@@ -12,7 +12,7 @@ class UserModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['username', 'email', 'password', 'role', 'full_name', 'student_id', 'college'];
+    protected $allowedFields    = ['username', 'email', 'password', 'role', 'full_name', 'student_id', 'college', 'user_acronym'];
 
     // Dates
     protected $useTimestamps = false;
@@ -24,6 +24,8 @@ class UserModel extends Model
     {
         return $this->where('username', $identity)
                     ->orWhere('email', $identity)
+                    ->orWhere('user_acronym', $identity)
+                    ->orWhere('student_id', $identity)
                     ->first();
     }
 }

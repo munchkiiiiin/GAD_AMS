@@ -33,7 +33,7 @@
                   v-model="identity"
                   class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-lg focus:ring-0 focus:bg-surface-bright focus:border-b-2 focus:border-primary transition-all duration-200 text-on-surface placeholder:text-outline/50" 
                   id="identity" 
-                  placeholder="e.g. j.doe@bsu.edu.ph" 
+                  placeholder="e.g. gad.office@bsu.edu.ph" 
                   required 
                   type="text" 
                 />
@@ -85,7 +85,7 @@
           <div class="mt-8 pt-8 border-t border-outline-variant/15 text-center">
             <p class="text-sm text-on-surface-variant font-body">
               Are you a visitor?
-              <a class="text-secondary font-bold hover:underline underline-offset-4 decoration-2 ml-1" href="#">Explore Public Records</a>
+              <router-link class="text-secondary font-bold hover:underline underline-offset-4 decoration-2 ml-1" to="/gad-corner">Explore Public Records</router-link>
             </p>
           </div>
         </div>
@@ -144,8 +144,13 @@ const handleLogin = async () => {
     else router.push('/');
     
   } catch (err) {
-    error.value = err.response?.data?.messages?.error || 'Invalid credentials. Please try again.';
-  } finally {
+      console.error('Login error:', err);
+      if (err.response && err.response.data && err.response.data.messages) {
+        error.value = err.response.data.messages.error || 'Login failed';
+      } else {
+        error.value = 'Connection error. Please check if the backend is running.';
+      }
+    } finally {
     loading.value = false;
   }
 };

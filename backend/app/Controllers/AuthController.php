@@ -11,24 +11,39 @@ class AuthController extends ResourceController
 
     public function login()
     {
+        // Handle JSON or Form-data
+        $data = $this->request->getJSON(true) ?: $this->request->getPost();
+
         $rules = [
             'identity' => 'required',
             'password' => 'required'
         ];
 
-        if (!$this->validate($rules)) {
+        if (!$this->validateData($data, $rules)) {
             return $this->fail($this->validator->getErrors());
         }
 
-        $identity = $this->request->getVar('identity');
-        $password = $this->request->getVar('password');
+        $identity = trim($data['identity']);
+        $password = $data['password'];
+
+        log_message('error', "LOGIN ATTEMPT: Identity=[$identity]");
 
         $userModel = new UserModel();
         $user = $userModel->findByIdentity($identity);
 
-        if (!$user || !password_verify($password, $user['password'])) {
-            return $this->failUnauthorized('Invalid username/email or password');
+        if (!$user) {
+            return $this->failUnauthorized("User not found for identity: $identity");
         }
+
+        if (!password_verify($password, $user['password'])) {
+            // Debug: Check if it's a legacy MD5 or something (unlikely but let's check)
+            if (md5($password) === $user['password']) {
+                 return $this->failUnauthorized('Legacy MD5 password detected. Please reset your password.');
+            }
+            return $this->failUnauthorized("Password verification failed for user: " . $user['username']);
+        }
+
+        log_message('error', "LOGIN SUCCESS: User [" . $user['username'] . "] authenticated.");
 
         // In a real app, you'd generate a JWT here. 
         // For this demo, we'll just return user info.
@@ -45,6 +60,8 @@ class AuthController extends ResourceController
 
     public function register()
     {
+        $data = $this->request->getJSON(true) ?: $this->request->getPost();
+
         $rules = [
             'fullname' => 'required',
             'university_id' => 'required',
@@ -54,11 +71,11 @@ class AuthController extends ResourceController
             'confirm_password' => 'required|matches[password]'
         ];
 
-        if (!$this->validate($rules)) {
+        if (!$this->validateData($data, $rules)) {
             return $this->fail($this->validator->getErrors());
         }
 
-        $email = $this->request->getVar('email');
+        $email = $data['email'];
         $username = strtolower(str_replace(' ', '_', explode('@', $email)[0]));
         
         $userModel = new UserModel();
@@ -71,11 +88,11 @@ class AuthController extends ResourceController
         $userData = [
             'username' => $username,
             'email' => $email,
-            'password' => password_hash($this->request->getVar('password'), PASSWORD_DEFAULT),
+            'password' => password_hash($data['password'], PASSWORD_DEFAULT),
             'role' => 'college', // Default role for registration
-            'full_name' => $this->request->getVar('fullname'),
-            'student_id' => $this->request->getVar('university_id'),
-            'college' => $this->request->getVar('department')
+            'full_name' => $data['fullname'],
+            'student_id' => $data['university_id'],
+            'college' => $data['department']
         ];
 
         if ($userModel->insert($userData)) {

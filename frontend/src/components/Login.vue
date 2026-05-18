@@ -28,7 +28,7 @@ const loading = ref(false);
 const error = ref('');
 
 const handleLogin = async () => {
-  loading.ref = true;
+  loading.value = true;
   error.value = '';
   
   try {

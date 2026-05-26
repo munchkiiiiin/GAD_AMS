@@ -198,7 +198,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '../../api';
 
 const router = useRouter();
 const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -303,8 +303,8 @@ const visiblePages = computed(() => {
 const fetchArchives = async () => {
   loading.value = true;
   try {
-    const designsResponse = await axios.get('http://localhost:8080/api/archived-designs');
-    const reportsResponse = await axios.get('http://localhost:8080/api/archived-reports');
+    const designsResponse = await api.get('archived-designs');
+    const reportsResponse = await api.get('archived-reports');
     archivedDesigns.value = designsResponse.data;
     archivedReports.value = reportsResponse.data;
   } catch (error) {
@@ -343,7 +343,7 @@ const viewItem = (item) => {
 
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
+    await api.get('logout');
     localStorage.removeItem('user');
     router.push('/login');
   } catch (err) {

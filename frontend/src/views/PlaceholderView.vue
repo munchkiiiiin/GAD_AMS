@@ -33,7 +33,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import axios from 'axios';
+// 1. Swap the old raw axios import with your custom dynamic api instance
+import api from '../api'; 
 import DashboardSidebar from '../components/DashboardSidebar.vue';
 import DashboardHeader from '../components/DashboardHeader.vue';
 
@@ -48,14 +49,14 @@ const title = computed(() => {
 
 const context = computed(() => {
   if (route.path.includes('/admin')) return 'Administration';
-  if (route.path.includes('/college')) return 'Technical Working Group (TWG)';
+  if (route.path.includes('/college')) return 'College/Unit';
   if (route.path.includes('/staff')) return 'GAD Staff';
   return 'Module';
 });
 
 const roleLabel = computed(() => {
   if (route.path.includes('/admin')) return 'Administrator';
-  if (route.path.includes('/college')) return 'Technical Working Group (TWG)';
+  if (route.path.includes('/college')) return 'College/Unit';
   if (route.path.includes('/staff')) return 'GAD Staff';
   return 'User';
 });
@@ -70,28 +71,21 @@ const adminMenu = [
 ];
 
 const collegeMenu = [
-  { label: 'New Submission', icon: 'add', href: '/college/submit' },
   { label: 'Dashboard', icon: 'dashboard', href: '/college/dashboard' },
-  { label: 'Submitted List', icon: 'list', href: '/college/submitted-list' },
-  { label: 'Archives', icon: 'archive', href: '/college/archive' },
+  { label: 'Submit Design', icon: 'add_task', href: '/college/submit-design' },
+  { label: 'Submit Accomplishment', icon: 'fact_check', href: '/college/submit-accomplishment' },
+  { label: 'Technical Assist', icon: 'support_agent', href: '/college/tech-assist' },
   { label: 'Mandates', icon: 'gavel', href: '/college/mandates' },
-  { label: 'User Manual', icon: 'menu_book', href: '/college/user-manual' },
-  { label: 'Data Privacy Policy', icon: 'privacy_tip', href: '/college/data-privacy-policy' }
-  
+  { label: 'Archives', icon: 'archive', href: '/college/archive' }
 ];
 
 const staffMenu = [
-  { label: 'New Submission', icon: 'add', href: '/staff/submit' },
   { label: 'Dashboard', icon: 'dashboard', href: '/staff/dashboard' },
-  { label: 'Submitted List', icon: 'list', href: '/staff/submitted-list' },
-  { label: 'Activity Design List', icon: 'list', href: '/staff/ad-list' },
-  { label: 'Accomplishment Report List', icon: 'list', href: '/staff/ar-list' },
-  { label: 'Archives', icon: 'archive', href: '/staff/archive' },
+  { label: 'Review Submissions', icon: 'rate_review', href: '/staff/reviews' },
+  { label: 'Budget Utilization', icon: 'payments', href: '/staff/budget' },
+  { label: 'Annual Reports', icon: 'description', href: '/staff/reports' },
   { label: 'Mandates', icon: 'gavel', href: '/staff/mandates' },
-  { label: 'Report Monitoring', icon: 'description', href: '/staff/reports' },
-  { label: 'Budget Monitoring', icon: 'payments', href: '/staff/budget' },
-  { label: 'User Manual', icon: 'menu_book', href: '/staff/user-manual' },
-  { label: 'Data Privacy Policy', icon: 'privacy_tip', href: '/staff/data-privacy-policy' }
+  { label: 'User Manual', icon: 'menu_book', href: '/staff/user-manual' }
 ];
 
 const menuItems = computed(() => {
@@ -101,13 +95,16 @@ const menuItems = computed(() => {
   return [];
 });
 
+// 2. Clear out the hardcoded production link so logout functions offline
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
-    localStorage.removeItem('user');
-    router.push('/login');
+    await api.get('logout');
   } catch (err) {
+    console.error('Logout failed tracking context:', err);
+  } finally {
+    // Always clean up local storage keys and route back to lockscreen
     localStorage.removeItem('user');
+    localStorage.removeItem('authToken'); 
     router.push('/login');
   }
 };

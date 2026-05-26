@@ -124,7 +124,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '../../api';
 
 const router = useRouter();
 const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -184,7 +184,7 @@ const fetchMandates = async () => {
   loading.value = true;
   try {
     // TODO: Replace with your actual API endpoint
-    // const response = await axios.get('http://localhost:8080/api/mandates');
+    // const response = await api.get('mandates');
     // mandates.value = response.data;
     
     // Temporary empty array - remove this once database is connected
@@ -240,7 +240,7 @@ const lastUpdated = computed(() => {
 
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
+    await api.get('logout');
     localStorage.removeItem('user');
     router.push('/login');
   } catch (err) {

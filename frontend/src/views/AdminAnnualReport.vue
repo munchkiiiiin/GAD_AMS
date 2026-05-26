@@ -1,19 +1,11 @@
 <template>
-  <div class="admin-dashboard bg-background min-h-screen flex">
-    <DashboardSidebar 
-      roleLabel="Administrator" 
-      :menuItems="adminMenu" 
-      @logout="handleLogout" 
+  <div class="flex flex-col flex-grow">
+    <DashboardHeader
+      title="Annual Report"
+      context="Report Monitoring"
+      :username="user?.username"
     />
-
-    <div class="flex-grow ml-64 flex flex-col">
-      <DashboardHeader 
-        title="Annual Report" 
-        context="Report Monitoring" 
-        :username="user?.username" 
-      />
-
-      <main class="p-8">
+    <main class="p-8">
         <div class="flex justify-between items-center mb-10">
           <div class="flex items-center gap-4">
             <select v-model="selectedYear" class="bg-white border border-outline-variant/30 rounded-xl px-4 py-2 text-sm font-bold shadow-sm focus:ring-2 focus:ring-primary outline-none">
@@ -110,30 +102,18 @@
             </table>
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
-import DashboardSidebar from '../components/DashboardSidebar.vue';
 import DashboardHeader from '../components/DashboardHeader.vue';
 
 const router = useRouter();
 const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
 const selectedYear = ref(2026);
-
-const adminMenu = [
-  { label: 'Dashboard', icon: 'dashboard', href: '/admin/dashboard' },
-  { label: 'Annual Reports', icon: 'description', href: '/admin/annual-report' },
-  { label: 'Plan & Budget', icon: 'account_balance_wallet', href: '/admin/gad-plan-budget' },
-  { label: 'Mandates', icon: 'gavel', href: '/admin/mandates' },
-  { label: 'Archives', icon: 'archive', href: '/admin/archive' },
-  { label: 'User Manual', icon: 'menu_book', href: '/admin/user-manual' }
-];
 
 const annualReportData = {
   2026: {
@@ -170,17 +150,6 @@ const totals = computed(() => {
     beneficiaries: clientMale + clientFemale + orgMale + orgFemale
   };
 });
-
-const handleLogout = async () => {
-  try {
-    await axios.get('http://localhost:8080/api/logout');
-    localStorage.removeItem('user');
-    router.push('/login');
-  } catch (err) {
-    localStorage.removeItem('user');
-    router.push('/login');
-  }
-};
 
 const exportToExcel = () => alert(`Exporting ${selectedYear.value} report...`);
 const viewDetails = (item) => alert(`Details for: ${item.mandate}`);

@@ -20,7 +20,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
+import api from '../api';
 
 const identity = ref('');
 const password = ref('');
@@ -32,26 +32,20 @@ const handleLogin = async () => {
   error.value = '';
   
   try {
-    const response = await axios.post('http://localhost:8080/api/login', {
+    const response = await api.post('api/login', {
       identity: identity.value,
       password: password.value
     });
     
-    alert('Login successful! Welcome ' + response.data.user.username);
-    // Here you would typically store the user data and redirect
+    if (response.data.user?.username) {
+      localStorage.setItem('authToken', response.data.token || '');
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      alert('Login successful! Welcome ' + response.data.user.username);
+      // Here you would typically store the user data and redirect
+    }
   } catch (err) {
     console.error('Login error:', err);
-    
-    if (err.response) {
-      // Backend responded with error
-      error.value = err.response.data?.message || err.response.data?.messages?.error || 'Login failed. Please try again.';
-    } else if (err.request) {
-      // Request made but no response
-      error.value = 'No response from server. Is the backend running on http://localhost:8080?';
-    } else {
-      // Other errors
-      error.value = 'An error occurred. Please try again.';
-    }
+    error.value = err.message || err.error || JSON.stringify(err) || 'Login failed. Please try again.';
   } finally {
     loading.value = false;
   }

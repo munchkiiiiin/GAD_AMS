@@ -33,7 +33,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import axios from 'axios';
+import api from '../../api';
 
 const router = useRouter();
 const route = useRoute();
@@ -46,7 +46,7 @@ const menuItems = computed(() => {
 
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
+    await api.get('logout');
     localStorage.removeItem('user');
     router.push('/login');
   } catch (err) {

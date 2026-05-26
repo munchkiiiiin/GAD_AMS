@@ -178,7 +178,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '../../api';
 
 const router = useRouter();
 
@@ -227,7 +227,7 @@ const filteredUnits = computed(() => {
 const fetchTWGSubmissions = async (page = 1) => {
   try {
     // Staged to fetch live data records matching your endpoint framework
-    // const response = await axios.get(`http://localhost:8080/api/admin/twg-submissions?page=${page}&per_page=${perPage.value}`);
+    // const response = await api.get(`admin/twg-submissions?page=${page}&per_page=${perPage.value}`);
     // twgUnits.value = response.data.data;
     // paginationMeta.value = response.data.meta;
     // currentPage.value = page;
@@ -253,7 +253,7 @@ const viewDetails = (unitId) => {
 
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
+    await api.get('logout');
     localStorage.removeItem('user');
     router.push('/login');
   } catch (err) {

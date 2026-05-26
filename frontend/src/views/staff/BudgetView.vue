@@ -196,7 +196,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '../../api';
 
 const router = useRouter();
 const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -314,7 +314,7 @@ const confirmModalAction = async () => {
     
     try {
       // TODO: Connect to actual API endpoint
-      // await axios.post('http://localhost:8080/api/staff/budget-monitoring/update', {
+      // await api.post('staff/budget-monitoring/update', {
       //   id: pendingUpdate.value.rowId,
       //   field: pendingUpdate.value.field,
       //   old_value: oldValue,
@@ -339,7 +339,7 @@ const cancelModalAction = () => {
 const fetchBudgetData = async () => {
   try {
     // TODO: Connect to actual API endpoint
-    // const response = await axios.get('http://localhost:8080/api/staff/budget-monitoring');
+    // const response = await api.get('staff/budget-monitoring');
     // budgetRows.value = response.data;
     // 
     // Ensure calculations are correct for each row
@@ -357,7 +357,7 @@ const fetchBudgetData = async () => {
 
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
+    await api.get('logout');
     localStorage.removeItem('user');
     router.push('/login');
   } catch (err) {

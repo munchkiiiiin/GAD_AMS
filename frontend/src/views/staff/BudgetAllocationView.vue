@@ -178,7 +178,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '../../api';
 
 const router = useRouter();
 const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -223,7 +223,7 @@ const submitRealignmentPipeline = async () => {
   
   try {
     // API endpoint database commit routing pipeline placeholder:
-    // await axios.post('http://localhost:8080/api/staff/budget/realign', realignmentForm.value);
+    // await api.post('staff/budget/realign', realignmentForm.value);
     alert("Financial reallocation command committed successfully inside registry buffers.");
     resetFormStructure();
     fetchInitialBudgetDataPipeline();
@@ -235,11 +235,11 @@ const submitRealignmentPipeline = async () => {
 const fetchInitialBudgetDataPipeline = async () => {
   try {
     // Pipeline connection route mappings placeholders layouts triggers:
-    // const mandatesRes = await axios.get('http://localhost:8080/api/staff/budget/available-mandates');
+    // const mandatesRes = await api.get('staff/budget/available-mandates');
     // mandateOptions.value = mandatesRes.data;
-    // const logsRes = await axios.get('http://localhost:8080/api/staff/budget/realignment-logs');
+    // const logsRes = await api.get('staff/budget/realignment-logs');
     // historyLogs.value = logsRes.data;
-    // const metaRes = await axios.get('http://localhost:8080/api/staff/budget/financial-meta');
+    // const metaRes = await api.get('staff/budget/financial-meta');
     // financialMeta.value = metaRes.data;
   } catch (err) {
     console.error(err);
@@ -248,7 +248,7 @@ const fetchInitialBudgetDataPipeline = async () => {
 
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
+    await api.get('logout');
     localStorage.removeItem('user');
     router.push('/login');
   } catch (err) {

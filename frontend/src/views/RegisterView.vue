@@ -91,8 +91,9 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+// Restructuring the imports neatly to match your other files
+import api from '../api';
 
 const router = useRouter();
 const loading = ref(false);
@@ -119,11 +120,22 @@ const handleRegister = async () => {
   error.value = '';
   
   try {
-    const response = await axios.post('http://localhost:8080/api/register', form);
+    // FIX: Trimmed 'api/' prefix so it resolves neatly to standard base endpoints
+    const response = await api.post('register', form);
+    
     success.value = response.data.message;
     setTimeout(() => router.push('/login'), 2000);
   } catch (err) {
-    error.value = err.response?.data?.messages?.error || 'Registration failed. Please try again.';
+    console.error('Registration error context:', err);
+    
+    // Aligned error handling with your login file structure
+    if (err && err.messages) {
+      error.value = err.messages.error || 'Registration failed';
+    } else if (err && err.message) {
+      error.value = err.message;
+    } else {
+      error.value = 'Registration failed. Please try again.';
+    }
   } finally {
     loading.value = false;
   }

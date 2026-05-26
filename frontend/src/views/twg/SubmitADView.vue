@@ -164,7 +164,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import axios from 'axios';
+import api from '../../api';
 
 const router = useRouter();
 const route = useRoute();
@@ -212,7 +212,7 @@ const submitActivityDesign = async () => {
     }
     formData.append('user_id', user.value.id);
 
-    const response = await axios.post('http://localhost:8080/api/submit-activity-design', formData, {
+    const response = await api.post('submit-activity-design', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
@@ -232,7 +232,7 @@ const goBack = () => {
 
 const handleLogout = async () => {
   try {
-    await axios.get('http://localhost:8080/api/logout');
+    await api.get('logout');
     localStorage.removeItem('user');
     router.push('/login');
   } catch (err) {

@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: May 26, 2026 at 01:50 PM
+-- Host: 127.0.0.1:3308
+-- Generation Time: May 27, 2026 at 05:23 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -164,6 +164,13 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `email`, `password`, `remember_token`, `created_at`) VALUES
+(1, 'bisayotduligas@gmail.com', '$2y$10$SsLnNlFpnvIvYzbQSZtaE.E62WfcA4Q9N5blPdexrYvetCNLD.8Ju', NULL, '2026-05-27 02:58:36');
+
 -- --------------------------------------------------------
 
 --
@@ -178,6 +185,13 @@ CREATE TABLE `user_profiles` (
   `user_role` enum('Director','Staff','TWG','Non-TWG') DEFAULT NULL,
   `office_unit_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_profiles`
+--
+
+INSERT INTO `user_profiles` (`user_id`, `first_name`, `middle_name`, `last_name`, `user_role`, `office_unit_id`) VALUES
+(1, 'Joshua', NULL, 'Duligas', 'Staff', NULL);
 
 --
 -- Indexes for dumped tables
@@ -283,7 +297,7 @@ ALTER TABLE `system_logs`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables

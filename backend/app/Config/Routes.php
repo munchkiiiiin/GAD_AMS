@@ -8,16 +8,48 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 
 $routes->group('api', function($routes) {
+    $routes->options('submit-activity-design', 'ActivityDesignController::submitDesign');
+    $routes->post('submit-activity-design', 'ActivityDesignController::submitDesign');
+    
+    $routes->options('submit-activity-report', 'AccomplishmentReportController::submitReport');
+    $routes->post('submit-activity-report', 'AccomplishmentReportController::submitReport');
+
+
+    // Route for fetching all designs and reports (for staff/admin)
+    $routes->options('activity-designs', 'ActivityDesignController::index');
+    $routes->get('activity-designs', 'ActivityDesignController::index');
+
+    $routes->options('activity-reports', 'AccomplishmentReportController::index');
+    $routes->get('activity-reports', 'AccomplishmentReportController::index');
+
+    
+    // Route for fetching a single activity design's & accomplishment report's details
+    $routes->options('activity-design/(:num)', 'ActivityDesignController::show/$1');
+    $routes->get('activity-design/(:num)', 'ActivityDesignController::show/$1');
+
+    $routes->options('activity-designs/(:num)', 'ActivityDesignController::getUserDesigns/$1');
+    $routes->get('activity-designs/(:num)', 'ActivityDesignController::getUserDesigns/$1');
+
+    $routes->options('activity-report/(:num)', 'AccomplishmentReportController::show/$1');
+    $routes->get('activity-report/(:num)', 'AccomplishmentReportController::show/$1');
+
+    $routes->options('activity-reports/(:num)', 'AccomplishmentReportController::getUserReports/$1');
+    $routes->get('activity-reports/(:num)', 'AccomplishmentReportController::getUserReports/$1');
+
+    // Route for fetching approved control numbers
+    $routes->get('approved-controls/(:num)', 'ApprovedControlsController::index/$1');
+
+
+    // Routes for archived items
+    $routes->options('archived-designs', 'ActivityDesignController::getArchivedDesigns');
+    $routes->get('archived-designs', 'ActivityDesignController::getArchivedDesigns');
+    $routes->options('archived-reports', 'AccomplishmentReportController::getArchivedReports');
+    $routes->get('archived-reports', 'AccomplishmentReportController::getArchivedReports');
+
+    // Admin tracking routes
+    $routes->get('admin/twg-submissions', 'ActivityDesignController::getTWGSubmissions');
+
+
+    $routes->options('login', 'AuthController::login');
     $routes->post('login', 'AuthController::login');
-    $routes->post('register', 'AuthController::register');
-    $routes->get('logout', 'AuthController::logout');
-    
-    // --- CLOUDFLARE R2 STORAGE ROUTE ---
-    $routes->post('storage/ticket', 'StorageController::getUploadTicket');
-    $routes->options('storage/ticket', 'AuthController::handleOptions'); // CORS preflight for the storage endpoint
-    
-    // CORS preflight routes
-    $routes->options('login', 'AuthController::handleOptions');
-    $routes->options('register', 'AuthController::handleOptions');
-    $routes->options('logout', 'AuthController::handleOptions');
 });

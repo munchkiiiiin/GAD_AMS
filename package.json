@@ -1,0 +1,7 @@
+{
+  "name": "gad-ams",
+  "private": true,
+  "scripts": {
+    "build": "npm install --prefix frontend && npm --prefix frontend run build"
+  }
+}

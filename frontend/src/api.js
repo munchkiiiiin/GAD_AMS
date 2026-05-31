@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://gad-ams-2.onrender.com/api/';
+import { API_BASE_URL } from './http';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

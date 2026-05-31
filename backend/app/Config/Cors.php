@@ -31,10 +31,10 @@ class Cors extends BaseConfig
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
          *
          * E.g.:
-         *   - ['http://localhost:8080']
+         *   - ['https://your-appwrite-domain.example']
          *   - ['https://www.example.com']
          */
-        'allowedOrigins' => ['http://localhost:5173', 'http://127.0.0.1:5173'],
+        'allowedOrigins' => [],
 
         /**
          * Origin regex patterns for the `Access-Control-Allow-Origin` header.
@@ -102,4 +102,32 @@ class Cors extends BaseConfig
          */
         'maxAge' => 7200,
     ];
+
+    public function __construct()
+    {
+        $allowedOrigins = $this->parseEnvList((string) env('cors.allowedOrigins', ''));
+        if ($allowedOrigins !== []) {
+            $this->default['allowedOrigins'] = $allowedOrigins;
+        }
+
+        $allowedHeaders = $this->parseEnvList((string) env('cors.allowedHeaders', ''));
+        if ($allowedHeaders !== []) {
+            $this->default['allowedHeaders'] = $allowedHeaders;
+        }
+
+        $allowedMethods = $this->parseEnvList((string) env('cors.allowedMethods', ''));
+        if ($allowedMethods !== []) {
+            $this->default['allowedMethods'] = $allowedMethods;
+        }
+
+        $this->default['supportsCredentials'] = filter_var(env('cors.supportsCredentials', true), FILTER_VALIDATE_BOOL);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function parseEnvList(string $value): array
+    {
+        return array_values(array_filter(array_map('trim', explode(',', $value))));
+    }
 }

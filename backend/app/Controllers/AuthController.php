@@ -11,9 +11,6 @@ class AuthController extends ResourceController
 
     public function login()
     {
-        // Set CORS headers
-        $this->setCorsHeaders();
-
         // Handle preflight request
         if (strtoupper($this->request->getMethod()) === 'OPTIONS') {
             return $this->response->setStatusCode(204);
@@ -68,9 +65,6 @@ class AuthController extends ResourceController
 
     public function register()
     {
-        // Set CORS headers
-        $this->setCorsHeaders();
-
         // Handle preflight request
         if (strtoupper($this->request->getMethod()) === 'OPTIONS') {
             return $this->response->setStatusCode(200);
@@ -120,16 +114,6 @@ class AuthController extends ResourceController
 
     public function logout()
     {
-        $this->setCorsHeaders();
         return $this->respond(['message' => 'Logout successful']);
-    }
-
-    private function setCorsHeaders()
-    {
-        $this->response->setHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
-                       ->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
-                       ->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
-                       ->setHeader('Access-Control-Allow-Credentials', 'true')
-                       ->setHeader('Access-Control-Max-Age', '86400');
     }
 }

@@ -27,9 +27,18 @@ class CorsFilter implements FilterInterface
 
     private function setCorsHeaders(ResponseInterface $response)
     {
-        $response->setHeader('Access-Control-Allow-Origin', 'http://localhost:5173'); // Better than '*' for development
-        $response->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-        $response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+        $allowedOrigins = array_values(array_filter(array_map('trim', explode(',', (string) env('cors.allowedOrigins', '')))));
+        $requestOrigin = service('request')->getHeaderLine('Origin');
+
+        if ($requestOrigin !== '' && in_array($requestOrigin, $allowedOrigins, true)) {
+            $response->setHeader('Access-Control-Allow-Origin', $requestOrigin);
+        } elseif ($allowedOrigins !== []) {
+            $response->setHeader('Access-Control-Allow-Origin', $allowedOrigins[0]);
+        }
+
+        $response->setHeader('Access-Control-Allow-Methods', (string) env('cors.allowedMethods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH'));
+        $response->setHeader('Access-Control-Allow-Headers', (string) env('cors.allowedHeaders', 'Content-Type, Authorization, X-Requested-With, Accept'));
+        $response->setHeader('Access-Control-Allow-Credentials', filter_var(env('cors.supportsCredentials', true), FILTER_VALIDATE_BOOL) ? 'true' : 'false');
         $response->setHeader('Access-Control-Max-Age', '86400');
     }
 }

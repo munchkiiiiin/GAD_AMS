@@ -20,7 +20,8 @@
 # APP
 #--------------------------------------------------------------------
 
-# app.baseURL = ''
+# app.baseURL = https://your-render-service.onrender.com/
+# cors.allowedOrigins = https://your-appwrite-domain.example
 # If you have trouble with `.`, you could also use `_`.
 # app_baseURL = ''
 # app.forceGlobalSecureRequests = false
@@ -30,10 +31,10 @@
 # DATABASE
 #--------------------------------------------------------------------
 
-# database.default.hostname = localhost
-# database.default.database = ci4
-# database.default.username = root
-# database.default.password = root
+# database.default.hostname = your-render-db-host
+# database.default.database = gad_submission_system
+# database.default.username = your-db-user
+# database.default.password = your-db-password
 # database.default.DBDriver = MySQLi
 # database.default.DBPrefix =
 # database.default.port = 3306

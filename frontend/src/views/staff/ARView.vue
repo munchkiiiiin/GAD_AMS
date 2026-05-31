@@ -163,6 +163,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import { apiUrl, backendUrl } from '../../http';
 
 const route = useRoute();
 const router = useRouter();
@@ -173,7 +174,7 @@ const error = ref(null);
 const fetchReportDetails = async () => {
   try {
     const id = route.params.id;
-    const response = await axios.get(`http://localhost:8080/api/activity-report/${id}`);
+    const response = await axios.get(apiUrl(`/activity-report/${id}`));
     
     if (response.data.success) {
       report.value = response.data.data;
@@ -213,13 +214,13 @@ const getStatusClass = (status) => {
 
 const previewFile = (fileName) => {
   if (!fileName) return;
-  window.open(`http://localhost:8080/uploads/${fileName}`, '_blank');
+  window.open(backendUrl(`/uploads/${fileName}`), '_blank');
 };
 
 const downloadFile = (fileName) => {
   if (!fileName) return;
   const link = document.createElement('a');
-  link.href = `http://localhost:8080/uploads/${fileName}`;
+  link.href = backendUrl(`/uploads/${fileName}`);
   link.download = fileName;
   link.click();
 };

@@ -161,6 +161,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import { apiUrl, backendUrl } from '../../http';
 
 const route = useRoute();
 const router = useRouter();
@@ -173,7 +174,7 @@ const fetchDesignDetails = async () => {
   loading.value = true;
   try {
     const designId = route.params.id;
-    const response = await axios.get(`http://localhost:8080/api/activity-design/${designId}`);
+    const response = await axios.get(apiUrl(`/activity-design/${designId}`));
     
     if (response.data.success) {
       const data = response.data.data;
@@ -226,13 +227,13 @@ const getStatusClass = (status) => {
 
 const previewFile = (fileName) => {
   if (!fileName) return;
-  window.open(`http://localhost:8080/uploads/${fileName}`, '_blank');
+  window.open(backendUrl(`/uploads/${fileName}`), '_blank');
 };
 
 const downloadFile = (fileName) => {
   if (!fileName) return;
   const link = document.createElement('a');
-  link.href = `http://localhost:8080/uploads/${fileName}`;
+  link.href = backendUrl(`/uploads/${fileName}`);
   link.download = fileName;
   link.click();
 };

@@ -1,8 +1,8 @@
 <template>
   <div class="staff-dashboard-content">
   <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-      <h1 class="text-3xl font-bold text-slate-900">Welcome, (Staff) to your Dashboard!</h1>
-      <p class="text-slate-500 mt-2">Manage your GAD programs, monitor activity designs, and oversee budget utilization from here.</p>
+      <h1 class="text-3xl font-bold text-slate-900">Welcome, {{ user.username || 'Staff' }} to your Dashboard!</h1>
+      <p class="text-slate-500 mt-2">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
     </div>
     <section class="stats-section">
       <div v-for="stat in metricsStats" :key="stat.label" class="stat-card">
@@ -33,10 +33,10 @@
               <table class="data-table">
                 <thead>
                   <tr class="table-header-row">
-                    <th class="table-header-cell">Activity Title</th>
-                    <th class="table-header-cell">Office / Unit</th>
                     <th class="table-header-cell">Type</th>
+                    <th class="table-header-cell">Activity Title</th>
                     <th class="table-header-cell">Date Submitted</th>
+                    <th class="table-header-cell">Status</th>
                   </tr>
                 </thead>
                 <tbody class="table-body">
@@ -45,15 +45,19 @@
                       No pending activities found matching evaluation workflows
                     </td>
                   </tr>
-                  <tr v-else v-for="activity in pendingActivities" :key="activity.id" @click="navigateToView(activity.type, activity.id)" class="table-row">
-                    <td class="activity-title-cell">{{ activity.title }}</td>
-                    <td class="office-cell">{{ activity.office }}</td>
+                  <tr v-else v-for="activity in pendingActivities" :key="activity.id" @click="navigateToView(activity)" class="table-row">
                     <td class="type-cell">
                       <span class="type-badge" :class="activity.type === 'design' ? 'type-badge-design' : 'type-badge-report'">
                         {{ activity.typeName }}
                       </span>
                     </td>
+                    <td class="activity-title-cell">{{ activity.title }}</td>
                     <td class="date-cell">{{ activity.date }}</td>
+                    <td class="status-cell">
+                      <span class="status-badge" :class="statusBadgeClass(activity.status)">
+                        {{ activity.status }}
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -87,24 +91,28 @@
       <div class="grid-sidebar">
         
         <div class="schedule-card">
-          <div class="schedule-header">
-            <h4 class="schedule-title">Schedule & Deadlines</h4>
-            <div class="calendar-nav">
-              <span class="calendar-nav-btn">◀</span>
-              <span class="calendar-label">CALENDAR</span>
-              <span class="calendar-nav-btn">▶</span>
+          <div class="calendar-header-nav">
+            <h4 class="schedule-title">{{ currentMonthName }} {{ currentYear }}</h4>
+            <div class="calendar-controls">
+              <button @click="changeMonth(-1)" class="nav-btn">◀</button>
+              <button @click="changeMonth(1)" class="nav-btn">▶</button>
             </div>
           </div>
           
-          <div class="calendar-weekdays">
-            <span v-for="day in ['S', 'M', 'T', 'W', 'T', 'F', 'S']" :key="day">{{ day }}</span>
-          </div>
-          <div class="calendar-dates">
-            <span class="date-cell date-cell-past">1</span>
-            <span v-for="date in 23" :key="date" class="date-cell">
-              <span class="date-number">{{ date + 1 }}</span>
-            </span>
-            <span v-for="blankDay in 7" :key="'b-' + blankDay" class="date-cell date-cell-future">{{ 24 + blankDay }}</span>
+          <div class="calendar-container">
+            <div class="calendar-weekdays">
+              <span v-for="day in ['S', 'M', 'T', 'W', 'T', 'F', 'S']" :key="day">{{ day }}</span>
+            </div>
+            <div class="calendar-dates">
+              <div 
+                v-for="(day, index) in calendarDays" 
+                :key="index" 
+                class="date-cell"
+                :class="{ 'date-active': day.current }"
+              >
+                <span class="date-number">{{ day.n }}</span>
+              </div>
+            </div>
           </div>
 
           <div class="deadlines-section">
@@ -146,22 +154,73 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
+const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
 const showNotifications = ref(false);
 
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value;
 };
 
-const navigateToView = (type, id) => {
+const statusBadgeClass = (status) => {
+  const s = status?.toLowerCase() || '';
+  return s.includes('revision') ? 'status-badge-revision' : 'status-badge-pending';
+};
+
+const navigateToView = (item) => {
+  const type = item.type;
+  const id = item.id;
+  const currentUserId = user.value.id || user.value.user_id;
+  const status = item.status?.toLowerCase() || '';
+  const isOwner = Number(item.user_id) === Number(currentUserId);
+
   if (type === 'design') {
-    router.push(`/staff/ad-list?id=${id}`);
+    if (status.includes('revision') && isOwner) {
+      router.push(`/staff/ad-revision/${id}`);
+    } else {
+      router.push(`/staff/ad-view/${id}`);
+    }
   } else {
-    router.push(`/staff/ar-list?id=${id}`);
+    if (status.includes('revision') && isOwner) {
+      router.push(`/staff/ar-revision/${id}`);
+    } else {
+      router.push(`/staff/ar-view/${id}`);
+    }
   }
+};
+
+// Calendar Logic (Synced with CollegeDashboard)
+const currentMonthDate = ref(new Date());
+const currentMonthName = computed(() => currentMonthDate.value.toLocaleString('default', { month: 'long' }));
+const currentYear = computed(() => currentMonthDate.value.getFullYear());
+
+const calendarDays = computed(() => {
+  const year = currentMonthDate.value.getFullYear();
+  const month = currentMonthDate.value.getMonth();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+  const days = [];
+
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    days.push({ n: '', current: false });
+  }
+
+  const today = new Date();
+  for (let i = 1; i <= lastDateOfMonth; i++) {
+    const isToday = i === today.getDate() && 
+                    month === today.getMonth() && 
+                    year === today.getFullYear();
+    days.push({ n: i, current: isToday });
+  }
+  return days;
+});
+
+const changeMonth = (offset) => {
+  currentMonthDate.value = new Date(currentMonthDate.value.getFullYear(), currentMonthDate.value.getMonth() + offset, 1);
 };
 
 /* ==============================================================
@@ -180,6 +239,68 @@ const pendingActivities = ref([]);
 const upcomingDeadlines = ref([]);
 const activityLogs = ref([]);
 const notificationItems = ref([]);
+
+const fetchDashboardData = async () => {
+  try {
+    const currentUserId = Number(user.value.id || user.value.user_id);
+    
+    // Fetch both types of submissions from the API
+    const [designsRes, reportsRes] = await Promise.all([
+      axios.get('http://localhost:8080/api/activity-designs'),
+      axios.get('http://localhost:8080/api/activity-reports')
+    ]);
+
+    const allDesigns = designsRes.data.success ? designsRes.data.data : [];
+    const allReports = reportsRes.data.success ? reportsRes.data.data : [];
+
+    // Map Activity Designs to unified table format
+    const formattedDesigns = allDesigns.map(d => ({
+      id: d.act_design_id,
+      title: d.activity_title || d.title,
+      office: d.office,
+      type: 'design',
+      typeName: 'Activity Design',
+      date: d.date || d.start_date,
+      status: d.status,
+      user_id: d.user_id
+    }));
+
+    // Map Accomplishment Reports to unified table format
+    const formattedReports = allReports.map(r => ({
+      id: r.id || r.act_report_id,
+      title: r.activity_title || r.title,
+      office: r.office,
+      type: 'report',
+      typeName: 'Accomplishment Report',
+      date: r.date || r.start_date,
+      status: r.status,
+      user_id: r.user_id
+    }));
+
+    // Filter for current user's PENDING or REVISION items and sort by ID (recent first)
+    const userPending = [...formattedDesigns, ...formattedReports]
+      .filter(item => {
+        const isOwner = Number(item.user_id) === currentUserId;
+        const s = item.status?.toLowerCase() || '';
+        // Include both 'pending' and 'revision' as they both require user attention
+        return isOwner && (s === 'pending' || s.includes('revision'));
+      })
+      .sort((a, b) => b.id - a.id);
+
+    pendingActivities.value = userPending.slice(0, 5);
+
+    // Update Metric Stats cards with dynamic values
+    metricsStats.value[0].value = userPending.length.toString();
+    metricsStats.value[1].value = formattedDesigns.filter(d => Number(d.user_id) === currentUserId).length.toString();
+    metricsStats.value[2].value = formattedReports.filter(r => Number(r.user_id) === currentUserId).length.toString();
+  } catch (err) {
+    console.error('Error fetching dashboard data:', err);
+  }
+};
+
+onMounted(() => {
+  fetchDashboardData();
+});
 </script>
 
 <style scoped>
@@ -375,10 +496,30 @@ const notificationItems = ref([]);
   color: #c084fc;
 }
 
-.office-cell {
+.status-cell {
   padding: 1rem;
-  font-size: 0.875rem;
-  color: #94a3b8;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge-pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge-revision {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .type-cell {
@@ -508,6 +649,28 @@ const notificationItems = ref([]);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
+.calendar-header-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-btn {
+  background: rgba(147, 51, 234, 0.1);
+  border: none;
+  color: #c084fc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
 .schedule-header {
   display: flex;
   align-items: center;
@@ -569,33 +732,13 @@ const notificationItems = ref([]);
   color: #cbd5e1;
 }
 
-.date-cell {
-  padding: 0.5rem;
+.date-active {
+  background: linear-gradient(135deg, #990dd1 0%, #b979cc 100%);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(153, 13, 209, 0.4);
   border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
-
-.date-cell:hover {
-  background: rgba(147, 51, 234, 0.3);
-}
-
-.date-cell:hover .date-number {
-  color: white;
-}
-
-.date-cell-past {
-  color: #475569;
-}
-
-.date-cell-future {
-  color: #475569;
-}
-
-.date-number {
-  transition: color 0.2s ease;
-}
-
 /* Deadlines Section */
 .deadlines-section {
   border-top: 1px solid rgba(147, 51, 234, 0.1);

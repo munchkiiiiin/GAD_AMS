@@ -23,17 +23,6 @@
 
           <div class="content-area">
             <div class="policy-card">
-              
-              <div id="introduction" class="policy-section">
-                <div class="policy-header">
-                  <div>
-                    <h1 class="policy-title">Data Privacy Statement</h1>
-                    <p class="policy-subtitle">
-                      Benguet State University - Gender and Development Information Management System (GAD-IMS)
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <div id="intro" class="policy-section">
                 <h2 class="section-heading">1. Introduction</h2>

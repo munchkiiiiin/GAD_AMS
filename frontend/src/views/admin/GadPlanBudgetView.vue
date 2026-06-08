@@ -3,8 +3,8 @@
         
         <div class="controls-panel mb-3 flex justify-between items-center">
           <div class="panel-left">
-            <h2 class="panel-title">Gender and Development Matrix</h2>
-            <p class="panel-subtitle">Annual compliance and budget allocations</p>
+            <h2 class="panel-title">GAD Plan and Budget (GPB)</h2>
+            <p class="panel-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
           </div>
           <div class="panel-right flex items-center gap-3">
             <div class="year-selector-wrapper relative">

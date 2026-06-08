@@ -2,6 +2,11 @@
       <main class="flex-1 overflow-y-autobg-transparent">
         <div class="max-w-7xl mx-auto">
 
+          <div class="page-header">
+            <h1 class="page-title">Activity Designs and Accomplishment Reports Tracker</h1>
+            <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+
             <div class="stats-container">
 
             <div class="stat-card-purple">
@@ -10,8 +15,8 @@
                     <span class="material-symbols-outlined">description</span>
                 </div>
                 <div class="stat-content">
-                    <h3 class="stat-number-purple">{{ totalActive }}</h3>
-                    <p class="stat-label-purple">TOTALLY ACTIVE</p>
+                    <h3 class="stat-number-purple">{{ totalSubmitted }}</h3>
+                    <p class="stat-label-purple">TOTAL SUBMITTED</p>
                 </div>
                 </div>
             </div>
@@ -19,23 +24,11 @@
             <div class="stat-card">
                 <div class="stat-card-inner">
                 <div class="stat-icon-wrapper blue">
-                    <span class="material-symbols-outlined">description</span>
+                    <span class="material-symbols-outlined">schedule</span>
                 </div>
                 <div class="stat-content">
-                    <h3 class="stat-number">{{ totalDesigns }}</h3>
-                    <p class="stat-label">Activity Designs</p>
-                </div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-card-inner">
-                <div class="stat-icon-wrapper green">
-                    <span class="material-symbols-outlined">assessment</span>
-                </div>
-                <div class="stat-content">
-                    <h3 class="stat-number">{{ totalReports }}</h3>
-                    <p class="stat-label">Accomplishment Reports</p>
+                    <h3 class="stat-number">{{ pendingCount }}</h3>
+                    <p class="stat-label">PENDING</p>
                 </div>
                 </div>
             </div>
@@ -43,11 +36,11 @@
             <div class="stat-card">
                 <div class="stat-card-inner">
                 <div class="stat-icon-wrapper amber">
-                    <span class="material-symbols-outlined">schedule</span>
+                    <span class="material-symbols-outlined">edit_document</span>
                 </div>
                 <div class="stat-content">
-                    <h3 class="stat-number">{{ pendingCount }}</h3>
-                    <p class="stat-label">PENDING REVIEW</p>
+                    <h3 class="stat-number">{{ revisionCount }}</h3>
+                    <p class="stat-label">REVISIONS</p>
                 </div>
                 </div>
             </div>
@@ -153,7 +146,7 @@
                     v-for="item in paginatedItems" 
                     :key="item.id"
                     class="clickable-row"
-                    @click="viewItem(item)"
+                    @click="viewDetails(item)"
                   >
                     <td class="table-cell">
                       <span class="type-badge" :class="item.type === 'design' ? 'type-design' : 'type-report'">
@@ -263,8 +256,8 @@ const filteredItems = computed(() => {
   return sorted;
 });
 
-const totalActive = computed(() => {
-  return submissions.value.filter(item => item.status === 'pending' || item.status === 'revision required').length;
+const totalSubmitted = computed(() => {
+  return submissions.value.length;
 });
 
 const totalDesigns = computed(() => {
@@ -277,6 +270,10 @@ const totalReports = computed(() => {
 
 const pendingCount = computed(() => {
   return submissions.value.filter(item => item.status === 'pending').length;
+});
+
+const revisionCount = computed(() => {
+  return submissions.value.filter(item => item.status.includes('revision')).length;
 });
 
 const totalPages = computed(() => Math.ceil(filteredItems.value.length / itemsPerPage));
@@ -306,7 +303,6 @@ const fetchSubmissions = async () => {
   try {
     const userId = user.value.id || user.value.user_id;
     
-    // Fetch both Activity Designs and Accomplishment Reports
     const [designsRes, reportsRes] = await Promise.all([
       axios.get(`http://localhost:8080/api/activity-designs/${userId}`),
       axios.get(`http://localhost:8080/api/activity-reports/${userId}`)
@@ -315,7 +311,7 @@ const fetchSubmissions = async () => {
     const designs = (designsRes.data.data || []).map(d => ({
       id: d.act_design_id,
       type: 'design',
-      control: d.control || 'PENDING',
+      control: d.control,
       title: d.activity_title,
       formLabel: formatFormType(d.form_type),
       formClass: getFormClass(d.form_type),
@@ -331,7 +327,7 @@ const fetchSubmissions = async () => {
       type: 'report',
       control: r.control,
       title: r.activity_title,
-      formLabel: formatFormType(r.formLabel), // Backend aliases form_type as formLabel in AR
+      formLabel: formatFormType(r.formLabel),
       formClass: getFormClass(r.formLabel),
       status: r.status.toLowerCase(),
       statusText: r.status,
@@ -359,8 +355,9 @@ const getFormClass = (type) => {
 };
 
 const getStatusClass = (status) => {
-  if (status === 'Approved' || status === 'Verified') return 'status-verified';
-  if (status === 'Revision Required') return 'status-revision';
+  const s = status?.toLowerCase() || '';
+  if (s === 'approved' || s === 'verified') return 'status-verified';
+  if (s.includes('revision')) return 'status-revision';
   return 'status-pending';
 };
 
@@ -383,13 +380,30 @@ const changePage = (page) => {
   }
 };
 
-const viewItem = (item) => {
-  if (item.type === 'design') {
-    router.push(`/college/view-design/${item.id}`);
+// const viewItem = (item) => {
+//   if (item.type === 'design') {
+//     router.push(`/college/ad-view/${item.id}`);
+//   } else {
+//     router.push(`/college/ar-view/${item.id}`);
+//   }
+// };
+
+const viewDetails = (item) => {
+  if (item.type === 'design' || !item.type) { 
+    if (item.status && item.status.toLowerCase().includes('revision')) {
+      router.push(`/college/ad-revision/${item.id}`);
+    } else {
+      router.push(`/college/ad-view/${item.id}`);
+    }
   } else {
-    router.push(`/college/view-report/${item.id}`);
+    if (item.status && item.status.toLowerCase().includes('revision')) {
+      router.push(`/college/ar-revision/${item.id}`);
+    } else {
+      router.push(`/college/ar-view/${item.id}`);
+    }
   }
 };
+
 
 const handleLogout = async () => {
   try {
@@ -411,6 +425,23 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.page-header {
+  padding: 0 0.25rem 1.5rem 0;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  color: #16213e;
+}
+
+.page-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
 .stats-container {
   display: grid;
   grid-template-columns: 1fr;
@@ -445,7 +476,6 @@ onMounted(() => {
   gap: 1rem;
 }
 
-/* Icon Wrapper */
 .stat-icon-wrapper {
   padding: 0.75rem;
   border-radius: 0.75rem;
@@ -483,12 +513,10 @@ onMounted(() => {
   color: #d97706;
 }
 
-/* Material Icons */
 .material-symbols-outlined {
   font-size: 1.5rem;
 }
 
-/* Stat Content */
 .stat-content {
   flex: 1;
 }
@@ -541,7 +569,6 @@ onMounted(() => {
   margin: 0.25rem 0 0 0;
 }
 
-/* Tabs */
 .tabs-container {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #e2e8f0;
@@ -597,7 +624,6 @@ onMounted(() => {
   color: #990dd1;
 }
 
-/* Filter Card */
 .filter-card {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 1.25rem;
@@ -747,7 +773,6 @@ onMounted(() => {
   font-size: 0.8rem;
 }
 
-/* Loading State */
 .loading-state {
   background: #ffffff;
   border-radius: 1.25rem;
@@ -775,7 +800,6 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
-/* Data Table */
 .data-table {
   background: #cbd5e1;
   border-radius: 1.25rem;
@@ -822,7 +846,6 @@ onMounted(() => {
   padding: 1rem 1.5rem;
 }
 
-/* Badges */
 .type-badge {
   display: inline-flex;
   align-items: center;
@@ -906,7 +929,6 @@ onMounted(() => {
   line-height: 1.4;
 }
 
-/* Empty State */
 .empty-row {
   border-bottom: none;
 }
@@ -932,7 +954,6 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 
-/* Pagination */
 .pagination-container {
   display: flex;
   align-items: center;
@@ -993,7 +1014,6 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);

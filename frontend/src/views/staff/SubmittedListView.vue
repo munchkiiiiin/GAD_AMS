@@ -5,7 +5,7 @@
           
           <div class="twg-header">
             <h1 class="twg-title">TWG Submission Tracker</h1>
-            <p class="twg-subtitle">Monitor, review, and evaluate submitted Activity Designs and Accomplishment Reports per institutional unit.</p>
+            <p class="twg-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
           </div>
 
           <section class="stats-section">

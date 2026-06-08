@@ -6,7 +6,7 @@
 
               <div class="page-header">
                 <h1 class="page-title">Execute Budget Allocation Adjustment</h1>
-                <p class="page-subtitle">Reallocate pending program capitals, record transaction logs, and manage structural operational realignments.</p>
+                <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
               </div>
 
               <div class="form-card">

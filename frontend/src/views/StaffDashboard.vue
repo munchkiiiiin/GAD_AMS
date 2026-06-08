@@ -6,10 +6,10 @@
       @logout="handleLogout" 
     />      
 
-    <div class="dashboard-main">
-      <header class="dashboard-header">
-      </header>
-        
+    <div class="dashboard-main bg-slate-50">
+      <header class="dashboard-header bg-[#1a1a2e] border-b border-purple-900/30">
+        </header>
+
       <main class="dashboard-main-content">
         <div class="content-wrapper">
           <router-view /> 
@@ -65,32 +65,12 @@ onMounted(() => {
   min-height: 100vh;
   display: flex;
   color: #cbd5e1;
-  font-family: system-ui, -apple-system, sans-serif;
-}
+  background-color: #f8fafc;}
 
-.dashboard-main {
-  flex-grow: 1;
-  margin-left: 256px;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.dashboard-header {
-  background: #1a1a2e;
-  border-bottom: 1px solid rgba(147, 51, 234, 0.3);
-}
-
-.dashboard-main-content {
-  flex-grow: 1;
-  display: block;
-  width: 100%;
-}
-
-.content-wrapper {
-  padding: 40px;
-  width: 100%;
-}
+.dashboard-main { flex-grow: 1; margin-left: 256px; display: flex; flex-direction: column; min-height: 100vh; }
+.dashboard-header { position: fixed; top: 0; left: 256px; right: 0; height: 80px; z-index: 10; display: flex; align-items: center; padding: 0 40px; background: #1a1a2e; border-bottom: 1px solid rgba(185, 121, 204, 0.3); }
+.dashboard-main-content { padding-top: 80px; flex-grow: 1; display: block; width: 100%; }
+.content-wrapper { padding: 40px; width: 100%; }
 
 @media (max-width: 1024px) {
   .dashboard-main {

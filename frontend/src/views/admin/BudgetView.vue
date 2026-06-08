@@ -4,7 +4,7 @@
     <div class="welcome-card">
       <h1 class="welcome-title">Budget Utilization Monitoring</h1>
       <p class="welcome-subtitle">
-        Track budget allocation, utilization, remaining balances, and percentage execution across all GAD units and tracked office mandates.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
       </p>
     </div>
 

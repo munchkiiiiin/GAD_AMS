@@ -5,7 +5,7 @@
         <span class="text-4xl text-purple-600">👤</span>
         <h1 class="text-2xl font-bold text-black">Assign Mandates</h1>
       </div>
-      <p class="text-slate-600 text-xs">Assign GAD mandates to accomplishment reports</p>
+      <p class="text-slate-600 text-xs">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
     </div>
 
     <div class="grid grid-cols-2 gap-8">

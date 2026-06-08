@@ -6,6 +6,8 @@ vendor/
 .env
 config/config.php
 database.php
+database.md
+*.pem
 
 # Log files
 logs/

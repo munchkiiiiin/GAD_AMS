@@ -16,7 +16,7 @@
             </p>
           </div>
           <div class="relative w-full aspect-square rounded-xl overflow-hidden shadow-2xl">
-            <img alt="Academic Building" class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8nYYL7wB7f7aO6xD9YmqF4a5EEvWxuG3gjap1VnrmGH6QoUtPdArd-LTbR6PAmLIf1R6P4DDC-2s_ZM1ncYyMn1i5wbipjXlYbmzfUM9NGZ8sEh9affvurdentdsie0DQNMXroezFpxyGlz_a0TkDVXF4F7T-9Y5dOjyOWhwggU1Wd2aUR3QcpIg4azf8r6vcJ-8yZCqmyID0XMuhcJ7iibjgZO2qVBoKJ_IBmUSgxB7wsD_3wjdtCnZxOfIEJQouT_McUGz5E8v3" />
+            <img alt="Academic Building" class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-700" src="/images/img_16.jpg" />
             <div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
             <div class="absolute bottom-6 left-6 right-6 text-white">
               <p class="text-sm font-label uppercase tracking-widest opacity-80 mb-2">Heritage & Excellence</p>
@@ -91,8 +91,9 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+// Restructuring the imports neatly to match your other files
+import api from '../api';
 
 const router = useRouter();
 const loading = ref(false);
@@ -119,11 +120,22 @@ const handleRegister = async () => {
   error.value = '';
   
   try {
-    const response = await axios.post('http://localhost:8080/api/register', form);
+    // FIX: Trimmed 'api/' prefix so it resolves neatly to standard base endpoints
+    const response = await api.post('register', form);
+    
     success.value = response.data.message;
     setTimeout(() => router.push('/login'), 2000);
   } catch (err) {
-    error.value = err.response?.data?.messages?.error || 'Registration failed. Please try again.';
+    console.error('Registration error context:', err);
+    
+    // Aligned error handling with your login file structure
+    if (err && err.messages) {
+      error.value = err.messages.error || 'Registration failed';
+    } else if (err && err.message) {
+      error.value = err.message;
+    } else {
+      error.value = 'Registration failed. Please try again.';
+    }
   } finally {
     loading.value = false;
   }

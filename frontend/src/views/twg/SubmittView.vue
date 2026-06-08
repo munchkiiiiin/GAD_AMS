@@ -39,7 +39,7 @@ const user = JSON.parse(localStorage.getItem('user') || '{}');
 
 onMounted(() => {
   // Check if user is logged in and has correct role
-  if (!user.id || !['TWG','Non-TWG','college'].includes(user.role)) {
+  if (!user.id || user.role !== 'college') {
     router.push('/login');
   }
 });

@@ -11,7 +11,7 @@
             </p>
           </div>
           <div class="relative h-[400px] rounded-xl overflow-hidden shadow-2xl">
-            <img alt="Academic Library" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7hEbm9jNmGbj6NmgWnmMdbTUD5MLfDz3zuiHR_0EK0wP3Vv0_z1urZJZSJnrmoVNafOqgAJQ6_Bb50hBeMav_Ge29stm52vtVCZ1Mok6CFcaNYuyM69fXoleXp1XPmfAl0GzNdPy-ghV4vd5H8juyoEQIDm7bBNRNAOApXW0TnBvDYYzOKuul9oiOxAsF925nyU83PMp23bQpaxTwXTt864E7mJmzhzhoaRE8GXP9ORafcjyyohbbqUdXEOY-o6TtwvQx62VT4xhV"/>
+            <img alt="Academic Library" class="w-full h-full object-cover" src="/images/img_17.jpg"/>
             <div class="absolute inset-0 bg-primary/20 mix-blend-multiply"></div>
           </div>
         </div>

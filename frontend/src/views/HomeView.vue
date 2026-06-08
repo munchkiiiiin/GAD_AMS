@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <section class="relative h-[870px] flex items-center overflow-hidden">
       <div class="absolute inset-0 z-0">
-        <img alt="BSU Campus" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDOUMOuclAu-k7ZxqNy3VQ_eDix1HnIcagflCDc85LJXkGDsEM5Sgxa1CvVgzh4iIY7RfckhFP5FUlNeIR8z1t-R4G1waaca3q4vj-AWYjSYAkEnLBIirE9M2KG1AdckM8_KSH-clmPRC3Ea785_TWAHJVJ9KoM8v8HnM92z_mtbcezKmziJLx7Ddd2dTFzS1SGWsFgoBnStRBIP_ld3N7yVjn7AMHrnecgHjXnzb_IXG_mEhYnk_1e1NPEJX_eVTZERULs__o4bVw"/>
+        <img alt="BSU Campus" class="w-full h-full object-cover" src="/images/img_10.jpg"/>
         <div class="absolute inset-0 hero-gradient"></div>
       </div>
       <div class="relative z-10 max-w-screen-2xl mx-auto px-12 w-full">
@@ -97,7 +97,7 @@
               </button>
             </div>
             <div class="md:w-1/2 h-64 md:h-auto">
-              <img alt="Counseling Session" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWfT6cC60lgVDULdoogzB-MqXy2W26P0mWQRwWZlGkE923q72CL7VsdlXrQ3ONVRtPpIAdz0loaZqNv752I6T4tWMpiGjfjFZ5fW24Sfoci_ohBW1qEVV9NE620yhOZ-daOtQ5_Ke3-ynCEfXJtIFHBYzVbaaW-eQSwnmTd5KrJTtgawPgSP7WFqL0f1fSXoc59OanXgqSLeqWF3vqqVO6Hx8TiUmjgINFqNzFOmzF5FN5tO8vU23t87uu5FIfJZCCqJ0rgoBGvnpJ"/>
+              <img alt="Counseling Session" class="w-full h-full object-cover" src="/images/img_11.jpg"/>
             </div>
           </div>
           <!-- Feature Card 2 -->
@@ -143,7 +143,7 @@
       <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-20">
         <div class="md:w-1/2 relative">
           <div class="absolute -top-10 -left-10 w-64 h-64 bg-secondary/10 rounded-full blur-3xl"></div>
-          <img alt="Graduation Celebration" class="rounded-2xl relative z-10 ambient-shadow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDh0KBhsxdP0gE0QZYEWZIY0FELpV7ApFuXzbZyo45dKpDNcR6NsmKAQxFhRJClYYOXRxhHzpEiDCMwF7SLpbJZ1n6s2qQ1KJpd0RWypvHsul9lOK93s5NkoNIe3tHD33Og52rmgHUvePUbeHk92Ng4u6PNu6COLoyhJxHRpBS9dwlfY3T9eE0YsKtVEf6lWVRlnEevVu54yIeW54fp4i-cGRoSl55Lwy6WDpAGcfbo3NQbMNgCW0s83PUH1Y82bO0NBsw4rwLcMvG-"/>
+          <img alt="Graduation Celebration" class="rounded-2xl relative z-10 ambient-shadow" src="/images/img_12.jpg"/>
           <div class="absolute -bottom-8 -right-8 bg-white p-8 rounded-xl ambient-shadow z-20">
             <div class="text-4xl font-headline font-extrabold text-primary">94%</div>
             <div class="text-sm font-bold text-on-surface-variant uppercase tracking-tighter">Community Satisfaction</div>
@@ -186,7 +186,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div class="group cursor-pointer">
             <div class="aspect-video rounded-xl overflow-hidden mb-6">
-              <img alt="Workshop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGonyIq11H0YrKS7sHEaTR-bjeFNyTROAaqsERXHB9Z79MJ5ag2Fs6GJzPbstjh1ympo-Le226brKiUfws4O4BwAiNG0_kKviSSnZmNNcfQdGjF-QNCrhPBYIyJgPdBKNMurFj0Xy8tmR0LUDlZHFirkM9K0NGK0ypZxQt1jz5AKQEZ0rOnFrrBk_8mflk0H72-NscfpMg0SyhdZ24Ldm-1YKhcRHLGohuiuIBaHPfyfHk84gvEXzFLq4Ja1zA8JYOzkKRCJ9IPFKi"/>
+              <img alt="Workshop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="/images/img_13.jpg"/>
             </div>
             <span class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-2 block">Event • Oct 24, 2024</span>
             <h3 class="text-xl font-headline font-bold text-primary group-hover:text-secondary transition-colors mb-3">Annual Gender Sensitivity Training for New Faculty</h3>
@@ -194,7 +194,7 @@
           </div>
           <div class="group cursor-pointer">
             <div class="aspect-video rounded-xl overflow-hidden mb-6">
-              <img alt="Students in Library" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCV4wDTnp7iABt-Xvr5EChTtGUouHrLJR0eW_Fb6DylccaUSNN-qB0xfKGpcwYuLUrDIonm5kt6cbbhYEXXQ8YSmkhWfx8SRv2f6Y8k0_Nidaig5ODfsxujeaWVwxpilgpkIOpzV5qZ703-2ZnkRbmx9-Wi7RU_w8vmKm8T1cmfW0SbC4GZkIOX3K0BPOWSVRHykkvUzeLhCLtjGdjDhH9oHOBXjlYUYw2OtmatQC1nvVCsBvAp00SuDWp3kK5L87uWuS1t_ZSsxn6n"/>
+              <img alt="Students in Library" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="/images/img_14.jpg"/>
             </div>
             <span class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-2 block">Announcement • Oct 15, 2024</span>
             <h3 class="text-xl font-headline font-bold text-primary group-hover:text-secondary transition-colors mb-3">Launch of the 2024 Student Wellness Survey</h3>
@@ -202,7 +202,7 @@
           </div>
           <div class="group cursor-pointer">
             <div class="aspect-video rounded-xl overflow-hidden mb-6">
-              <img alt="Legal Documents" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWwpnHzXN7HQGd8e-Sj3uqxgW4Spw_svqxT7HfmG3iO5gyjDLmt9KcRjH79IiGVtSaLUiA0LCxIW3-8yCs0iUtNfwPdpfZwwi6bC_nMo0o9ktJoIZPkzE2ba_0tCki9tIxXo8Uv_HHUhAf3gOoIkhxo3NTfP0gY5sIQDiCDHqqB5jhHZROubJ1i0CmprL2uQzFqEeQwnCtgE-USUV2ZPv5rhUpAivz_pVzmKsDZbBtlf2bIR5Zv7qdBM7S-OAkDyH5LvE2-l4i1nFv"/>
+              <img alt="Legal Documents" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="/images/img_15.jpg"/>
             </div>
             <span class="text-xs font-bold text-secondary uppercase tracking-[0.2em] mb-2 block">Policy • Oct 02, 2024</span>
             <h3 class="text-xl font-headline font-bold text-primary group-hover:text-secondary transition-colors mb-3">Updated Guidelines on Anti-Sexual Harassment</h3>

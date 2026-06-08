@@ -51,5 +51,4 @@ const navItems = [
 
 <style scoped>
 /* Ensure material symbols are available if not globally */
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 </style>

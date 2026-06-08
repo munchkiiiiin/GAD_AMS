@@ -9,7 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/manrope": "^5.2.8",
     "axios": "^1.16.1",
+    "material-symbols": "^0.44.12",
+    "sweetalert2": "^11.26.25",
     "vue": "^3.5.34",
     "vue-router": "^4.6.4"
   },

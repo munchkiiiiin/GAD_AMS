@@ -12,7 +12,7 @@
       <section class="mb-20">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
           <div class="lg:col-span-7 relative h-[400px] lg:h-[540px]">
-            <img alt="Featured Article" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXSUul2vJcK0ecat705QJaylXcLlfEmrDJDtuyKbWxsG3ejpgx2YIgIAk_XYYAX3Ua7Gqx0rG20VfyTHbzqXVdtOOM6BSoa4ULbnByA0Fhd1P1Pe5p-cMsxOhVA_E2gTx-1m50lsDGpTJvSBjUaIRwRRKdvHoRmNOfhtEakFK6y5hv-Z6r1Z9ihnYF2YIDzKXcbPGxP_4uajO-lJ4paZLlxz47YsVsWol_Z759C0BMB4L4Nq88M78K2iM-Jewci_22td2ok5qnOSC5"/>
+            <img alt="Featured Article" class="w-full h-full object-cover" src="/images/img_5.jpg"/>
             <div class="absolute top-6 left-6">
               <span class="bg-primary text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase">Featured Story</span>
             </div>
@@ -145,7 +145,7 @@ const posts = [
     readTime: '5 min read',
     title: 'Safe Spaces Workshop: Fostering Inclusivity in the Classroom',
     excerpt: 'Faculty members from all colleges gathered to discuss pedagogical shifts towards a more gender-neutral learning environment.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA_G-T1Vpm2ZjLuRu755YEaAGpt3V7Ler9sk6h4sKNar4xApm8zyfHC3kF-6wSYQ4Lz83Ie_T35icsIgans2YFzQ0i42u_duHDfyoZ71YsjYtgNt5qVqmzVsjPofsx_HzCADKPMnYVZt6rm1pYAs2g5OOQj-EXH9NAfsld8Aa1StDuxzNi5Cg_QMdBRmzl6H_BZ_jPfuSs8hn9MnxN69ymwycoiQim49fZbjH04lU0YU6vtc4LYqsy7VArmW0kR148hQFKtZcvDqjCR'
+    image: '/images/img_6.jpg'
   },
   {
     id: 2,
@@ -154,7 +154,7 @@ const posts = [
     readTime: '8 min read',
     title: 'Voices of BSU: A Retrospective on 20 Years of GAD',
     excerpt: 'Interviewing the pioneers who established the first gender desk in the Cordillera administrative region.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOd2mv2tzbeM8AuSFeoIXT0Z7VujFAuRd2-yjZVBXA2B9cPLJcDyMhOmoCLSCOa0xJQJu-63XnHgX8zR5wPNZpAbT6IqF1Y_HmVn3rvH6bRnEHgvNFP-ZrivtscjVp1ELzYQPAl68gUtDeqDBaDCszyqcICbZwJFtjyOhiiTE4kq5ko_NNMM4IbvRT6cx2KVdNu6ujkgZCK7ojvA0tGxMW1riRisFxi5RNeotfZYAi1NbTg76eEZ1STRpH6v-Y0TX1C8wNBg3wE8zh'
+    image: '/images/img_7.jpg'
   },
   {
     id: 3,
@@ -163,7 +163,7 @@ const posts = [
     readTime: '2 min read',
     title: 'Upcoming Seminar: Digital Citizenship and Online Gender Safety',
     excerpt: 'Join us this coming Friday for a webinar focusing on protecting students from cyber-harassment.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBS0v8kIFq1kNUaEUBVOnyek8ZRC8JZCXewDZT21S4xx5zhb_Re2o9fCwDvRI-ku437S4s985HvU48O0oOD0rU5gv242ae8U9L3L8smwKuuL5MO_-u6jPy7mW06xLoRuCw6U-8TM8CstK0fO0okIEsywIMLAoi4JKPiZDxOebJNP40kCr3EMY5MZZBAus5A0IznTHMqMwADeBs73wesw4ZkGpaWmqnMxW5BuDIXNLx6dpnYs11LpiMKcB1hF775-BDfuqHxdxj82ywx'
+    image: '/images/img_8.jpg'
   },
   {
     id: 4,
@@ -172,7 +172,7 @@ const posts = [
     readTime: '4 min read',
     title: 'Call for Proposals: 2025 Gender Equity Research Grants',
     excerpt: 'The GAD Council is now accepting research proposals that address urban-rural gender disparities in Cordillera.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBx0lc2Au-DLX0yKlhzfrMCQ_ggrg9nKcSi5wE0pSJ-2v8XsUYzcao1XYAzPXh5ZUaBknyQrVi6BDkppqnqpxs7QfwB5w5YkhKQIl4c7u58bAcrSoKelhFDGjQafAPyn9LTAvXS9BCpg77kPeuM7ytEb_pXMPrYakaDfXndimEwy6cKBQEVacgFmEM79oXGyiRoQCCFDtahmox_95wDjnGT-YJbB7OUojAaQD7cQ8Pa921avcVGYY9XRImAv8CwdZQ03IkuMXxni_BS'
+    image: '/images/img_9.jpg'
   }
 ];
 

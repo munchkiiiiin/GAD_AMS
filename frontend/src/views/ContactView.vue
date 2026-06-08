@@ -14,7 +14,7 @@
           </div>
           <div class="lg:col-span-5 hidden lg:block">
             <div class="h-64 rounded-xl overflow-hidden ambient-shadow relative border border-outline-variant/10">
-              <img alt="BSU GAD Office Environment" class="w-full h-full object-cover grayscale opacity-40 hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJMFB0V6BJxKILLaObo8EeoeP54iI0gQBX_xEuLB50u8LzHbFqNIeNt7D6SCBt3V-b5vVGIvRRxNDteKPhXcKGcFmA9aT2f5N-405q63120iKPsbSJZBpSqCmFG0pqcF_dxOJUYTTAgYdI8EvR7xDbaSdpy2u3W132D4Zb1HMlg2DXo8yM9pF3vcRDx01yZGFwOqPKashQtxTL4MgSbMvgGHRxqsBIyLyqRy6Vts-2_mx-iUeElxWkXf7DK87aWrlh-ROfVUBo6OmK"/>
+              <img alt="BSU GAD Office Environment" class="w-full h-full object-cover grayscale opacity-40 hover:grayscale-0 transition-all duration-700" src="/images/img_3.jpg"/>
               <div class="absolute inset-0 bg-primary/10 mix-blend-multiply"></div>
             </div>
           </div>
@@ -63,7 +63,7 @@
           </div>
           <div class="rounded-xl overflow-hidden h-64 grayscale-0 contrast-125 ambient-shadow border border-outline-variant/15">
             <div class="w-full h-full bg-surface-container-highest relative flex items-center justify-center overflow-hidden">
-              <img class="absolute inset-0 w-full h-full object-cover opacity-20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAueGXkEMRk4J-bnXRl0jwhvdtGyu_w2MclS4gmOPbguVDT1_D7zWgrtINGvHQTjC9aGPZGrxi4nwaWr6Ux033HFFXoJIz8GtgyEldmaGxJmJXOvBn8mRgZnb-yymRLYCNZHqtwYIAj0ShqYHd79M6rkRlIovKtuS6uh56xWys5mxhByPOVEBjIMACN4w6F82B_QxqcwG0PWpOakiugtpFv5JHHcx7yK_OB-dsr278qgt57bOGVDFjZI8-o0qDAf8YpG5EED5yNBJPH"/>
+              <img class="absolute inset-0 w-full h-full object-cover opacity-20" src="/images/img_4.jpg"/>
               <div class="relative z-10 text-center">
                 <span class="material-symbols-outlined text-primary text-4xl mb-2">map</span>
                 <p class="text-primary font-headline font-bold">BSU Main Campus Map</p>

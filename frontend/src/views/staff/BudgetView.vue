@@ -6,7 +6,7 @@
             <div class="header-main-flex">
               <div>
                 <h1 class="page-title">Budget Utilization Monitoring</h1>
-                <p class="page-subtitle">Track budget allocation, utilization, remaining balances, and percentage utilization across all GAD units and offices.</p>
+                <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
               </div>
               <button @click="router.push('/staff/budget-allocation')" class="allocation-btn">
                 <span class="material-symbols-outlined btn-icon">payments</span>

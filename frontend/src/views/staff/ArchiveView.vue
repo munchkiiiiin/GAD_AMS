@@ -2,6 +2,12 @@
 
       <main class="flex-1 overflow-y-auto">
         <div class="max-w-7xl mx-auto">
+
+          <div class="page-header">
+            <h1 class="page-title">Archives Tracker</h1>
+            <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+
           <div class="stats-container">
             <div class="stat-card-purple">
               <div class="stat-card-inner">
@@ -207,10 +213,10 @@ const archivedReports = ref([]);
 const loading = ref(false);
 const activeTab = ref('designs');
 
-const filters = ref({ // Initialize filters for archive view
-  status: 'all', // 'all', 'approved', 'verified', 'cancelled'
-  sort: 'date_desc', // 'date_desc', 'date_asc', 'control_asc', 'control_desc'
-  search: '' // Search by title or control number
+const filters = ref({ 
+  status: 'all',
+  sort: 'date_desc',
+  search: '' 
 });
 
 const currentPage = ref(1);
@@ -221,11 +227,11 @@ const totalArchived = computed(() => {
 });
 
 const approvedDesigns = computed(() => {
-  return archivedDesigns.value.filter(d => d.status === 'approved').length;
+  return archivedDesigns.value.length;
 });
 
 const completedReports = computed(() => {
-  return archivedReports.value.filter(r => r.status === 'verified').length;
+  return archivedReports.value.length;
 });
 
 const totalDesigns = computed(() => {
@@ -244,9 +250,9 @@ const filteredItems = computed(() => {
   let items = [...currentSourceData.value];
   
   if (filters.value.status === 'completed') {
-    items = items.filter(item => item.status === 'approved' || item.status === 'verified');
+    items = items.filter(item => item.status.toLowerCase() === 'approved' || item.status.toLowerCase() === 'verified');
   } else if (filters.value.status === 'cancelled') {
-    items = items.filter(item => item.status === 'cancelled');
+    items = items.filter(item => item.status.toLowerCase() === 'cancelled');
   }
   
   if (filters.value.search.trim()) {
@@ -268,7 +274,7 @@ const filteredItems = computed(() => {
     case 'date_asc':
       sorted.sort((a, b) => new Date(a.dateRaw) - new Date(b.dateRaw));
       break;
-    default: // date_desc
+    default: 
       sorted.sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
   }
   
@@ -328,6 +334,15 @@ const fetchArchives = async () => {
   }
 };
 
+const formatDate = (date) => {
+  if (!date) return '---';
+  return new Date(date).toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+};
+
 const formatFormType = (type) => {
   const types = { 'inset': 'INSET Training', 'extension': 'Extension Program', 'employee': 'Employee Training' };
   return types[type] || type;
@@ -340,13 +355,11 @@ const getFormClass = (type) => {
 const getStatusClass = (status) => {
   if (!status) return '';
   const s = status.toLowerCase();
-  if (s === 'approved' || s === 'verified') return 'status-badge-approved'; // Use approved for both completed
-  if (s === 'cancelled') return 'status-badge-revision'; // Using revision style for cancelled
-  return 'status-badge-pending'; // Fallback
+  if (s === 'approved') return 'status-approved';
+  if (s === 'verified') return 'status-completed';
+  if (s === 'cancelled') return 'status-revision';
+  return 'status-pending';
 };
-
-
-
 
 const applyFilters = () => {
   currentPage.value = 1;
@@ -369,9 +382,9 @@ const changePage = (page) => {
 
 const viewItem = (item) => {
   if (item.type === 'design') {
-    router.push({ name: 'staff-ad-view', params: { id: item.id } });
+    router.push(`/staff/ad-view/${item.id}`);
   } else {
-    router.push({ name: 'staff-ar-view', params: { id: item.id } });
+    router.push(`/staff/ar-view/${item.id}`);
   }
 };
 
@@ -395,6 +408,22 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.page-header {
+  padding: 0 0.25rem 1.5rem 0;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  color: #16213e;
+}
+
+.page-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
 .stats-container {
   display: grid;
   grid-template-columns: 1fr;

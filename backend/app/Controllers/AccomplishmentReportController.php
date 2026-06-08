@@ -10,7 +10,6 @@ class AccomplishmentReportController extends BaseController
     {
         $accomplishmentReportModel = new AccomplishmentReportModel();
 
-        // FIX 1: Ensure upload parameter name aligns with frontend append statement ('attachment')
         $rules = [
             "activity-title"      => "required",
             "control-number"      => "required",
@@ -27,8 +26,7 @@ class AccomplishmentReportController extends BaseController
             "attachment"         => "uploaded[attachment]|max_size[attachment,10240]|ext_in[attachment,pdf]",
         ];
 
-        if (!$this->validate($rules)) { // Removed $messages as it's not defined
-            // FIX 2: Return errors as a JSON object, not a view
+        if (!$this->validate($rules)) { 
             return $this->response->setJSON([
                 "success" => false,
                 "errors"  => $this->validator->getErrors()
@@ -36,7 +34,6 @@ class AccomplishmentReportController extends BaseController
         }
 
         try {
-            // FIX 3: Process and store physical upload file appropriately
             $file = $this->request->getFile('attachment');
             $fileName = '';
 
@@ -44,7 +41,6 @@ class AccomplishmentReportController extends BaseController
                 $fileName = $file->getRandomName();
                 $uploadPath = FCPATH . 'uploads';
 
-                // Automatically create the directory if it doesn't exist
                 if (!is_dir($uploadPath)) {
                     mkdir($uploadPath, 0777, true);
                 }
@@ -80,7 +76,6 @@ class AccomplishmentReportController extends BaseController
                 ]);
             }
 
-            // If insertion fails (e.g. model validation), return specific errors
             return $this->response->setJSON([
                 "success" => false,
                 "message" => "Failed to save data into database.",
@@ -99,14 +94,18 @@ class AccomplishmentReportController extends BaseController
     {
         $accomplishmentReportModel = new AccomplishmentReportModel();
         
-        // Fetch reports with joined data for the list view
         $reports = $accomplishmentReportModel
-            ->select('accomplishment_report.*, control_number.control_number as control, accomplishment_report.activity_title as title, DATE_FORMAT(accomplishment_report.created_at, "%Y-%m-%d") as date, users.username as office, activity_design.form_type as formLabel')
+            ->select('accomplishment_report.*, control_number.control_number as control, accomplishment_report.activity_title as title, DATE_FORMAT(accomplishment_report.created_at, "%Y-%m-%d") as date, users.username as office, activity_design.form_type as formLabel, accomplishment_report.attachment as fileName')
             ->join('users', 'users.id = accomplishment_report.user_id', 'left')
             ->join('control_number', 'control_number.control_number = accomplishment_report.control_number', 'left')
             ->join('activity_design', 'activity_design.act_design_id = control_number.act_design_id', 'left')
             ->orderBy('accomplishment_report.id', 'DESC')
             ->findAll();
+
+        // Add a full URL for the attachment helper
+        foreach ($reports as &$report) {
+            $report['attachment_url'] = $report['attachment'] ? base_url('uploads/' . $report['attachment']) : null;
+        }
 
         return $this->response->setJSON([
             'success' => true,
@@ -122,7 +121,7 @@ class AccomplishmentReportController extends BaseController
 
         $accomplishmentReportModel = new AccomplishmentReportModel();
         $report = $accomplishmentReportModel
-            ->select('accomplishment_report.*, control_number.control_number as control, DATE_FORMAT(accomplishment_report.created_at, "%Y-%m-%d") as date, users.username as office, activity_design.form_type as formLabel')
+            ->select('accomplishment_report.*, control_number.control_number as control, DATE_FORMAT(accomplishment_report.created_at, "%Y-%m-%d") as date, users.username as office, activity_design.form_type as formLabel, accomplishment_report.attachment as fileName')
             ->join('users', 'users.id = accomplishment_report.user_id', 'left')
             ->join('control_number', 'control_number.control_number = accomplishment_report.control_number', 'left')
             ->join('activity_design', 'activity_design.act_design_id = control_number.act_design_id', 'left')
@@ -130,12 +129,24 @@ class AccomplishmentReportController extends BaseController
             ->first();
 
         if (!$report) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Report not found'])->setStatusCode(404);
+            $db = \Config\Database::connect();
+            $report = $db->table('archived_accomplishment_reports as aar')
+                ->select('aar.*, aar.original_report_id as id, aar.activity_title as title, DATE_FORMAT(aar.created_at, "%Y-%m-%d") as date, users.username as office, aar.control_number as control')
+                ->join('users', 'users.id = aar.user_id', 'left')
+                ->where('aar.original_report_id', $id)
+                ->get()->getRowArray();
+
+            if (!$report) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Report not found'])->setStatusCode(404);
+            }
+        }
+
+        if ($report) {
+            $report['attachment_url'] = $report['attachment'] ? base_url('uploads/' . $report['attachment']) : null;
         }
 
         return $this->response->setJSON(['success' => true, 'data' => $report]);
     }
-
 
     public function getUserReports($userId = null)
     {
@@ -163,7 +174,6 @@ class AccomplishmentReportController extends BaseController
     {
         $accomplishmentReportModel = new AccomplishmentReportModel();
 
-        // Fetch reports that are 'Verified' or 'Cancelled'
         $reports = $accomplishmentReportModel
             ->select('accomplishment_report.*, control_number.control_number as control, accomplishment_report.activity_title as title, DATE_FORMAT(accomplishment_report.created_at, "%Y-%m-%d") as date, users.username as office, activity_design.form_type as formLabel')
             ->join('users', 'users.id = accomplishment_report.user_id', 'left')
@@ -177,5 +187,64 @@ class AccomplishmentReportController extends BaseController
             'success' => true,
             'data'    => $reports
         ]);
+    }
+
+    public function updateReport($id)
+    {
+        $model = new AccomplishmentReportModel();
+        
+        $report = $model->find($id);
+        if (!$report) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => "Accomplishment report #$id not found."
+            ])->setStatusCode(404);
+        }
+
+        $data = [
+            'activity_title' => $this->request->getPost('activity_title'),
+            'control_number' => $this->request->getPost('control_number'),
+            'start_date'     => $this->request->getPost('start_date'),
+            'end_date'       => $this->request->getPost('end_date'),
+            'start_time'     => $this->request->getPost('start_time'),
+            'end_time'       => $this->request->getPost('end_time'),
+            'venue'          => $this->request->getPost('venue'),
+            'attendees'      => $this->request->getPost('attendees'),
+            'male'           => $this->request->getPost('male'),
+            'female'         => $this->request->getPost('female'),
+            'rating'         => $this->request->getPost('rating'),
+            'status'         => $this->request->getPost('status') ?? 'Pending',
+        ];
+
+        $updateData = array_filter($data, function($value) {
+            return $value !== null && $value !== '';
+        });
+
+        $file = $this->request->getFile('attachment');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $newName = $file->getRandomName();
+            $file->move(FCPATH . 'uploads', $newName);
+            $updateData['attachment'] = $newName;
+        }
+
+        try {
+            if ($model->update($id, $updateData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Accomplishment Report updated and resubmitted successfully.'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Database update failed.',
+                    'errors'  => $model->errors()
+                ])->setStatusCode(400);
+            }
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server Error: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
     }
 }

@@ -5,8 +5,8 @@
           
           <section class="filter-panel">
             <div>
-              <h1 class="filter-title">Consolidated Report</h1>
-              <p class="filter-subtitle">Yearly overview tracking total corporate mandates and combined beneficiary participant metrics.</p>
+              <h1 class="filter-title">Report Monitoring</h1>
+              <p class="filter-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
             </div>
             
             <div class="year-selector-wrapper">

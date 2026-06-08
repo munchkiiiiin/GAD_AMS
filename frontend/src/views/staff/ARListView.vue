@@ -4,7 +4,7 @@
           
           <div class="page-header">
             <h1 class="page-title">Accomplishment Reports Tracker</h1>
-            <p class="page-subtitle">Audit evidence logs, review physical outcomes, and process final evaluation matrices for verified activities.</p>
+            <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
           </div>
 
           <section class="stats-section">
@@ -61,14 +61,13 @@
                 >
                   <option value="all">All Statuses</option>
                   <option value="Pending">Pending Review</option>
-                  <option value="Verified">Verified</option>
                   <option value="Revision Required">Revision Required</option>
                 </select>
                 <span class="select-arrow">▼</span>
               </div>
             </div>
 
-            <div class="per-page-controls">
+            <!-- <div class="per-page-controls">
               <span class="per-page-label">Show</span>
               <select 
                 v-model="perPage"
@@ -79,7 +78,7 @@
                 <option :value="25">25</option>
               </select>
               <span class="per-page-label">records</span>
-            </div>
+            </div> -->
           </section>
 
           <div class="table-container">
@@ -104,9 +103,9 @@
                   
                   <tr 
                     v-else
-                    v-for="item in filteredReports" 
+                    v-for="item in paginatedReports" 
                     :key="item.id"
-                    @click="viewDetails(item.id)"
+                    @click="viewDetails(item)"
                     class="table-row"
                   >
                     <td class="table-cell control-cell">
@@ -176,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 
@@ -194,7 +193,10 @@ const officeOptions = ref([]);
 const accomplishmentReports = ref([]);
 const currentPage = ref(1);
 const perPage = ref(10);
-const paginationMeta = ref({ total: 0, from: 0, to: 0, last_page: 1 });
+
+watch([filters, perPage], () => {
+  currentPage.value = 1;
+}, { deep: true });
 
 const metricsStats = ref([
   { label: 'Total Reports', value: '0', icon: 'analytics', iconColor: 'text-blue-400', bgClass: 'bg-blue-500/10' },
@@ -207,7 +209,10 @@ const filteredReports = computed(() => {
   let records = accomplishmentReports.value;
   if (filters.value.search) {
     const q = filters.value.search.toLowerCase();
-    records = records.filter(i => i.control.toLowerCase().includes(q) || i.title.toLowerCase().includes(q));
+    records = records.filter(i => 
+      (i.control && i.control.toLowerCase().includes(q)) || 
+      (i.title && i.title.toLowerCase().includes(q))
+    );
   }
   if (filters.value.office !== 'all') {
     records = records.filter(i => i.office === filters.value.office);
@@ -218,14 +223,47 @@ const filteredReports = computed(() => {
   return records;
 });
 
+const paginatedReports = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value;
+  const end = start + perPage.value;
+  return filteredReports.value.slice(start, end);
+});
+
+const paginationMeta = computed(() => {
+  const total = filteredReports.value.length;
+  const lastPage = Math.ceil(total / perPage.value) || 1;
+  const from = total === 0 ? 0 : (currentPage.value - 1) * perPage.value + 1;
+  const to = Math.min(currentPage.value * perPage.value, total);
+  
+  return {
+    total,
+    from,
+    to,
+    last_page: lastPage
+  };
+});
+
 const statusBadgeClass = (status) => {
-  if (status === 'Verified') return 'status-badge-verified';
-  if (status === 'Revision Required') return 'status-badge-revision';
+  const s = status?.toLowerCase() || '';
+  if (s.includes('verified')) return 'status-badge-verified';
+  if (s.includes('revision')) return 'status-badge-revision';
+  if (s.includes('pending')) return 'status-badge-pending';
   return 'status-badge-pending';
 };
 
-const viewDetails = (id) => {
-  router.push(`/staff/ar-view/${id}`);
+const viewDetails = (item) => {
+  const id = item.id || item.act_report_id;
+  const currentUserId = user.value.id || user.value.user_id;
+  const status = item.status?.toLowerCase() || '';
+  const isOwner = Number(item.user_id) === Number(currentUserId);
+
+  // Redirect to revision page only if status is revision and user is the submitter
+  if (status.includes('revision') && isOwner) {
+    router.push(`/staff/ar-revision/${id}`);
+  } else {
+    // Default to read-only view for all other statuses or non-owners
+    router.push(`/staff/ar-view/${id}`);
+  }
 };
 
 const fetchReports = async () => {
@@ -236,21 +274,13 @@ const fetchReports = async () => {
       
       // Update Statistics
       metricsStats.value[0].value = accomplishmentReports.value.length.toString();
-      metricsStats.value[1].value = accomplishmentReports.value.filter(r => r.status === 'Pending').length.toString();
-      metricsStats.value[2].value = accomplishmentReports.value.filter(r => r.status === 'Verified').length.toString();
-      metricsStats.value[3].value = accomplishmentReports.value.filter(r => r.status === 'Revision Required').length.toString();
+      metricsStats.value[1].value = accomplishmentReports.value.filter(r => r.status?.toLowerCase().includes('pending')).length.toString();
+      metricsStats.value[2].value = accomplishmentReports.value.filter(r => r.status?.toLowerCase().includes('verified')).length.toString();
+      metricsStats.value[3].value = accomplishmentReports.value.filter(r => r.status?.toLowerCase().includes('revision')).length.toString();
 
       // Extract Unique Offices for Filter
       const offices = [...new Set(accomplishmentReports.value.map(r => r.office).filter(Boolean))];
       officeOptions.value = offices.sort();
-
-      // Basic Pagination Meta Setup
-      paginationMeta.value = {
-        total: accomplishmentReports.value.length,
-        from: accomplishmentReports.value.length > 0 ? 1 : 0,
-        to: accomplishmentReports.value.length,
-        last_page: Math.ceil(accomplishmentReports.value.length / perPage.value) || 1
-      };
     }
   } catch (err) {
     console.error(err);
@@ -418,7 +448,7 @@ onMounted(() => {
 .text-blue-400 { color: #60a5fa; }
 .text-amber-400 { color: #fbbf24; }
 .text-cyan-400 { color: #22d3ee; }
-.text-red-400 { color: #f87171; }
+.text-red-400 { color: #ef4444; }
 
 .bg-blue-500\/10 { background: rgba(59, 130, 246, 0.1); }
 .bg-amber-500\/10 { background: rgba(245, 158, 11, 0.1); }
@@ -693,9 +723,9 @@ onMounted(() => {
 }
 
 .status-badge-revision {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 /* Pagination */

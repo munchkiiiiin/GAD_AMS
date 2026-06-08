@@ -36,19 +36,32 @@ $routes->group('api', function($routes) {
     $routes->options('activity-reports/(:num)', 'AccomplishmentReportController::getUserReports/$1');
     $routes->get('activity-reports/(:num)', 'AccomplishmentReportController::getUserReports/$1');
 
+
+    // Route for updating activity designs during revision
+    $routes->options('update-design/(:num)', 'ActivityDesignController::updateDesign/$1');
+    $routes->post('update-design/(:num)', 'ActivityDesignController::updateDesign/$1');
+
+    $routes->options('update-report/(:num)', 'AccomplishmentReportController::updateReport/$1');
+    $routes->post('update-report/(:num)', 'AccomplishmentReportController::updateReport/$1');
+
+    
     // Route for fetching approved control numbers
     $routes->get('approved-controls/(:num)', 'ApprovedControlsController::index/$1');
 
 
     // Routes for archived items
-    $routes->options('archived-designs', 'ActivityDesignController::getArchivedDesigns');
-    $routes->get('archived-designs', 'ActivityDesignController::getArchivedDesigns');
-    $routes->options('archived-reports', 'AccomplishmentReportController::getArchivedReports');
-    $routes->get('archived-reports', 'AccomplishmentReportController::getArchivedReports');
+    $routes->options('archives', 'ArchiveController::index');
+    $routes->get('archives', 'ArchiveController::index');
+    $routes->post('archive-design/(:num)', 'ArchiveController::archiveDesign/$1');
+    $routes->post('archive-report/(:num)', 'ArchiveController::archiveReport/$1');
 
     // Admin tracking routes
     $routes->get('admin/twg-submissions', 'ActivityDesignController::getTWGSubmissions');
 
+
+    // Routes for storage
+    $routes->options('get-upload-ticket', 'StorageController::getUploadTicket');
+    $routes->get('get-upload-ticket', 'StorageController::getUploadTicket');
 
     $routes->options('login', 'AuthController::login');
     $routes->post('login', 'AuthController::login');

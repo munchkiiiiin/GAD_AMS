@@ -10,7 +10,6 @@ class ActivityDesignController extends BaseController
     {
         $activityDesignModel = new ActivityDesignModel();
 
-        // FIX 1: Ensure upload parameter name aligns with frontend append statement ('attachment')
         $rules = [
             "form-type"           => "required",
             "activity-title"      => "required",
@@ -171,7 +170,19 @@ class ActivityDesignController extends BaseController
             ->first();
 
         if (!$design) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Activity design not found'])->setStatusCode(404);
+            // Try searching in archive fallback
+            $db = \Config\Database::connect();
+            $design = $db->table('archived_activity_designs as aad')
+                ->select('aad.*, aad.original_act_design_id as act_design_id, aad.activity_title as title, aad.form_type as formLabel, users.username as office, aad.start_date as date')
+                ->join('users', 'users.id = aad.user_id', 'left')
+                ->join('control_number as cn', 'cn.act_design_id = aad.original_act_design_id', 'left')
+                ->select('COALESCE(cn.control_number, "N/A") as control')
+                ->where('aad.original_act_design_id', $id)
+                ->get()->getRowArray();
+
+            if (!$design) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Activity design not found'])->setStatusCode(404);
+            }
         }
 
         return $this->response->setJSON(['success' => true, 'data' => $design]);
@@ -220,7 +231,6 @@ class ActivityDesignController extends BaseController
     {
         $activityDesignModel = new ActivityDesignModel();
 
-        // Fetch designs that are 'Approved' or 'Cancelled'
         $designs = $activityDesignModel
             ->select('activity_design.*, control_number.control_number as control, users.username as office, activity_design.activity_title as title, activity_design.form_type as formLabel, activity_design.start_date as date')
             ->join('users', 'users.id = activity_design.user_id', 'left')
@@ -233,5 +243,63 @@ class ActivityDesignController extends BaseController
             'success' => true,
             'data'    => $designs
         ]);
+    }
+
+    public function updateDesign($id)
+    {
+        $model = new ActivityDesignModel(); 
+        
+        $design = $model->find($id);
+        if (!$design) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => "Activity design record #$id not found."
+            ])->setStatusCode(404);
+        }
+
+        $data = [
+            'activity_title'      => $this->request->getPost('activity_title'),
+            'form_type'           => $this->request->getPost('form_type'),
+            'start_date'          => $this->request->getPost('start_date'),
+            'end_date'            => $this->request->getPost('end_date'),
+            'start_time'          => $this->request->getPost('start_time'),
+            'end_time'            => $this->request->getPost('end_time'),
+            'venue'               => $this->request->getPost('venue'),
+            'proposed_budget'     => $this->request->getPost('proposed_budget'),
+            'target_participants' => $this->request->getPost('target_participants'),
+            'status'              => $this->request->getPost('status') ?? 'Pending', 
+        ];
+
+        $updateData = array_filter($data, function($value) {
+            return $value !== null && $value !== '';
+        });
+
+        $file = $this->request->getFile('attachment');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+
+            $newName = $file->getRandomName();
+            $file->move(FCPATH . 'uploads', $newName);
+            $updateData['attachment'] = $newName;
+        }
+
+        try {
+            if ($model->update($id, $updateData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Activity Design updated and resubmitted successfully.'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Database update failed.',
+                    'errors'  => $model->errors()
+                ])->setStatusCode(400);
+            }
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
     }
 }

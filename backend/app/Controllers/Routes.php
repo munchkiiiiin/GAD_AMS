@@ -14,6 +14,11 @@ $routes->group('api', function($routes) {
     $routes->options('submit-activity-report', 'AccomplishmentReportController::submitReport');
     $routes->post('submit-activity-report', 'AccomplishmentReportController::submitReport');
 
+    // Routes for updating/resubmitting reports and designs
+    $routes->options('update-activity-report/(:num)', 'AccomplishmentReportController::updateReport/$1');
+    $routes->post('update-activity-report/(:num)', 'AccomplishmentReportController::updateReport/$1');
+    $routes->options('update-activity-design/(:num)', 'ActivityDesignController::updateDesign/$1');
+    $routes->post('update-activity-design/(:num)', 'ActivityDesignController::updateDesign/$1');
 
     // Route for fetching all designs and reports (for staff/admin)
     $routes->options('activity-designs', 'ActivityDesignController::index');

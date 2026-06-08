@@ -4,7 +4,7 @@
           
           <div class="page-header">
             <h1 class="page-title">Accomplishment Reports Tracker</h1>
-            <p class="page-subtitle">Audit evidence logs, review physical outcomes, and process final evaluation matrices for verified activities.</p>
+            <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
           </div>
 
           <section class="stats-section">
@@ -61,14 +61,13 @@
                 >
                   <option value="all">All Statuses</option>
                   <option value="Pending">Pending Review</option>
-                  <option value="Verified">Verified</option>
                   <option value="Revision Required">Revision Required</option>
                 </select>
                 <span class="select-arrow">▼</span>
               </div>
             </div>
 
-            <div class="per-page-controls">
+            <!-- <div class="per-page-controls">
               <span class="per-page-label">Show</span>
               <select 
                 v-model="perPage"
@@ -79,7 +78,7 @@
                 <option :value="25">25</option>
               </select>
               <span class="per-page-label">records</span>
-            </div>
+            </div> -->
           </section>
 
           <div class="table-container">
@@ -195,7 +194,6 @@ const accomplishmentReports = ref([]);
 const currentPage = ref(1);
 const perPage = ref(10);
 
-// Reset to first page when filtering or changing page size
 watch([filters, perPage], () => {
   currentPage.value = 1;
 }, { deep: true });
@@ -246,13 +244,15 @@ const paginationMeta = computed(() => {
 });
 
 const statusBadgeClass = (status) => {
-  if (status === 'Verified') return 'status-badge-verified';
-  if (status === 'Revision Required') return 'status-badge-revision';
+  const s = status?.toLowerCase() || '';
+  if (s.includes('verified')) return 'status-badge-verified';
+  if (s.includes('revision')) return 'status-badge-revision';
+  if (s.includes('pending')) return 'status-badge-pending';
   return 'status-badge-pending';
 };
 
 const viewDetails = (id) => {
-  router.push(`/admin/ar-view/${id}`);
+  router.push(`/admin/ar-review/${id}`);
 };
 
 const fetchReports = async () => {
@@ -263,9 +263,9 @@ const fetchReports = async () => {
       
       // Update Statistics
       metricsStats.value[0].value = accomplishmentReports.value.length.toString();
-      metricsStats.value[1].value = accomplishmentReports.value.filter(r => r.status === 'Pending').length.toString();
-      metricsStats.value[2].value = accomplishmentReports.value.filter(r => r.status === 'Verified').length.toString();
-      metricsStats.value[3].value = accomplishmentReports.value.filter(r => r.status === 'Revision Required').length.toString();
+      metricsStats.value[1].value = accomplishmentReports.value.filter(r => r.status?.toLowerCase().includes('pending')).length.toString();
+      metricsStats.value[2].value = accomplishmentReports.value.filter(r => r.status?.toLowerCase().includes('verified')).length.toString();
+      metricsStats.value[3].value = accomplishmentReports.value.filter(r => r.status?.toLowerCase().includes('revision')).length.toString();
 
       // Extract Unique Offices for Filter
       const offices = [...new Set(accomplishmentReports.value.map(r => r.office).filter(Boolean))];

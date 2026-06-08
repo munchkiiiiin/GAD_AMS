@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 30, 2026 at 05:59 AM
+-- Generation Time: Jun 07, 2026 at 03:02 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.5.6
 
@@ -51,8 +51,9 @@ CREATE TABLE `accomplishment_report` (
 --
 
 INSERT INTO `accomplishment_report` (`id`, `control_number`, `activity_title`, `start_date`, `end_date`, `start_time`, `end_time`, `venue`, `attendees`, `male`, `female`, `rating`, `attachment`, `user_id`, `status`, `created_at`) VALUES
-(1, 'GAD-2024-001', 'Voluptatum doloremqu', '2000-10-06', '1988-01-28', '23:45:00', '15:05:00', 'Qui rem reprehenderi', 58, 35, 28, 86, '1779884224_2f4c9f25b5500814d806.pdf', 47, 'Pending', '2026-05-27 12:17:04'),
-(2, 'GAD-2024-003', 'Exercitationem dolor', '2010-07-11', '2016-09-14', '10:32:00', '16:05:00', 'Dolor sit irure dolo', 41, 22, 22, 20, '1780114466_73f25e1fd9093a3537ec.pdf', 2, 'Pending', '2026-05-30 04:14:26');
+(1, 'GAD-2024-001', 'Sample Accomplishment Report For Revision', '2026-05-01', '2026-05-01', '13:00:00', '16:00:00', 'College of Veterinary Medicine, Social Hall', 58, 35, 28, 86, '1780743455_3e48d0d629d603c3eea4.pdf', 47, 'Revision', '2026-05-27 12:17:04'),
+(2, 'GAD-2024-003', 'Exercitationem dolor', '2010-07-11', '2016-09-14', '10:32:00', '16:05:00', 'Dolor sit irure dolo', 41, 22, 22, 20, '1780114466_73f25e1fd9093a3537ec.pdf', 2, 'Pending', '2026-05-30 04:14:26'),
+(3, 'GAD-2024-003', 'Another Accomplishment Report for Revision', '2026-05-02', '2026-05-02', '08:30:00', '12:00:00', 'CVM Social Hall', 38, 20, 18, 36, '1780744417_e0280d0fcfa3c2f6a5ea.pdf', 2, 'Revision', '2026-06-06 11:13:37');
 
 -- --------------------------------------------------------
 
@@ -82,11 +83,78 @@ CREATE TABLE `activity_design` (
 --
 
 INSERT INTO `activity_design` (`act_design_id`, `activity_title`, `start_date`, `end_date`, `start_time`, `end_time`, `status`, `attachment`, `user_id`, `gpb_id`, `venue`, `target_participants`, `proposed_budget`, `form_type`) VALUES
-(1, 'Voluptatum doloremqu', '2000-10-06', '1988-01-28', '23:45:00', '15:05:00', 'Pending', '1779877140_31b6724d338a0bb7c2e7.pdf', 47, NULL, 'Qui rem reprehenderi', 58, 60, 'extension'),
-(2, 'Eu Nam non itaque qu', '1977-09-03', '2018-06-05', '17:34:00', '06:11:00', 'Pending', '1779880718_f0964cad8b90daa94468.pdf', 47, NULL, 'Cupiditate voluptate', 26, 37, 'extension'),
+(1, 'Sample Activity Design', '2026-06-01', '2026-06-02', '08:00:00', '12:00:00', 'Pending', '1780739453_ad591e4db8d1d746a0b4.pdf', 47, NULL, 'College of Teacher Education, Function Hall', 112, 6000, 'employee'),
+(2, 'Eu Nam non itaque qu', '1977-09-03', '2018-06-05', '17:34:00', '06:11:00', 'Revision', '1780739609_ae4bef8b6ed1f9e3005f.pdf', 47, NULL, 'Cupiditate voluptate', 26, 37, 'extension'),
 (3, 'Exercitationem dolor', '2010-07-11', '2016-09-14', '10:32:00', '16:05:00', 'Pending', '1779948695_310c88237b212824d580.pdf', 47, NULL, 'Dolor sit irure dolo', 41, 77, 'inset'),
-(4, 'Officia deserunt ill', '1974-07-22', '1984-03-02', '17:13:00', '02:36:00', 'Pending', '1780114334_1789776b8290ab550748.pdf', 2, NULL, 'Dicta est eos aut mo', 11, 13, 'extension'),
+(4, 'Sample Activity Design for Revision', '2026-06-06', '2026-06-06', '13:00:00', '15:00:00', 'Revision', '1780222839_27159794b255e4d86955.pdf', 2, NULL, 'Office of Student Services, Social Hall', 52, 1300, 'extension'),
 (5, 'Nostrum exercitation', '1983-10-12', '2016-09-03', '19:39:00', '00:58:00', 'Pending', '1780117957_4ec41dfc077083083b92.pdf', 2, NULL, 'Aute repellendus Ad', 89, 31, 'extension');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `archived_accomplishment_reports`
+--
+
+CREATE TABLE `archived_accomplishment_reports` (
+  `archive_id` int(11) NOT NULL,
+  `original_report_id` int(11) NOT NULL,
+  `control_number` varchar(50) NOT NULL,
+  `activity_title` text NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `venue` varchar(255) NOT NULL,
+  `attendees` int(11) NOT NULL,
+  `male` int(11) NOT NULL,
+  `female` int(11) NOT NULL,
+  `rating` int(11) NOT NULL,
+  `attachment` varchar(255) NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `status` varchar(20) DEFAULT 'Completed',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `archived_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `archived_accomplishment_reports`
+--
+
+INSERT INTO `archived_accomplishment_reports` (`archive_id`, `original_report_id`, `control_number`, `activity_title`, `start_date`, `end_date`, `start_time`, `end_time`, `venue`, `attendees`, `male`, `female`, `rating`, `attachment`, `user_id`, `status`, `created_at`, `archived_at`) VALUES
+(1, 1, 'GAD-2024-001', 'Voluptatum doloremqu', '2026-06-15', '2026-06-17', '08:00:00', '17:00:00', 'Qui rem reprehenderi', 58, 30, 28, 92, '1779884224_2f4c9f25b5500814d806.pdf', 47, 'Completed', '2026-05-27 04:17:04', '2026-05-29 23:02:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `archived_activity_designs`
+--
+
+CREATE TABLE `archived_activity_designs` (
+  `archive_id` int(11) NOT NULL,
+  `original_act_design_id` int(11) NOT NULL,
+  `activity_title` varchar(255) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'Approved',
+  `attachment` varchar(500) DEFAULT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `gpb_id` int(11) DEFAULT NULL,
+  `venue` varchar(255) DEFAULT NULL,
+  `target_participants` int(11) DEFAULT NULL,
+  `proposed_budget` int(8) DEFAULT NULL,
+  `form_type` varchar(255) NOT NULL,
+  `archived_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `archived_activity_designs`
+--
+
+INSERT INTO `archived_activity_designs` (`archive_id`, `original_act_design_id`, `activity_title`, `start_date`, `end_date`, `start_time`, `end_time`, `status`, `attachment`, `user_id`, `gpb_id`, `venue`, `target_participants`, `proposed_budget`, `form_type`, `archived_at`) VALUES
+(1, 1, 'Voluptatum doloremqu', '2026-06-15', '2026-06-17', '08:00:00', '17:00:00', 'Approved', '1779877140_31b6724d338a0bb7c2e7.pdf', 47, 3, 'Qui rem reprehenderi', 58, 60000, 'extension', '2026-05-29 22:15:00'),
+(2, 2, 'Eu Nam non itaque qu', '2026-07-10', '2026-07-11', '09:00:00', '16:30:00', 'Approved', '1779880718_f0964cad8b90daa94468.pdf', 2, 4, 'Cupiditate voluptate', 26, 37000, 'extension', '2026-05-29 22:20:00');
 
 -- --------------------------------------------------------
 
@@ -299,7 +367,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `email_verified_at`, `password`,
 (4, 'Human Resources and Management Office BSU Bokod Campus', 'bokod.hrmo@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, NULL, 'Bokod-HRMO', NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
 (5, 'International Relations Office', 'iro@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'IRO', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
 (6, 'Disaster Risk Reduction Management', 'drrm@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'DRRM', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
-(7, 'College of Social Science', 'css@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'CSS', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
+(7, 'College of Social Science', 'css@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'CSS', NULL, NULL, '2026-05-25 11:58:10', '2026-05-30 11:07:16'),
 (8, 'College of Applied Techonology BSU Bokod Campus', 'bokod.cat@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'Bokod-CAT', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
 (9, 'University Business Affairs Office', 'ubao@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'UBAO', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
 (10, 'University Library and Information Service BSU Buguias Campus', 'ulis.buguias@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'Buguias-ULIS', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
@@ -339,7 +407,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `email_verified_at`, `password`,
 (44, 'Open University', 'ou@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'OU', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
 (45, 'College of Education BSU Bokod Campus', 'bokod.ce@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'Bokod-CE', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
 (46, 'College of Forestry', 'cf@bsu.edu.ph', NULL, '$2y$12$l7EFqawcRIOIN9O.LGwQ..4PpoSt5sbaRziIQVMbNsOJbF7b/3Lpq', 'college', NULL, NULL, NULL, NULL, 'CF', NULL, NULL, '2026-05-25 11:58:10', '2026-05-25 11:58:10'),
-(47, 'gad.staff', 'gad.staff@bsu.edu.ph', NULL, '$2y$12$fbD/jvk.znEQnBmKq4.ebOojmijHJO/zU7.P7Tzo.zV3FgvP8PzNe', 'gad_staff', 'GAD Staff User', NULL, NULL, NULL, 'GAD-STAFF', NULL, NULL, '2026-03-26 15:53:56', '2026-03-26 15:53:56');
+(47, 'gad.staff', 'gad.staff@bsu.edu.ph', NULL, '$2y$12$fbD/jvk.znEQnBmKq4.ebOojmijHJO/zU7.P7Tzo.zV3FgvP8PzNe', 'gad_staff', 'GAD Staff User', NULL, NULL, NULL, 'GAD-STAFF', NULL, NULL, '2026-03-26 15:53:56', '2026-06-05 02:30:59');
 
 -- --------------------------------------------------------
 
@@ -388,6 +456,18 @@ ALTER TABLE `activity_design`
   ADD PRIMARY KEY (`act_design_id`),
   ADD KEY `fk_activity_user` (`user_id`),
   ADD KEY `fk_activity_gpb` (`gpb_id`);
+
+--
+-- Indexes for table `archived_accomplishment_reports`
+--
+ALTER TABLE `archived_accomplishment_reports`
+  ADD PRIMARY KEY (`archive_id`);
+
+--
+-- Indexes for table `archived_activity_designs`
+--
+ALTER TABLE `archived_activity_designs`
+  ADD PRIMARY KEY (`archive_id`);
 
 --
 -- Indexes for table `control_number`
@@ -446,13 +526,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `accomplishment_report`
 --
 ALTER TABLE `accomplishment_report`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `activity_design`
 --
 ALTER TABLE `activity_design`
   MODIFY `act_design_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `archived_accomplishment_reports`
+--
+ALTER TABLE `archived_accomplishment_reports`
+  MODIFY `archive_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `archived_activity_designs`
+--
+ALTER TABLE `archived_activity_designs`
+  MODIFY `archive_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `control_number`

@@ -4,7 +4,7 @@
           
           <div class="page-header">
             <h1 class="page-title">Activity Designs Tracker</h1>
-            <p class="page-subtitle">Review, monitor compliance status, and manage submitted institutional activity plan frameworks.</p>
+            <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
           </div>
 
           <section class="stats-section">
@@ -68,7 +68,7 @@
               </div>
             </div>
 
-            <div class="per-page-controls">
+            <!-- <div class="per-page-controls">
               <span class="per-page-label">Show</span>
               <select 
                 v-model="perPage"
@@ -79,7 +79,7 @@
                 <option :value="25">25</option>
               </select>
               <span class="per-page-label">records</span>
-            </div>
+            </div> -->
           </section>
 
           <div class="table-container">
@@ -105,7 +105,7 @@
                     v-else
                     v-for="item in paginatedDesigns" 
                     :key="item.act_design_id"
-                    @click="viewDetails(item.act_design_id)"
+                    @click="viewItem(item)"
                     class="table-row"
                   >
                     <td class="table-cell control-cell">
@@ -246,13 +246,31 @@ const paginationMeta = computed(() => {
 });
 
 const statusBadgeClass = (status) => {
-  if (status === 'Approved') return 'status-badge-approved';
-  if (status === 'Revision Required') return 'status-badge-revision';
+  const s = status?.toLowerCase() || '';
+  if (s === 'approved') return 'status-badge-approved';
+  if (s.includes('revision')) return 'status-badge-revision';
   return 'status-badge-pending';
 };
 
-const viewDetails = (id) => {
-  router.push({ name: 'staff-ad-view', params: { id } });
+const viewItem = (item) => {
+  const id = item.act_design_id || item.id;
+  const currentUserId = user.value.id || user.value.user_id;
+
+  if (item.type === 'design' || !item.type) { 
+    if (item.status && item.status.toLowerCase().includes('revision')) {
+      // Check if the staff member is the owner of the submission
+      if (Number(item.user_id) === Number(currentUserId)) {
+        router.push(`/staff/ad-revision/${id}`);
+      } else {
+        // If not the owner, redirect to read-only view even if status is revision
+        router.push(`/staff/ad-view/${id}`);
+      }
+    } else {
+      router.push(`/staff/ad-view/${id}`);
+    }
+  } else {
+    router.push(`/staff/ar-view/${id}`);
+  }
 };
 
 const fetchDesigns = async () => {
@@ -447,7 +465,7 @@ onMounted(() => {
 .text-purple-400 { color: #c084fc; }
 .text-amber-400 { color: #fbbf24; }
 .text-green-400 { color: #4ade80; }
-.text-red-400 { color: #f87171; }
+.text-red-400 { color: #ef4444; }
 
 .bg-purple-500\/10 { background: rgba(168, 85, 247, 0.1); }
 .bg-amber-500\/10 { background: rgba(245, 158, 11, 0.1); }
@@ -722,9 +740,9 @@ onMounted(() => {
 }
 
 .status-badge-revision {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .pagination-container {

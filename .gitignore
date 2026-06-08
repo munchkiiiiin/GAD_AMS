@@ -26,3 +26,4 @@ backend/writable/
 
 # Production builds
 frontend/dist/
+writable/

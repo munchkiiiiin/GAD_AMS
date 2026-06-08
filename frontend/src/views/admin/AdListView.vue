@@ -4,7 +4,7 @@
           
           <div class="page-header">
             <h1 class="page-title">Activity Designs Tracker</h1>
-            <p class="page-subtitle">Review, monitor compliance status, and manage submitted institutional activity plan frameworks.</p>
+            <p class="page-subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
           </div>
 
           <section class="stats-section">
@@ -62,23 +62,10 @@
                   <option value="all">All Statuses</option>
                   <option value="Pending">Pending Review</option>
                   <option value="Approved">Approved</option>
-                  <option value="Revision Required">Revision Required</option>
+                  <option value="Revision">Revision</option>
                 </select>
                 <span class="select-arrow">▼</span>
               </div>
-            </div>
-
-            <div class="per-page-controls">
-              <span class="per-page-label">Show</span>
-              <select 
-                v-model="perPage"
-                class="per-page-select"
-              >
-                <option :value="5">5</option>
-                <option :value="10">10</option>
-                <option :value="25">25</option>
-              </select>
-              <span class="per-page-label">records</span>
             </div>
           </section>
 
@@ -205,7 +192,7 @@ const metricsStats = ref([
   { label: 'Total Designs', value: '0', icon: 'description', iconColor: 'text-purple-400', bgClass: 'bg-purple-500/10' },
   { label: 'Pending Reviews', value: '0', icon: 'schedule', iconColor: 'text-amber-400', bgClass: 'bg-amber-500/10' },
   { label: 'Approved Plans', value: '0', icon: 'verified', iconColor: 'text-green-400', bgClass: 'bg-green-500/10' },
-  { label: 'Revision Required', value: '0', icon: 'assignment_return', iconColor: 'text-red-400', bgClass: 'bg-red-500/10' }
+  { label: 'Revision', value: '0', icon: 'assignment_return', iconColor: 'text-red-400', bgClass: 'bg-red-500/10' }
 ]);
 
 const filteredDesigns = computed(() => {
@@ -247,13 +234,14 @@ const paginationMeta = computed(() => {
 });
 
 const statusBadgeClass = (status) => {
-  if (status === 'Approved') return 'status-badge-approved';
-  if (status === 'Revision Required') return 'status-badge-revision';
+  const s = status?.toLowerCase() || '';
+  if (s === 'approved') return 'status-badge-approved';
+  if (s.includes('revision')) return 'status-badge-revision';
   return 'status-badge-pending';
 };
 
 const viewDetails = (id) => {
-  router.push(`/admin/ad-view/${id}`);
+  router.push(`/admin/ad-review/${id}`);
 };
 
 const fetchDesigns = async () => {
@@ -266,7 +254,7 @@ const fetchDesigns = async () => {
       metricsStats.value[0].value = activityDesigns.value.length.toString();
       metricsStats.value[1].value = activityDesigns.value.filter(r => r.status === 'Pending').length.toString();
       metricsStats.value[2].value = activityDesigns.value.filter(r => r.status === 'Approved').length.toString();
-      metricsStats.value[3].value = activityDesigns.value.filter(r => r.status === 'Revision Required').length.toString();
+      metricsStats.value[3].value = activityDesigns.value.filter(r => r.status === 'Revision').length.toString();
 
       // Extract Unique Offices for Filter
       const offices = [...new Set(activityDesigns.value.map(r => r.office).filter(Boolean))];
@@ -720,7 +708,7 @@ onMounted(() => {
 
 .status-badge-revision {
   background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 

@@ -1,7 +1,7 @@
 <template>
     <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-      <h1 class="text-3xl font-bold text-slate-900">Welcome, (Director) to your Dashboard!</h1>
-      <p class="text-slate-500 mt-2">Manage your GAD programs, monitor activity designs, and oversee budget utilization from here.</p>
+      <h1 class="text-3xl font-bold text-slate-900">Welcome, {{ user.username || 'User' }} to your Dashboard!</h1>
+      <p class="text-slate-500 mt-2">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
     </div><br>
     
   <div class="dashboard-grid">
@@ -36,10 +36,10 @@
           <table class="data-table">
             <thead>
               <tr class="table-header-row">
-                <th class="table-header-cell">Control No.</th>
+                <th class="table-header-cell">Type</th>
+                <!-- <th class="table-header-cell">Control No.</th> -->
                 <th class="table-header-cell">Title</th>
                 <th class="table-header-cell">Status</th>
-                <th class="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="table-body">
@@ -51,18 +51,18 @@
                   </div>
                 </td>
               </tr>
-              <tr v-else v-for="sub in submissions" :key="sub.id" class="clickable-row">
-                <td class="control-number-cell">{{ sub.control }}</td>
+              <tr v-else v-for="sub in submissions" :key="sub.id" class="clickable-row" @click="viewDetails(sub)">
+                <td class="type-cell">
+                  <span :class="['type-badge', sub.type === 'design' ? 'type-design' : 'type-report']">
+                    {{ sub.type === 'design' ? 'Activity Design' : 'Accomplishment Report' }}
+                  </span>
+                </td>
+                <!-- <td class="control-number-cell">{{ sub.control || 'N/A' }}</td> -->
                 <td class="title-cell">{{ sub.title }}</td>
                 <td class="status-cell">
                   <span :class="['status-pill', sub.statusClass]">
                     {{ sub.status }}
                   </span>
-                </td>
-                <td class="actions-cell text-right">
-                  <button class="view-button">
-                    <span class="material-symbols-outlined view-icon">visibility</span>
-                  </button>
                 </td>
               </tr>
             </tbody>
@@ -74,20 +74,26 @@
     <div class="sidebar-area">
       
       <div class="calendar-card">
-        <h3 class="widget-title">Calendar</h3>
+        <div class="calendar-header-nav">
+          <h3 class="widget-title">{{ currentMonthName }} {{ currentYear }}</h3>
+          <div class="calendar-controls">
+            <button @click="changeMonth(-1)" class="nav-btn">◀</button>
+            <button @click="changeMonth(1)" class="nav-btn">▶</button>
+          </div>
+        </div>
         <div class="calendar-container">
           <div class="weekdays-grid">
             <span v-for="day in ['S', 'M', 'T', 'W', 'T', 'F', 'S']" :key="day" class="weekday-label">{{ day }}</span>
           </div>
           <div class="dates-grid">
             <div 
-              v-for="n in 31" 
-              :key="n" 
+              v-for="(day, index) in calendarDays" 
+              :key="index" 
               class="date-cell"
-              :class="{ 'date-active': n === 18 }"
+              :class="{ 'date-active': day.current }"
             >
-              {{ n }}
-              <span v-if="[20, 22, 25].includes(n)" class="event-indicator"></span>
+              {{ day.n }}
+              <!-- <span v-if="[20, 22, 25].includes(n)" class="event-indicator"></span> -->
             </div>
           </div>
         </div>
@@ -117,7 +123,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+
+const router = useRouter();
+const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
 
 const metricsStats = ref([
   { label: 'Pending Reviews', value: '0', icon: 'schedule', iconColor: 'text-amber-400', bgClass: 'bg-amber-500/10' },
@@ -125,11 +136,95 @@ const metricsStats = ref([
   { label: 'Total Acc Reports', value: '0', icon: 'analytics', iconColor: 'text-blue-400', bgClass: 'bg-blue-500/10' },
 ]);
 
+// Calendar Logic
+const currentMonthDate = ref(new Date());
+const currentMonthName = computed(() => currentMonthDate.value.toLocaleString('default', { month: 'long' }));
+const currentYear = computed(() => currentMonthDate.value.getFullYear());
+
+const calendarDays = computed(() => {
+  const year = currentMonthDate.value.getFullYear();
+  const month = currentMonthDate.value.getMonth();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+  const days = [];
+
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    days.push({ n: '', current: false });
+  }
+
+  const today = new Date();
+  for (let i = 1; i <= lastDateOfMonth; i++) {
+    const isToday = i === today.getDate() && 
+                    month === today.getMonth() && 
+                    year === today.getFullYear();
+    days.push({ n: i, current: isToday });
+  }
+  return days;
+});
+
+const changeMonth = (offset) => {
+  currentMonthDate.value = new Date(currentMonthDate.value.getFullYear(), currentMonthDate.value.getMonth() + offset, 1);
+};
 
 const submissions = ref([]);
 const deadlines = ref([]);
 
-const fetchSubmissions = async () => {};
+const fetchSubmissions = async () => {
+  try {
+    const userId = user.value.id || user.value.user_id;
+    
+    const [designsRes, reportsRes] = await Promise.all([
+      axios.get(`http://localhost:8080/api/activity-designs/${userId}`),
+      axios.get(`http://localhost:8080/api/activity-reports/${userId}`)
+    ]);
+
+    const designs = (designsRes.data.data || []).map(d => ({
+      id: d.act_design_id,
+      type: 'design',
+      control: d.control || ' ',
+      title: d.activity_title,
+      status: d.status,
+      statusClass: getStatusClass(d.status),
+      dateRaw: d.created_at || d.date
+    }));
+
+    const reports = (reportsRes.data.data || []).map(r => ({
+      id: r.id,
+      type: 'report',
+      control: r.control || ' ',
+      title: r.activity_title,
+      status: r.status,
+      statusClass: getStatusClass(r.status),
+      dateRaw: r.created_at || r.date
+    }));
+
+    const allSubmissions = [...designs, ...reports].sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
+    submissions.value = allSubmissions.slice(0, 5);
+
+    // Update metrics
+    metricsStats.value[0].value = allSubmissions.filter(s => s.status.toLowerCase() === 'pending').length.toString();
+    metricsStats.value[1].value = designs.length.toString();
+    metricsStats.value[2].value = reports.length.toString();
+    
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+  }
+};
+
+const getStatusClass = (status) => {
+  const s = status?.toLowerCase() || '';
+  if (s === 'approved' || s === 'verified') return 'status-approved';
+  if (s.includes('revision')) return 'status-revision';
+  return 'status-review';
+};
+
+const viewDetails = (sub) => {
+  const routePrefix = sub.type === 'design' ? 'ad' : 'ar';
+  const isRevision = sub.status.toLowerCase().includes('revision');
+  const action = isRevision ? 'revision' : 'view';
+  router.push(`/college/${routePrefix}-${action}/${sub.id}`);
+};
+
 const fetchDeadlines = async () => {};
 
 const loadDashboardData = async () => {
@@ -160,13 +255,34 @@ onMounted(() => {
   gap: 2rem;
 }
 
-/* Base Card Layout Rules */
 .table-card, .calendar-card, .deadlines-card {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border: 1px solid rgba(185, 121, 204, 0.15);
   padding: 1.75rem;
   border-radius: 1.25rem;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.601);
+}
+
+.calendar-header-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-btn {
+  background: rgba(185, 121, 204, 0.1);
+  border: none;
+  color: #b979cc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
 }
 
 .table-title, .widget-title {
@@ -281,6 +397,7 @@ onMounted(() => {
 }
 
 .clickable-row {
+  cursor: pointer;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   transition: background-color 0.2s ease;
 }
@@ -318,31 +435,25 @@ onMounted(() => {
 .status-review { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; }
 .status-revision { background-color: rgba(239, 68, 68, 0.15); color: #f87171; }
 
-.actions-cell {
+.type-cell {
   padding: 1.25rem 1rem;
 }
 
-.text-right {
-  text-align: right;
-}
-
-.view-button {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(185, 121, 204, 0.15);
-  border-radius: 0.5rem;
-  padding: 0.45rem;
-  cursor: pointer;
-  color: #cbd5e1;
+.type-badge {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 600;
 }
 
-.view-button:hover {
-  color: #ffffff;
-  background: rgba(153, 13, 209, 0.2);
-  border-color: #b979cc;
+.type-design { 
+  background: rgba(147, 51, 234, 0.15); 
+  color: #c084fc; 
+}
+.type-report { 
+  background: rgba(59, 130, 246, 0.15); 
+  color: #60a5fa; 
 }
 
 .view-icon {
@@ -430,7 +541,6 @@ onMounted(() => {
   border-radius: 50%;
 }
 
-/* Contextual Target Evaluation Logs */
 .deadlines-card .widget-title {
   margin-bottom: 1.5rem;
 }

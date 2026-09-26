@@ -20,7 +20,7 @@
       />
     </div>
 
-    <main :class="['flex-grow w-full min-w-0 overflow-x-hidden', $route.path.includes('/plan-and-budget') ? 'p-0' : 'p-4 md:p-10']">
+    <main :class="['flex-grow w-full min-w-0 overflow-x-hidden', ($route.path.includes('/plan-and-budget') || $route.path.includes('/budget-distribution')) ? 'p-0' : 'p-4 md:p-10']">
       <router-view />
     </main>
   </div>
@@ -65,7 +65,8 @@ const staffMenu = ref([
   {
     label: 'Plan & Budget Distribution', icon: 'gavel',
     children: [
-      { label: 'Plan and Budget Distribution', icon: 'gavel', href: '/staff/plan-and-budget' },
+      { label: 'Plan & Budget', icon: 'table_chart', href: '/staff/plan-and-budget' },
+      { label: 'Budget Distribution', icon: 'account_balance_wallet', href: '/staff/budget-distribution' },
       { label: 'Report Monitoring', icon: 'description', href: '/staff/reports' },
       { label: 'Budget Monitoring', icon: 'payments', href: '/staff/budget' }
     ]

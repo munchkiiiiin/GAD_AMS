@@ -11,8 +11,8 @@
         <!-- nav removed -->
   
         <div class="topbar-actions">
-          <button class="topbar-btn secondary" @click="scrollToStats" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
-            Budget Distribution
+          <button class="topbar-btn secondary" @click="goToBudgetDistribution" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+            Budget Distribution ➔
           </button>
           <button id="btnExpandAll" class="topbar-btn outline" @click="expandAll">Expand All</button>
           <button id="btnCollapseAll" class="topbar-btn outline" @click="collapseAll">Collapse All</button>
@@ -213,211 +213,33 @@
     </main>
     </div>
 
-    <!-- MANDATE STATISTICS SECTION -->
-    <div id="mandate-statistics-section" class="card" style="margin: 24px 32px 32px 32px; padding: 24px; border-top: 1px solid var(--border); border-radius: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2 style="display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-size: 1.25rem; margin: 0; font-weight: 600;">
-          GAD Budget Distribution by Mandate
-        </h2>
-        <div style="display: flex; align-items: center; gap: 8px;">
-           <label style="color: var(--text-muted); font-size: 0.85rem;">Filter by Classification:</label>
-           <select v-model="mandateStatsFilter" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; padding: 6px 12px; border-radius: 6px; outline: none; font-size: 0.9rem;">
-             <option value="all" style="background: #1e293b; color: #fff;">All Classifications</option>
-             <option value="client" style="background: #1e293b; color: #fff;">Client-Focused</option>
-             <option value="org" style="background: #1e293b; color: #fff;">Organization-Focused</option>
-             <option value="attributed" style="background: #1e293b; color: #fff;">Attributed Program</option>
-           </select>
-        </div>
-      </div>
-      <div v-if="loadingStats" style="text-align: center; color: var(--text-muted); padding: 40px;">
-        Loading statistics...
-      </div>
-      <div v-else-if="mandateStats.length === 0" style="text-align: center; color: var(--text-muted); padding: 40px;">
-        <span style="font-size: 2rem; display: block; margin-bottom: 12px;">📭</span>
-        <h3 style="color: var(--text); margin-bottom: 8px;">No Mandate Data Available</h3>
-        <p style="font-size: 0.9rem;">The statistics are generated from your saved GAD Plan.<br>Please click <b>"Save Plan"</b> first to generate statistics.</p>
-      </div>
-      <div v-else>
-         <div v-if="filteredMandateStats.length === 0" style="text-align: center; color: var(--text-muted); padding: 24px;">No mandates found for this classification.</div>
-         <!-- Data Cards Grid -->
-         <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
-           <div v-for="(stat, idx) in filteredMandateStats" :key="idx" style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';">
-             
-             <!-- Content Section -->
-             <div style="display: flex; flex-direction: column; gap: 12px; flex: 1;">
-               <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border-left: 3px solid #6366f1;">
-                 <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">Gender Issue / Mandate</div>
-                 <div style="font-size: 0.95rem; color: var(--text-primary); font-weight: 500; line-height: 1.4;">{{ stat.mandate || 'N/A' }}</div>
-               </div>
-               
-               <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border-left: 3px solid #8b5cf6;">
-                 <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">Cause of Gender Issue</div>
-                 <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">{{ stat.cause || 'N/A' }}</div>
-               </div>
-               
-               <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border-left: 3px solid #ec4899;">
-                 <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">GAD Activity</div>
-                 <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">{{ stat.activity || 'N/A' }}</div>
-               </div>
-             </div>
-             
-             <!-- Stats Section -->
-             <div style="background: rgba(0,0,0,0.15); border-radius: 8px; padding: 16px; border: 1px solid rgba(255,255,255,0.03);">
-               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                 <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
-                   <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Approved ADs</div>
-                   <div style="font-size: 1.1rem; color: var(--text-primary); font-weight: 700;">{{ stat.approved_ad_count }}</div>
-                 </div>
-                 <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
-                   <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Approved ARs</div>
-                   <div style="font-size: 1.1rem; color: var(--text-primary); font-weight: 700;">{{ stat.approved_ar_count }}</div>
-                 </div>
-               </div>
-               
-               <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-secondary);">
-                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                   <span style="font-weight: 500;">Budget:</span>
-                   <span style="color: var(--text-primary); font-family: monospace; font-size: 0.95rem;">₱{{ Number(stat.budget).toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
-                 </div>
-                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                   <span style="font-weight: 500;">Utilized:</span>
-                   <span style="color: #10b981; font-family: monospace; font-size: 0.95rem;">₱{{ Number(stat.utilized_budget).toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
-                 </div>
-                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                   <span style="font-weight: 500;">Pending (ADs):</span>
-                   <span style="color: #f59e0b; font-family: monospace; font-size: 0.95rem;">₱{{ Number(stat.pending_budget).toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
-                 </div>
-                 <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 4px;">
-                    <span style="text-transform: uppercase; font-size: 0.75rem;">Remaining:</span>
-                    <span :style="{ color: stat.remaining_budget < 0 ? '#ef4444' : '#3b82f6' }" style="font-family: monospace; font-size: 1.05rem;">₱{{ Number(stat.remaining_budget).toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-       </div>
-    </div>
-
-
     <input :disabled="isReadOnly" type="file" ref="fileImport" accept="application/json" style="display:none" @change="handleFileImport">
-
-    <PdfPreviewModal :isOpen="isPdfModalOpen" :fileUrl="pdfFileUrl" @close="closePdfModal" />
   </div>
 </template>
 
 <script>
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-import Chart from 'chart.js/auto';
 import api from '../../api';
-import PdfPreviewModal from '../../components/PdfPreviewModal.vue';
 
 export default {
   name: 'App',
-  components: { PdfPreviewModal },
   setup() {
+    const router = useRouter();
     const userRole = JSON.parse(localStorage.getItem('user'))?.user_role?.toLowerCase() || '';
     const isReadOnly = true;
+
+    const goToBudgetDistribution = () => {
+      router.push('/college/budget-distribution');
+    };
 
     const SECTION_ORDER  = ['client', 'org', 'attributed'];
     const SECTION_LABELS = { client: 'Client-Focused Activities', org: 'Organization-Focused Activities', attributed: 'Attributed Program' };
     const SECTION_SHORT  = { client: 'CF', org: 'OF', attributed: 'AP' };
     const SOURCE_OPTIONS = ['GAA', 'Other'];
     const EXPORT_URL     = '/gpb/export-live'; // Vite proxy → http://localhost:8080
-
-    const mandateStats = ref([]);
-    const mandateStatsFilter = ref('all');
-    const filteredMandateStats = computed(() => {
-      if (mandateStatsFilter.value === 'all') return mandateStats.value;
-      return mandateStats.value.filter(s => s.classification === mandateStatsFilter.value);
-    });
-    const loadingStats = ref(true);
-    const statsChartCanvas = ref(null);
-    let statsChartInstance = null;
-    
-    const scrollToStats = () => {
-      const el = document.getElementById('mandate-statistics-section');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-    };
-    
-    const fetchMandateStats = async () => {
-      loadingStats.value = true;
-      try {
-        const response = await api.get('/plan/mandate-statistics');
-        if (response.data.success) {
-          mandateStats.value = response.data.data;
-        }
-      } catch (err) {
-        console.error('Failed to fetch mandate stats', err);
-      } finally {
-        loadingStats.value = false;
-        nextTick(() => {
-          renderStatsChart();
-        });
-      }
-    };
-    
-    const renderStatsChart = () => {
-      if (statsChartInstance) {
-        statsChartInstance.destroy();
-      }
-      if (!statsChartCanvas.value || mandateStats.value.length === 0) return;
-      
-      const labels = mandateStats.value.map(s => {
-         let title = s.activity || s.mandate || 'Untitled';
-         return title.length > 25 ? title.substring(0, 25) + '...' : title;
-      });
-      const budgetData = mandateStats.value.map(s => s.budget);
-      const utilizedData = mandateStats.value.map(s => s.utilized_budget);
-      const remainingData = mandateStats.value.map(s => s.remaining_budget);
-      
-      const textColor = getComputedStyle(document.body).getPropertyValue('--text-secondary').trim() || 'rgba(255,255,255,0.7)';
-      const gridColor = 'rgba(255,255,255,0.05)';
-      
-      const bgColors = mandateStats.value.map((_, i) => `hsl(${(i * 360) / Math.max(1, mandateStats.value.length)}, 70%, 60%)`);
-      
-      statsChartInstance = new Chart(statsChartCanvas.value, {
-        type: 'pie',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              data: budgetData,
-              backgroundColor: bgColors,
-              borderWidth: 3,
-              borderColor: 'rgba(0,0,0,0.6)'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            tooltip: {
-              callbacks: {
-                 label: (context) => {
-                   const value = context.raw;
-                   return ' ₱' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2});
-                 },
-                 title: (context) => {
-                   const item = mandateStats.value[context[0].dataIndex];
-                   return `Activity: ${item.activity}\nMandate: ${item.mandate}\nCause: ${item.cause}`;
-                 }
-              }
-            },
-            legend: {
-              position: 'right',
-              labels: {
-                color: textColor
-              }
-            }
-          }
-        }
-      });
-    };
 
 
     // ─── Seed ───────────────────────────────────────────────────────────────
@@ -1047,7 +869,6 @@ export default {
     }
 
     onMounted(async () => {
-      fetchMandateStats();
       loadFromAPI();
       try {
         const res = await api.get('/budget/summary');
@@ -1058,29 +879,15 @@ export default {
         console.error('Error fetching budget summary:', e);
       }
     });
-    const isPdfModalOpen = ref(false);
-    const pdfFileUrl = ref('');
 
-    const openDocumentPreview = (attachment, type) => {
-      if (attachment) {
-        let fileName = attachment;
-        if (typeof attachment === 'string' && attachment.startsWith('[')) {
-           try {
-               const parsed = JSON.parse(attachment);
-               if (parsed.length > 0) fileName = parsed[0];
-           } catch(e) {}
-        }
-        pdfFileUrl.value = `${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')}/api/files/archived/${fileName}`;
-        isPdfModalOpen.value = true;
-      }
-    };
-    const closePdfModal = () => {
-      isPdfModalOpen.value = false;
-      pdfFileUrl.value = '';
-    };
+
+
+
+
+
 
     return {
-      mandateStats, mandateStatsFilter, filteredMandateStats, loadingStats, statsChartCanvas, scrollToStats,
+      goToBudgetDistribution,
       isReadOnly,
 
       SECTION_ORDER, SECTION_LABELS, SECTION_SHORT, SOURCE_OPTIONS,
@@ -1092,8 +899,7 @@ export default {
       toggleCard, expandAll, collapseAll,
       addItemInline, markDirty, saveItem, savePlan,
       deleteItem, addBudgetLine, removeBudgetLine,
-      handleFileImport, promptExcelImport, handleExcelImport, exportToExcel, resetToSeed,
-      isPdfModalOpen, pdfFileUrl, openDocumentPreview, closePdfModal
+      handleFileImport, promptExcelImport, handleExcelImport, exportToExcel, resetToSeed
     };
   }
 };

@@ -23,6 +23,24 @@
               </select>
             </div>
 
+            <!-- Analytics Toggle Button -->
+            <button class="btn-analytics" @click="showAnalytics = !showAnalytics" :class="{ 'active': showAnalytics }" title="Toggle burn-rate analytics">
+              <span class="material-symbols-outlined">{{ showAnalytics ? 'query_stats' : 'bar_chart' }}</span>
+              <span>{{ showAnalytics ? 'Hide Analytics' : 'Analytics' }}</span>
+            </button>
+
+            <!-- Export Excel Button -->
+            <button class="btn-export-excel" @click="exportToExcel" title="Export formatted compliance Excel (.xlsx)">
+              <span class="material-symbols-outlined text-emerald-600">table_view</span>
+              <span>Export Excel</span>
+            </button>
+
+            <!-- Print / PDF Button -->
+            <button class="btn-print-pdf" @click="printReport" title="Print or save as PDF">
+              <span class="material-symbols-outlined text-purple-600">print</span>
+              <span>Print / PDF</span>
+            </button>
+
             <button class="btn-refresh" @click="fetchBudgetData" :disabled="loading" title="Refresh live data">
               <span class="material-symbols-outlined" :class="{ 'spin': loading }">sync</span>
               <span>Refresh</span>
@@ -116,6 +134,68 @@
         </div>
       </div>
 
+      <!-- Visual Analytics & Burn-Rate Panel -->
+      <div v-if="showAnalytics" class="analytics-container">
+        <div class="analytics-header">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-400 text-xl">insights</span>
+            <h3 class="analytics-title">Expenditure Burn-Rate & Allocation Distribution</h3>
+          </div>
+          <span class="text-xs text-slate-400">Live breakdown of filtered mandates for {{ selectedFiscalYear === 'all' ? 'All Fiscal Years' : 'FY ' + selectedFiscalYear }}</span>
+        </div>
+
+        <div class="analytics-grid">
+          <!-- Card 1: Quarterly Burn-Rate Breakdown -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h4 class="chart-card-title">Quarterly Expenditure Burn-Rate</h4>
+              <p class="text-[11px] text-slate-400 m-0">Actual Disbursed Cost (ARs) grouped by quarter</p>
+            </div>
+            
+            <div class="quarterly-bars-container">
+              <div v-for="q in quarterlyStats" :key="q.label" class="quarter-col">
+                <div class="quarter-bar-wrapper">
+                  <div class="quarter-bar-fill" :style="{ height: q.pct + '%' }" :title="`${q.label}: ₱${formatNum(q.amount)}`">
+                    <span v-if="q.pct > 22" class="quarter-bar-val mono">₱{{ formatCompactNum(q.amount) }}</span>
+                  </div>
+                </div>
+                <span class="quarter-label">{{ q.label }}</span>
+                <span class="quarter-subval mono">₱{{ formatCompactNum(q.amount) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Spending by Classification (Client vs Org vs Attributed) -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h4 class="chart-card-title">Allocation & Spending by Classification</h4>
+              <p class="text-[11px] text-slate-400 m-0">Client-Focused vs. Org-Focused vs. Attributed</p>
+            </div>
+
+            <div class="classification-breakdown-list">
+              <div v-for="c in classificationStats" :key="c.key" class="class-stat-row">
+                <div class="class-stat-meta">
+                  <span class="classification-pill" :class="c.pillClass">{{ c.label }}</span>
+                  <div class="class-amounts mono">
+                    <span class="text-emerald-400 font-bold">₱{{ formatCompactNum(c.disbursed) }}</span>
+                    <span class="text-slate-400">/ ₱{{ formatCompactNum(c.allocated) }}</span>
+                  </div>
+                </div>
+                <div class="class-progress-track">
+                  <div class="class-progress-disbursed" :style="{ width: c.disbursedPct + '%' }" :title="`Disbursed: ${c.disbursedPct.toFixed(1)}%`"></div>
+                  <div class="class-progress-committed" :style="{ width: c.committedPct + '%' }" :title="`Committed: ${c.committedPct.toFixed(1)}%`"></div>
+                </div>
+                <div class="class-stat-footer text-[11px] text-slate-400 flex justify-between">
+                  <span>{{ c.disbursedPct.toFixed(1) }}% Disbursed</span>
+                  <span>{{ c.mandateCount }} Mandates</span>
+                  <span class="text-purple-300 font-semibold">₱{{ formatCompactNum(c.remaining) }} Left</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Search & Filters Toolbar -->
       <div class="filter-toolbar">
         <div class="search-box">
@@ -150,16 +230,10 @@
             </select>
           </div>
 
-          <!-- Health / Status Filter -->
+          <!-- Document / Activity Filter -->
           <div class="select-wrapper">
             <select v-model="selectedHealth" class="filter-select">
-              <option value="all">All Health Statuses</option>
-              <option value="healthy">Healthy (> 40% balance)</option>
-              <option value="moderate">Moderate (15% - 40% balance)</option>
-              <option value="warning">Low Balance (< 15% balance)</option>
-              <option value="exhausted">Exhausted (₱0.00 balance)</option>
-              <option value="untouched">Untouched (0% utilized)</option>
-              <option value="overcommitted">Overcommitted (Deficit)</option>
+              <option value="all">All Records</option>
               <option value="has_ads">Has Pending ADs</option>
               <option value="has_ars">Has Verified ARs</option>
             </select>
@@ -194,7 +268,7 @@
                 <th class="table-header-cell col-activity text-left">GAD Activity</th>
                 <th class="table-header-cell col-allocated">Budget</th>
                 <th class="table-header-cell col-pending">Pending (ADs)</th>
-                <th class="table-header-cell col-remaining">Remaining & Health</th>
+                <th class="table-header-cell col-remaining">Remaining</th>
                 <th class="table-header-cell col-actual-cost">Actual Cost (ARs)</th>
                 <th class="table-header-cell col-actions text-center">Audit Trail</th>
               </tr>
@@ -273,16 +347,10 @@
                     </div>
                   </td>
 
-                  <!-- Remaining & Segmented Health Progress -->
+                  <!-- Remaining -->
                   <td class="table-cell cell-remaining text-right">
-                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                      <span class="health-badge" :class="getHealthStatus(row).class">
-                        <span class="material-symbols-outlined text-[12px]">{{ getHealthStatus(row).icon }}</span>
-                        <span>{{ getHealthStatus(row).label }}</span>
-                      </span>
-                      <span class="cell-value mono font-bold" :class="getRemainingClass(row.remaining)">
-                        ₱{{ formatNum(row.remaining) }}
-                      </span>
+                    <div class="cell-value mono font-bold" :class="getRemainingClass(row.remaining)">
+                      ₱{{ formatNum(row.remaining) }}
                     </div>
 
                     <!-- Segmented Utilization Progress Bar -->
@@ -530,6 +598,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import * as XLSX from 'xlsx';
+import Swal from 'sweetalert2';
 import api from '../../api';
 import PdfPreviewModal from '../../components/PdfPreviewModal.vue';
 
@@ -542,6 +612,7 @@ const actualCost = ref(0);
 const proposedBudget = ref(0);
 const overallUtilizationRate = ref('0.0');
 const loading = ref(false);
+const showAnalytics = ref(false);
 
 // Filter & Search states
 const searchQuery = ref('');
@@ -571,6 +642,13 @@ const formatDate = (dateStr) => {
   } catch {
     return dateStr;
   }
+};
+
+const formatCompactNum = (val) => {
+  const num = Number(val) || 0;
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+  return num.toLocaleString();
 };
 
 const updateRowCalculations = (row) => {
@@ -607,33 +685,6 @@ const getSegmentPercentages = (row) => {
   };
 };
 
-const getHealthStatus = (row) => {
-  const allocated = Number(row.allocated) || 0;
-  const utilized = Number(row.utilized ?? row.actual_cost) || 0;
-  const pending = Number(row.pending_approved) || 0;
-  const remaining = Number(row.remaining) || 0;
-
-  if (allocated <= 0) {
-    return { key: 'unfunded', label: 'Unfunded', class: 'health-untouched', icon: 'money_off' };
-  }
-  if (remaining < 0 || (utilized + pending) > allocated) {
-    return { key: 'overcommitted', label: 'Deficit', class: 'health-overcommitted', icon: 'warning' };
-  }
-  if (utilized === 0 && pending === 0) {
-    return { key: 'untouched', label: 'Untouched', class: 'health-untouched', icon: 'hourglass_top' };
-  }
-  if (remaining === 0) {
-    return { key: 'exhausted', label: 'Exhausted', class: 'health-exhausted', icon: 'cancel' };
-  }
-  const remainingPct = (remaining / allocated) * 100;
-  if (remainingPct < 15 || remaining < 20000) {
-    return { key: 'warning', label: 'Low Balance', class: 'health-warning', icon: 'error_outline' };
-  }
-  if (remainingPct <= 40) {
-    return { key: 'moderate', label: 'Moderate', class: 'health-moderate', icon: 'schedule' };
-  }
-  return { key: 'healthy', label: 'Healthy', class: 'health-healthy', icon: 'check_circle' };
-};
 
 const getClassificationLabel = (section) => {
   const s = (section || '').toLowerCase();
@@ -693,12 +744,9 @@ const filteredRows = computed(() => {
       }
     }
 
-    // Health filter
+    // Document Activity filter
     if (selectedHealth.value !== 'all') {
-      const status = getHealthStatus(row).key;
-      if (['healthy', 'moderate', 'warning', 'exhausted', 'untouched', 'overcommitted'].includes(selectedHealth.value)) {
-        if (status !== selectedHealth.value) return false;
-      } else if (selectedHealth.value === 'has_ads') {
+      if (selectedHealth.value === 'has_ads') {
         if (!row.pending_ads || row.pending_ads.length === 0) return false;
       } else if (selectedHealth.value === 'has_ars') {
         if (!row.completed_ars || row.completed_ars.length === 0) return false;
@@ -706,6 +754,66 @@ const filteredRows = computed(() => {
     }
 
     return true;
+  });
+});
+
+// Quarterly expenditure burn-rate statistics
+const quarterlyStats = computed(() => {
+  const quarters = [
+    { label: 'Q1 (Jan-Mar)', amount: 0, pct: 0 },
+    { label: 'Q2 (Apr-Jun)', amount: 0, pct: 0 },
+    { label: 'Q3 (Jul-Sep)', amount: 0, pct: 0 },
+    { label: 'Q4 (Oct-Dec)', amount: 0, pct: 0 },
+  ];
+
+  filteredRows.value.forEach(row => {
+    (row.completed_ars || []).forEach(ar => {
+      const d = ar.created_at ? new Date(ar.created_at) : null;
+      if (d && !isNaN(d.getTime())) {
+        const m = d.getMonth(); // 0 to 11
+        const qIdx = Math.floor(m / 3);
+        if (qIdx >= 0 && qIdx < 4) {
+          quarters[qIdx].amount += (Number(ar.amount) || 0);
+        }
+      } else {
+        quarters[0].amount += (Number(ar.amount) || 0);
+      }
+    });
+  });
+
+  const maxAmount = Math.max(...quarters.map(q => q.amount), 1);
+  quarters.forEach(q => {
+    q.pct = Math.min(100, Math.max(10, (q.amount / maxAmount) * 100));
+  });
+
+  return quarters;
+});
+
+// Classification statistics
+const classificationStats = computed(() => {
+  const map = {
+    client: { key: 'client', label: 'Client-Focused (CF)', pillClass: 'pill-client', allocated: 0, disbursed: 0, committed: 0, remaining: 0, mandateCount: 0 },
+    org: { key: 'org', label: 'Organization-Focused (OF)', pillClass: 'pill-org', allocated: 0, disbursed: 0, committed: 0, remaining: 0, mandateCount: 0 },
+    attributed: { key: 'attributed', label: 'Attributed Program (AP)', pillClass: 'pill-attributed', allocated: 0, disbursed: 0, committed: 0, remaining: 0, mandateCount: 0 }
+  };
+
+  filteredRows.value.forEach(row => {
+    const sec = (row.section || 'client').toLowerCase();
+    const target = map[sec] || map.client;
+    target.allocated += Number(row.allocated) || 0;
+    target.disbursed += Number(row.actual_cost ?? row.utilized) || 0;
+    target.committed += Number(row.pending_approved) || 0;
+    target.remaining += Number(row.remaining) || 0;
+    target.mandateCount += 1;
+  });
+
+  return Object.values(map).map(c => {
+    const total = c.allocated > 0 ? c.allocated : 1;
+    return {
+      ...c,
+      disbursedPct: Math.min(100, (c.disbursed / total) * 100),
+      committedPct: Math.min(100, (c.committed / total) * 100)
+    };
   });
 });
 
@@ -802,6 +910,137 @@ const fetchBudgetData = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// Export formatted compliance Excel (.xlsx)
+const exportToExcel = () => {
+  const rows = [];
+
+  // Header Title Blocks
+  rows.push(['BENGUET STATE UNIVERSITY']);
+  rows.push(['GENDER AND DEVELOPMENT (GAD) ADVOCACY AND MANAGEMENT SYSTEM']);
+  rows.push([`BUDGET UTILIZATION AND EXPENDITURE MONITORING REPORT - FY ${selectedFiscalYear.value === 'all' ? 'ALL YEARS' : selectedFiscalYear.value}`]);
+  rows.push([`Generated on: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
+  rows.push([]);
+
+  // High-Level Summary Block
+  rows.push(['FINANCIAL SUMMARY OVERVIEW']);
+  rows.push(['Total GAD Budget (PHP)', 'Actual Cost / Disbursed (PHP)', 'Proposed Budget / Committed ADs (PHP)', 'Remaining Available Balance (PHP)', 'Overall Utilization Rate (%)']);
+  rows.push([
+    totalGadBudget.value,
+    actualCost.value,
+    proposedBudget.value,
+    Math.max(0, totalGadBudget.value - actualCost.value - proposedBudget.value),
+    `${overallUtilizationRate.value}%`
+  ]);
+  rows.push([]);
+
+  // Mandate Data Table Header
+  rows.push([
+    '#',
+    'GPB Code',
+    'Classification',
+    'Gender Issue / Mandate',
+    'GAD Activity',
+    'Responsible Unit / Office',
+    'Allocated Budget (PHP)',
+    'Pending Approved ADs (PHP)',
+    'Remaining Balance (PHP)',
+    'Actual Disbursed Cost / ARs (PHP)',
+    'Utilization Rate (%)',
+    'Approved ADs Count',
+    'Verified ARs Count'
+  ]);
+
+  let totalAlloc = 0;
+  let totalPending = 0;
+  let totalRem = 0;
+  let totalDisbursed = 0;
+
+  filteredRows.value.forEach((r, idx) => {
+    const alloc = Number(r.allocated) || 0;
+    const pend = Number(r.pending_approved) || 0;
+    const rem = Number(r.remaining) || 0;
+    const disb = Number(r.actual_cost ?? r.utilized) || 0;
+    const rate = alloc > 0 ? ((disb / alloc) * 100).toFixed(2) + '%' : '0.00%';
+
+    totalAlloc += alloc;
+    totalPending += pend;
+    totalRem += rem;
+    totalDisbursed += disb;
+
+    rows.push([
+      idx + 1,
+      r.unit_code || `GPB-${r.id}`,
+      getClassificationLabel(r.section),
+      r.mandate || '',
+      r.activity || '',
+      r.responsible || '',
+      alloc,
+      pend,
+      rem,
+      disb,
+      rate,
+      (r.pending_ads || []).length,
+      (r.completed_ars || []).length
+    ]);
+  });
+
+  // Total Summary Row
+  rows.push([]);
+  rows.push([
+    'TOTAL',
+    '',
+    '',
+    '',
+    '',
+    '',
+    totalAlloc,
+    totalPending,
+    totalRem,
+    totalDisbursed,
+    totalAlloc > 0 ? ((totalDisbursed / totalAlloc) * 100).toFixed(2) + '%' : '0.00%',
+    '',
+    ''
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Column width configuration
+  ws['!cols'] = [
+    { wch: 5 },  // #
+    { wch: 12 }, // Code
+    { wch: 16 }, // Section
+    { wch: 40 }, // Mandate
+    { wch: 35 }, // Activity
+    { wch: 25 }, // Responsible
+    { wch: 18 }, // Allocated
+    { wch: 18 }, // Pending
+    { wch: 18 }, // Remaining
+    { wch: 18 }, // Disbursed
+    { wch: 12 }, // Rate
+    { wch: 12 }, // AD count
+    { wch: 12 }  // AR count
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Budget Utilization');
+
+  const fileName = `BSU_GAD_Budget_Utilization_Report_FY${selectedFiscalYear.value}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+
+  Swal.fire({
+    title: 'Excel Export Complete',
+    text: `Report saved as ${fileName}`,
+    icon: 'success',
+    timer: 2500,
+    showConfirmButton: false
+  });
+};
+
+// Print / PDF Report
+const printReport = () => {
+  window.print();
 };
 
 onMounted(() => {
@@ -922,14 +1161,14 @@ onMounted(() => {
   appearance: auto;
 }
 
-.btn-refresh, .btn-toggle-all {
+.btn-refresh, .btn-toggle-all, .btn-export-excel, .btn-print-pdf, .btn-analytics {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
   color: #1e293b;
-  padding: 8px 15px;
+  padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -943,6 +1182,27 @@ onMounted(() => {
   border-color: #9333ea;
   color: #7e22ce;
   box-shadow: 0 2px 6px rgba(147, 51, 234, 0.15);
+}
+
+.btn-export-excel:hover {
+  background: #f0fdf4;
+  border-color: #10b981;
+  color: #047857;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+}
+
+.btn-print-pdf:hover {
+  background: #faf5ff;
+  border-color: #9333ea;
+  color: #7e22ce;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.15);
+}
+
+.btn-analytics:hover, .btn-analytics.active {
+  background: #f8fafc;
+  border-color: #6366f1;
+  color: #4338ca;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.15);
 }
 
 .spin {
@@ -1080,6 +1340,176 @@ onMounted(() => {
   background: linear-gradient(90deg, #9333ea 0%, #c084fc 60%, #10b981 100%);
   border-radius: 999px;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Visual Analytics Container */
+.analytics-container {
+  background: #141120;
+  border: 1px solid rgba(192, 132, 252, 0.2);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(192, 132, 252, 0.15);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.analytics-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: #1a1628;
+  border: 1px solid rgba(192, 132, 252, 0.12);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.chart-card-header {
+  margin-bottom: 1.25rem;
+}
+
+.chart-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 2px 0;
+}
+
+/* Quarterly Burn-Rate Chart */
+.quarterly-bars-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 160px;
+  padding-top: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quarter-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22%;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.quarter-bar-wrapper {
+  width: 100%;
+  max-width: 44px;
+  height: 120px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.quarter-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  transition: height 0.5s ease;
+  min-height: 8px;
+}
+
+.quarter-bar-val {
+  font-size: 9px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.quarter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 8px;
+  white-space: nowrap;
+}
+
+.quarter-subval {
+  font-size: 10px;
+  color: #34d399;
+  font-weight: 700;
+}
+
+/* Classification Breakdown List */
+.classification-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.class-stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.class-stat-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.class-amounts {
+  font-size: 11.5px;
+  display: flex;
+  gap: 6px;
+}
+
+.class-progress-track {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.class-progress-disbursed {
+  height: 100%;
+  background: linear-gradient(90deg, #059669, #10b981);
+  transition: width 0.5s ease;
+}
+
+.class-progress-committed {
+  height: 100%;
+  background: linear-gradient(90deg, #d97706, #f59e0b);
+  transition: width 0.5s ease;
 }
 
 /* Filter Toolbar */
@@ -1359,54 +1789,7 @@ onMounted(() => {
   color: #f87171;
 }
 
-/* Health Badges */
-.health-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 7px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
 
-.health-healthy {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
-}
-
-.health-moderate {
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  color: #60a5fa;
-}
-
-.health-warning {
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
-}
-
-.health-exhausted {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #f87171;
-}
-
-.health-untouched {
-  background: rgba(148, 163, 184, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  color: #94a3b8;
-}
-
-.health-overcommitted {
-  background: rgba(225, 29, 72, 0.2);
-  border: 1px solid rgba(225, 29, 72, 0.4);
-  color: #fb7185;
-}
 
 /* Segmented Progress Bars */
 .segmented-progress-container {
@@ -1766,5 +2149,126 @@ onMounted(() => {
 
 .btn-clear-empty:hover {
   background: rgba(192, 132, 252, 0.2);
+}
+
+/* Print / PDF Export Media Styles */
+@media print {
+  aside,
+  nav,
+  .header-actions,
+  .filter-toolbar,
+  .btn-audit-toggle,
+  .btn-refresh,
+  .btn-toggle-all,
+  .btn-export-excel,
+  .btn-print-pdf,
+  .btn-analytics,
+  .fy-switcher-wrapper {
+    display: none !important;
+  }
+
+  body,
+  .main-content,
+  .content-wrapper {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .page-title {
+    color: #0f172a !important;
+    font-size: 18pt !important;
+  }
+
+  .page-subtitle {
+    color: #475569 !important;
+    font-size: 10pt !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .stat-card {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    padding: 10px !important;
+  }
+
+  .stat-value {
+    color: #0f172a !important;
+    font-size: 13pt !important;
+  }
+
+  .stat-label {
+    color: #475569 !important;
+  }
+
+  .table-container {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+
+  .data-table {
+    width: 100% !important;
+    color: #0f172a !important;
+    min-width: unset !important;
+  }
+
+  .table-header-row {
+    background: #f1f5f9 !important;
+    border-bottom: 2px solid #94a3b8 !important;
+  }
+
+  .table-header-cell {
+    color: #0f172a !important;
+    font-size: 8.5pt !important;
+    padding: 6px 8px !important;
+  }
+
+  .table-row {
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    page-break-inside: avoid;
+  }
+
+  .table-cell {
+    padding: 6px 8px !important;
+    font-size: 9pt !important;
+  }
+
+  .unit-name,
+  .activity-text,
+  .cell-value {
+    color: #0f172a !important;
+  }
+
+  .unit-code {
+    background: #e2e8f0 !important;
+    color: #334155 !important;
+  }
+
+  .analytics-container {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+  }
+
+  .chart-card {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .analytics-title,
+  .chart-card-title {
+    color: #0f172a !important;
+  }
 }
 </style>

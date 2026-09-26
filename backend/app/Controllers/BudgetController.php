@@ -17,22 +17,29 @@ class BudgetController extends Controller
     public function getSummary()
     {
         $db = \Config\Database::connect();
+        $fiscalYear = $this->request->getGet('fiscal_year');
         
-        $items = $db->table('gpb_items')->get()->getResultArray();
+        $itemsQuery = $db->table('gpb_items');
+        if (!empty($fiscalYear) && $fiscalYear !== 'all') {
+            $itemsQuery->where('fiscal_year', $fiscalYear);
+        }
+        $items = $itemsQuery->get()->getResultArray();
+
         $totalBudget = 0.0;
         foreach ($items as $item) {
             $budgetLines = isset($item['budget_lines']) ? json_decode($item['budget_lines'], true) : [];
-            if (is_array($budgetLines)) {
+            if (is_array($budgetLines) && !empty($budgetLines)) {
                 foreach ($budgetLines as $line) {
                     $totalBudget += (float) ($line['amount'] ?? 0);
                 }
+            } else {
+                $totalBudget += (float) ($item['budget'] ?? 0);
             }
         }
 
         $settingModel = new \App\Models\SettingModel();
-        $latestItem = $db->table('gpb_items')->select('fiscal_year')->orderBy('id', 'DESC')->get()->getRowArray();
-        $latestYear = $latestItem ? $latestItem['fiscal_year'] : date('Y');
-        $settings = $settingModel->getByFiscalYear($latestYear);
+        $targetYear = (!empty($fiscalYear) && $fiscalYear !== 'all') ? $fiscalYear : date('Y');
+        $settings = $settingModel->getByFiscalYear($targetYear);
         $otherSources = isset($settings['otherSources']) ? (float) $settings['otherSources'] : 0.0;
         
         $totalBudget += $otherSources;
@@ -134,7 +141,28 @@ class BudgetController extends Controller
     public function getOfficeUtilization()
     {
         $db = \Config\Database::connect();
-        $gpbs = $db->table('gpb_items')->orderBy('id', 'ASC')->get()->getResultArray();
+        $fiscalYear = $this->request->getGet('fiscal_year');
+
+        // Fetch distinct fiscal years for switcher
+        $yearsRows = $db->table('gpb_items')
+            ->select('DISTINCT(fiscal_year) as year')
+            ->where('fiscal_year IS NOT NULL')
+            ->where('fiscal_year !=', '')
+            ->orderBy('fiscal_year', 'DESC')
+            ->get()
+            ->getResultArray();
+        $availableYears = array_values(array_filter(array_map(function($r) {
+            return !empty($r['year']) ? (string)$r['year'] : null;
+        }, $yearsRows)));
+        if (empty($availableYears)) {
+            $availableYears = [(string)date('Y')];
+        }
+
+        $gpbQuery = $db->table('gpb_items');
+        if (!empty($fiscalYear) && $fiscalYear !== 'all') {
+            $gpbQuery->where('fiscal_year', $fiscalYear);
+        }
+        $gpbs = $gpbQuery->orderBy('id', 'ASC')->get()->getResultArray();
         $budgetRows = [];
 
         foreach ($gpbs as $gpb) {
@@ -239,7 +267,11 @@ class BudgetController extends Controller
             ];
         }
 
-        return $this->respond($budgetRows);
+        return $this->respond([
+            'success'         => true,
+            'data'            => $budgetRows,
+            'available_years' => $availableYears
+        ]);
     }
 
     /**

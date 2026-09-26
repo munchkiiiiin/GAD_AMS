@@ -14,6 +14,15 @@
             <p class="page-subtitle">Track mandate allocations, pending approved commitments (ADs), actual disbursed expenditures (ARs), and comprehensive document audit trails.</p>
           </div>
           <div class="header-actions">
+            <!-- Fiscal Year Switcher -->
+            <div class="fy-switcher-wrapper">
+              <span class="material-symbols-outlined fy-icon">calendar_month</span>
+              <select v-model="selectedFiscalYear" @change="fetchBudgetData" class="fy-select" title="Filter by Fiscal Year">
+                <option value="all">All Fiscal Years</option>
+                <option v-for="yr in availableYears" :key="yr" :value="yr">FY {{ yr }}</option>
+              </select>
+            </div>
+
             <button class="btn-refresh" @click="fetchBudgetData" :disabled="loading" title="Refresh live data">
               <span class="material-symbols-outlined" :class="{ 'spin': loading }">sync</span>
               <span>Refresh</span>
@@ -29,42 +38,80 @@
       <!-- KPI Summary Cards -->
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon-wrapper blue">
-            <span class="material-symbols-outlined">account_balance</span>
+          <div class="stat-card-header">
+            <div class="stat-icon-wrapper blue">
+              <span class="material-symbols-outlined">account_balance</span>
+            </div>
+            <span class="stat-badge badge-normal">
+              {{ selectedFiscalYear === 'all' ? 'All Years' : 'FY ' + selectedFiscalYear }}
+            </span>
           </div>
           <div class="stat-content">
             <h3 class="stat-value mono">₱{{ formatNum(totalGadBudget) }}</h3>
             <p class="stat-label">Total GAD Budget</p>
+            <div class="stat-sub-info">
+              <span>{{ filteredRows.length }} Active Mandates</span>
+            </div>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon-wrapper green">
-            <span class="material-symbols-outlined">trending_up</span>
+          <div class="stat-card-header">
+            <div class="stat-icon-wrapper green">
+              <span class="material-symbols-outlined">trending_up</span>
+            </div>
+            <span class="stat-badge badge-high">Disbursed</span>
           </div>
           <div class="stat-content">
             <h3 class="stat-value mono">₱{{ formatNum(actualCost) }}</h3>
             <p class="stat-label">Actual Cost (Disbursed)</p>
+            <div class="stat-sub-info">
+              <span>Verified AR Expenditures</span>
+            </div>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon-wrapper amber">
-            <span class="material-symbols-outlined">hourglass_empty</span>
+          <div class="stat-card-header">
+            <div class="stat-icon-wrapper amber">
+              <span class="material-symbols-outlined">hourglass_empty</span>
+            </div>
+            <span class="stat-badge badge-warning">Committed</span>
           </div>
           <div class="stat-content">
             <h3 class="stat-value mono">₱{{ formatNum(proposedBudget) }}</h3>
             <p class="stat-label">Proposed Budget (Committed ADs)</p>
+            <div class="stat-sub-info">
+              <span>Pending Accomplishment</span>
+            </div>
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-icon-wrapper purple">
-            <span class="material-symbols-outlined">pie_chart</span>
+          <div class="stat-card-header">
+            <div class="stat-icon-wrapper purple">
+              <span class="material-symbols-outlined">pie_chart</span>
+            </div>
+            <span class="stat-badge" :class="Number(overallUtilizationRate) >= 75 ? 'badge-high' : Number(overallUtilizationRate) >= 40 ? 'badge-med' : 'badge-normal'">
+              {{ Number(overallUtilizationRate) >= 75 ? 'Optimal' : Number(overallUtilizationRate) >= 40 ? 'On Track' : 'Starting' }}
+            </span>
           </div>
           <div class="stat-content">
-            <h3 class="stat-value mono">{{ overallUtilizationRate }}%</h3>
-            <p class="stat-label">% Utilization Rate</p>
+            <div class="flex items-baseline justify-between">
+              <h3 class="stat-value mono">{{ overallUtilizationRate }}%</h3>
+              <span class="text-xs text-purple-300 font-medium">% Utilization</span>
+            </div>
+            <!-- Utilization Gauge Mini Progress Bar -->
+            <div class="util-gauge-track">
+              <div 
+                class="util-gauge-fill" 
+                :style="{ width: Math.min(100, Math.max(0, Number(overallUtilizationRate) || 0)) + '%' }"
+              ></div>
+            </div>
+            <div class="stat-sub-info mt-1.5 flex justify-between">
+              <span>Remaining Balance:</span>
+              <span class="font-bold text-slate-200 mono">₱{{ formatNum(Math.max(0, totalGadBudget - actualCost - proposedBudget)) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -106,10 +153,13 @@
           <!-- Health / Status Filter -->
           <div class="select-wrapper">
             <select v-model="selectedHealth" class="filter-select">
-              <option value="all">All Statuses</option>
-              <option value="healthy">Healthy (> ₱50k remaining)</option>
-              <option value="warning">Low Balance (< ₱20k remaining)</option>
-              <option value="critical">Exhausted (₱0.00 remaining)</option>
+              <option value="all">All Health Statuses</option>
+              <option value="healthy">Healthy (> 40% balance)</option>
+              <option value="moderate">Moderate (15% - 40% balance)</option>
+              <option value="warning">Low Balance (< 15% balance)</option>
+              <option value="exhausted">Exhausted (₱0.00 balance)</option>
+              <option value="untouched">Untouched (0% utilized)</option>
+              <option value="overcommitted">Overcommitted (Deficit)</option>
               <option value="has_ads">Has Pending ADs</option>
               <option value="has_ars">Has Verified ARs</option>
             </select>
@@ -144,7 +194,7 @@
                 <th class="table-header-cell col-activity text-left">GAD Activity</th>
                 <th class="table-header-cell col-allocated">Budget</th>
                 <th class="table-header-cell col-pending">Pending (ADs)</th>
-                <th class="table-header-cell col-remaining">Remaining</th>
+                <th class="table-header-cell col-remaining">Remaining & Health</th>
                 <th class="table-header-cell col-actual-cost">Actual Cost (ARs)</th>
                 <th class="table-header-cell col-actions text-center">Audit Trail</th>
               </tr>
@@ -223,13 +273,42 @@
                     </div>
                   </td>
 
-                  <!-- Remaining -->
+                  <!-- Remaining & Segmented Health Progress -->
                   <td class="table-cell cell-remaining text-right">
-                    <div class="cell-value mono font-bold" :class="getRemainingClass(row.remaining)">
-                      ₱{{ formatNum(row.remaining) }}
+                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                      <span class="health-badge" :class="getHealthStatus(row).class">
+                        <span class="material-symbols-outlined text-[12px]">{{ getHealthStatus(row).icon }}</span>
+                        <span>{{ getHealthStatus(row).label }}</span>
+                      </span>
+                      <span class="cell-value mono font-bold" :class="getRemainingClass(row.remaining)">
+                        ₱{{ formatNum(row.remaining) }}
+                      </span>
                     </div>
-                    <div class="sub-badge" :class="getRemainingClass(row.remaining)">
-                      {{ getHealthLabel(row.remaining) }}
+
+                    <!-- Segmented Utilization Progress Bar -->
+                    <div class="segmented-progress-container mt-1.5" :title="`Disbursed: ₱${formatNum(row.actual_cost)} (${getSegmentPercentages(row).disbursed.toFixed(1)}%) | Committed: ₱${formatNum(row.pending_approved)} (${getSegmentPercentages(row).committed.toFixed(1)}%) | Remaining: ₱${formatNum(row.remaining)} (${getSegmentPercentages(row).remaining.toFixed(1)}%)`">
+                      <div class="segmented-bar">
+                        <div 
+                          v-if="getSegmentPercentages(row).disbursed > 0" 
+                          class="segment segment-disbursed" 
+                          :style="{ width: getSegmentPercentages(row).disbursed + '%' }"
+                        ></div>
+                        <div 
+                          v-if="getSegmentPercentages(row).committed > 0" 
+                          class="segment segment-committed" 
+                          :style="{ width: getSegmentPercentages(row).committed + '%' }"
+                        ></div>
+                        <div 
+                          v-if="getSegmentPercentages(row).remaining > 0" 
+                          class="segment segment-remaining" 
+                          :style="{ width: getSegmentPercentages(row).remaining + '%' }"
+                        ></div>
+                      </div>
+                      <div class="segmented-legend">
+                        <span class="text-emerald-400">{{ getSegmentPercentages(row).disbursed.toFixed(0) }}% spent</span>
+                        <span v-if="getSegmentPercentages(row).committed > 0" class="text-amber-400">{{ getSegmentPercentages(row).committed.toFixed(0) }}% pending</span>
+                        <span class="text-slate-400">{{ getSegmentPercentages(row).remaining.toFixed(0) }}% left</span>
+                      </div>
                     </div>
                   </td>
 
@@ -288,6 +367,33 @@
                             <span class="text-slate-400">Remaining Balance:</span>
                             <span class="font-bold" :class="getRemainingClass(row.remaining)">₱{{ formatNum(row.remaining) }}</span>
                           </span>
+                        </div>
+                      </div>
+
+                      <!-- Drawer Visual Progress Bar -->
+                      <div class="drawer-progress-wrapper">
+                        <div class="segmented-bar drawer-bar">
+                          <div 
+                            v-if="getSegmentPercentages(row).disbursed > 0" 
+                            class="segment segment-disbursed" 
+                            :style="{ width: getSegmentPercentages(row).disbursed + '%' }"
+                          >
+                            <span v-if="getSegmentPercentages(row).disbursed >= 10" class="segment-label">{{ getSegmentPercentages(row).disbursed.toFixed(1) }}% Disbursed (₱{{ formatNum(row.actual_cost) }})</span>
+                          </div>
+                          <div 
+                            v-if="getSegmentPercentages(row).committed > 0" 
+                            class="segment segment-committed" 
+                            :style="{ width: getSegmentPercentages(row).committed + '%' }"
+                          >
+                            <span v-if="getSegmentPercentages(row).committed >= 10" class="segment-label">{{ getSegmentPercentages(row).committed.toFixed(1) }}% Committed (₱{{ formatNum(row.pending_approved) }})</span>
+                          </div>
+                          <div 
+                            v-if="getSegmentPercentages(row).remaining > 0" 
+                            class="segment segment-remaining" 
+                            :style="{ width: getSegmentPercentages(row).remaining + '%' }"
+                          >
+                            <span v-if="getSegmentPercentages(row).remaining >= 10" class="segment-label">{{ getSegmentPercentages(row).remaining.toFixed(1) }}% Remaining (₱{{ formatNum(row.remaining) }})</span>
+                          </div>
                         </div>
                       </div>
 
@@ -442,6 +548,8 @@ const searchQuery = ref('');
 const selectedClassification = ref('all');
 const selectedOffice = ref('all');
 const selectedHealth = ref('all');
+const selectedFiscalYear = ref('2026');
+const availableYears = ref(['2026']);
 
 // Expandable drawer state
 const expandedRows = ref([]);
@@ -479,6 +587,52 @@ const getHealthLabel = (remaining) => {
   if (remaining <= 0) return 'Exhausted';
   if (remaining < 20000) return 'Low Balance';
   return 'Healthy';
+};
+
+const getSegmentPercentages = (row) => {
+  const allocated = Number(row.allocated) || 0;
+  if (allocated <= 0) return { disbursed: 0, committed: 0, remaining: 100 };
+  
+  const disbursed = Number(row.utilized ?? row.actual_cost) || 0;
+  const committed = Number(row.pending_approved) || 0;
+  
+  const disbursedPct = Math.min(100, Math.max(0, (disbursed / allocated) * 100));
+  const committedPct = Math.min(100 - disbursedPct, Math.max(0, (committed / allocated) * 100));
+  const remainingPct = Math.max(0, 100 - disbursedPct - committedPct);
+  
+  return {
+    disbursed: disbursedPct,
+    committed: committedPct,
+    remaining: remainingPct
+  };
+};
+
+const getHealthStatus = (row) => {
+  const allocated = Number(row.allocated) || 0;
+  const utilized = Number(row.utilized ?? row.actual_cost) || 0;
+  const pending = Number(row.pending_approved) || 0;
+  const remaining = Number(row.remaining) || 0;
+
+  if (allocated <= 0) {
+    return { key: 'unfunded', label: 'Unfunded', class: 'health-untouched', icon: 'money_off' };
+  }
+  if (remaining < 0 || (utilized + pending) > allocated) {
+    return { key: 'overcommitted', label: 'Deficit', class: 'health-overcommitted', icon: 'warning' };
+  }
+  if (utilized === 0 && pending === 0) {
+    return { key: 'untouched', label: 'Untouched', class: 'health-untouched', icon: 'hourglass_top' };
+  }
+  if (remaining === 0) {
+    return { key: 'exhausted', label: 'Exhausted', class: 'health-exhausted', icon: 'cancel' };
+  }
+  const remainingPct = (remaining / allocated) * 100;
+  if (remainingPct < 15 || remaining < 20000) {
+    return { key: 'warning', label: 'Low Balance', class: 'health-warning', icon: 'error_outline' };
+  }
+  if (remainingPct <= 40) {
+    return { key: 'moderate', label: 'Moderate', class: 'health-moderate', icon: 'schedule' };
+  }
+  return { key: 'healthy', label: 'Healthy', class: 'health-healthy', icon: 'check_circle' };
 };
 
 const getClassificationLabel = (section) => {
@@ -541,12 +695,14 @@ const filteredRows = computed(() => {
 
     // Health filter
     if (selectedHealth.value !== 'all') {
-      const rem = Number(row.remaining) || 0;
-      if (selectedHealth.value === 'healthy' && rem < 50000) return false;
-      if (selectedHealth.value === 'warning' && (rem >= 20000 || rem <= 0)) return false;
-      if (selectedHealth.value === 'critical' && rem > 0) return false;
-      if (selectedHealth.value === 'has_ads' && (!row.pending_ads || row.pending_ads.length === 0)) return false;
-      if (selectedHealth.value === 'has_ars' && (!row.completed_ars || row.completed_ars.length === 0)) return false;
+      const status = getHealthStatus(row).key;
+      if (['healthy', 'moderate', 'warning', 'exhausted', 'untouched', 'overcommitted'].includes(selectedHealth.value)) {
+        if (status !== selectedHealth.value) return false;
+      } else if (selectedHealth.value === 'has_ads') {
+        if (!row.pending_ads || row.pending_ads.length === 0) return false;
+      } else if (selectedHealth.value === 'has_ars') {
+        if (!row.completed_ars || row.completed_ars.length === 0) return false;
+      }
     }
 
     return true;
@@ -608,16 +764,30 @@ const closePdfModal = () => {
 const fetchBudgetData = async () => {
   loading.value = true;
   try {
+    const params = {};
+    if (selectedFiscalYear.value && selectedFiscalYear.value !== 'all') {
+      params.fiscal_year = selectedFiscalYear.value;
+    }
+
     const [monitoringRes, summaryRes] = await Promise.all([
-      api.get('staff/budget-monitoring'),
-      api.get('budget/summary')
+      api.get('staff/budget-monitoring', { params }),
+      api.get('budget/summary', { params })
     ]);
 
     if (monitoringRes.data) {
-      budgetRows.value = monitoringRes.data;
+      const rawRows = Array.isArray(monitoringRes.data)
+        ? monitoringRes.data
+        : (monitoringRes.data.data || []);
+      budgetRows.value = rawRows;
       budgetRows.value.forEach(row => {
         updateRowCalculations(row);
       });
+      if (monitoringRes.data.available_years && Array.isArray(monitoringRes.data.available_years)) {
+        availableYears.value = monitoringRes.data.available_years;
+        if (selectedFiscalYear.value !== 'all' && !availableYears.value.includes(selectedFiscalYear.value) && availableYears.value.length > 0) {
+          selectedFiscalYear.value = availableYears.value[0];
+        }
+      }
     }
 
     if (summaryRes.data && summaryRes.data.success) {
@@ -712,6 +882,44 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fy-switcher-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 10px 0 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.fy-switcher-wrapper:hover {
+  border-color: #9333ea;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.15);
+}
+
+.fy-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 16px;
+  color: #7e22ce;
+  pointer-events: none;
+}
+
+.fy-select {
+  background: transparent;
+  border: none;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px 8px 0;
+  outline: none;
+  cursor: pointer;
+  appearance: auto;
 }
 
 .btn-refresh, .btn-toggle-all {
@@ -779,15 +987,55 @@ onMounted(() => {
   box-shadow: 0 14px 20px -3px rgba(0, 0, 0, 0.35);
 }
 
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.stat-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-high {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.badge-med {
+  background: rgba(192, 132, 252, 0.2);
+  color: #d8b4fe;
+  border: 1px solid rgba(192, 132, 252, 0.4);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-normal {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
 .stat-icon-wrapper {
-  width: 42px;
-  height: 42px;
-  border-radius: 0.75rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 0.65rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .stat-icon-wrapper.blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
@@ -810,6 +1058,28 @@ onMounted(() => {
   letter-spacing: 0.05em;
   color: #94a3b8;
   margin-top: 0.35rem;
+}
+
+.stat-sub-info {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 0.35rem;
+}
+
+.util-gauge-track {
+  width: 100%;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.util-gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9333ea 0%, #c084fc 60%, #10b981 100%);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Filter Toolbar */
@@ -936,17 +1206,17 @@ onMounted(() => {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1100px;
+  min-width: 1180px;
 }
 
 .col-expand { width: 44px; text-align: center; }
-.col-number { width: 50px; text-align: center; }
-.col-unit { width: 280px; }
-.col-activity { width: 260px; }
-.col-allocated { width: 140px; text-align: right; }
-.col-pending { width: 140px; text-align: right; }
-.col-remaining { width: 140px; text-align: right; }
-.col-actual-cost { width: 150px; text-align: right; }
+.col-number { width: 48px; text-align: center; }
+.col-unit { width: 260px; }
+.col-activity { width: 230px; }
+.col-allocated { width: 135px; text-align: right; }
+.col-pending { width: 135px; text-align: right; }
+.col-remaining { width: 195px; text-align: right; }
+.col-actual-cost { width: 145px; text-align: right; }
 .col-actions { width: 110px; text-align: center; }
 
 .table-header-row {
@@ -1087,6 +1357,127 @@ onMounted(() => {
 
 .remaining-critical {
   color: #f87171;
+}
+
+/* Health Badges */
+.health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.health-healthy {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.health-moderate {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+}
+
+.health-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.health-exhausted {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.health-untouched {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #94a3b8;
+}
+
+.health-overcommitted {
+  background: rgba(225, 29, 72, 0.2);
+  border: 1px solid rgba(225, 29, 72, 0.4);
+  color: #fb7185;
+}
+
+/* Segmented Progress Bars */
+.segmented-progress-container {
+  width: 100%;
+  min-width: 140px;
+}
+
+.segmented-bar {
+  display: flex;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.segment {
+  height: 100%;
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.segment-disbursed {
+  background: linear-gradient(90deg, #059669, #10b981);
+}
+
+.segment-committed {
+  background: linear-gradient(90deg, #d97706, #f59e0b);
+}
+
+.segment-remaining {
+  background: rgba(147, 51, 234, 0.25);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.segmented-legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 3px;
+}
+
+/* Drawer Progress Bar */
+.drawer-progress-wrapper {
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.drawer-bar {
+  height: 18px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.drawer-bar .segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.segment-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  padding: 0 4px;
 }
 
 .btn-audit-toggle {

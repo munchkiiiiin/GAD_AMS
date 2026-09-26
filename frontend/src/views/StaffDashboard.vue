@@ -51,10 +51,10 @@ const handleScroll = () => {
 
 const staffMenu = ref([
   { label: 'Dashboard', icon: 'dashboard', href: '/staff/dashboard' },
+  { label: 'New Submission', icon: 'add', href: '/staff/submit' },
   {
     label: 'Documents', icon: 'folder',
     children: [
-      { label: 'New Submission', icon: 'add', href: '/staff/submit' },
       { label: 'Submitted List', icon: 'list', href: '/staff/submitted-list' },
       { label: 'Activity Design List', icon: 'list', href: '/staff/ad-list' },
       { label: 'Accomplishment Report List', icon: 'list', href: '/staff/ar-list' },
@@ -72,13 +72,9 @@ const staffMenu = ref([
     ]
   },
   {
-    label: 'Publish Bulletin',
-    icon: 'post_add',
-    href: '/staff/publish-news-iec'
-  },
-  {
     label: 'System & Controls', icon: 'admin_panel_settings',
     children: [
+      { label: 'Publish Bulletin', icon: 'post_add', href: '/staff/publish-news-iec' },
       { label: 'Campus Resources', icon: 'business_center', href: '/staff/campus-resources' },
       { label: 'User Management', icon: 'manage_accounts', href: '/staff/user-management' },
       { label: 'Activity Logs', icon: 'history', href: '/staff/activity-logs' }

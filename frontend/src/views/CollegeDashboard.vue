@@ -51,10 +51,10 @@ const handleScroll = () => {
 
 const collegeMenu = ref([
   { label: 'Dashboard', icon: 'dashboard', href: '/college/dashboard' },
+  { label: 'New Submission', icon: 'add', href: '/college/submit' },
   {
     label: 'Documents', icon: 'folder',
     children: [
-      { label: 'New Submission', icon: 'add', href: '/college/submit' },
       { label: 'Submitted List', icon: 'list', href: '/college/submitted-list' },
       { label: 'Archives', icon: 'archive', href: '/college/archive' },
       { label: 'Document Trash Bin', icon: 'delete', href: '/college/trashbin' }

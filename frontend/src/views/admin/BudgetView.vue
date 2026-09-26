@@ -35,12 +35,6 @@
               <span>Export Excel</span>
             </button>
 
-            <!-- Print / PDF Button -->
-            <button class="btn-print-pdf" @click="printReport" title="Print or save as PDF">
-              <span class="material-symbols-outlined text-purple-600">print</span>
-              <span>Print / PDF</span>
-            </button>
-
             <button class="btn-refresh" @click="fetchBudgetData" :disabled="loading" title="Refresh live data">
               <span class="material-symbols-outlined" :class="{ 'spin': loading }">sync</span>
               <span>Refresh</span>
@@ -75,22 +69,6 @@
 
         <div class="stat-card">
           <div class="stat-card-header">
-            <div class="stat-icon-wrapper green">
-              <span class="material-symbols-outlined">trending_up</span>
-            </div>
-            <span class="stat-badge badge-high">Disbursed</span>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value mono">₱{{ formatNum(actualCost) }}</h3>
-            <p class="stat-label">Actual Cost (Disbursed)</p>
-            <div class="stat-sub-info">
-              <span>Verified AR Expenditures</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-card-header">
             <div class="stat-icon-wrapper amber">
               <span class="material-symbols-outlined">hourglass_empty</span>
             </div>
@@ -101,6 +79,22 @@
             <p class="stat-label">Proposed Budget (Committed ADs)</p>
             <div class="stat-sub-info">
               <span>Pending Accomplishment</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon-wrapper green">
+              <span class="material-symbols-outlined">trending_up</span>
+            </div>
+            <span class="stat-badge badge-high">Disbursed</span>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value mono">₱{{ formatNum(actualCost) }}</h3>
+            <p class="stat-label">Actual Cost (Disbursed)</p>
+            <div class="stat-sub-info">
+              <span>Verified AR Expenditures</span>
             </div>
           </div>
         </div>
@@ -918,18 +912,18 @@ const exportToExcel = () => {
 
   // Header Title Blocks
   rows.push(['BENGUET STATE UNIVERSITY']);
-  rows.push(['GENDER AND DEVELOPMENT (GAD) ADVOCACY AND MANAGEMENT SYSTEM']);
+  rows.push(['GENDER AND DEVELOPMENT (GAD) ACTIVITY MANAGEMENT SYSTEM']);
   rows.push([`BUDGET UTILIZATION AND EXPENDITURE MONITORING REPORT - FY ${selectedFiscalYear.value === 'all' ? 'ALL YEARS' : selectedFiscalYear.value}`]);
   rows.push([`Generated on: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
   rows.push([]);
 
   // High-Level Summary Block
   rows.push(['FINANCIAL SUMMARY OVERVIEW']);
-  rows.push(['Total GAD Budget (PHP)', 'Actual Cost / Disbursed (PHP)', 'Proposed Budget / Committed ADs (PHP)', 'Remaining Available Balance (PHP)', 'Overall Utilization Rate (%)']);
+  rows.push(['Total GAD Budget (PHP)', 'Proposed Budget / Committed ADs (PHP)', 'Actual Cost / Disbursed (PHP)', 'Remaining Available Balance (PHP)', 'Overall Utilization Rate (%)']);
   rows.push([
     totalGadBudget.value,
-    actualCost.value,
     proposedBudget.value,
+    actualCost.value,
     Math.max(0, totalGadBudget.value - actualCost.value - proposedBudget.value),
     `${overallUtilizationRate.value}%`
   ]);
@@ -1038,10 +1032,7 @@ const exportToExcel = () => {
   });
 };
 
-// Print / PDF Report
-const printReport = () => {
-  window.print();
-};
+
 
 onMounted(() => {
   const role = (user.value.role || user.value.user_role || '').toLowerCase();
@@ -1161,7 +1152,7 @@ onMounted(() => {
   appearance: auto;
 }
 
-.btn-refresh, .btn-toggle-all, .btn-export-excel, .btn-print-pdf, .btn-analytics {
+.btn-refresh, .btn-toggle-all, .btn-export-excel, .btn-analytics {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1189,13 +1180,6 @@ onMounted(() => {
   border-color: #10b981;
   color: #047857;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
-}
-
-.btn-print-pdf:hover {
-  background: #faf5ff;
-  border-color: #9333ea;
-  color: #7e22ce;
-  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.15);
 }
 
 .btn-analytics:hover, .btn-analytics.active {
@@ -2161,7 +2145,6 @@ onMounted(() => {
   .btn-refresh,
   .btn-toggle-all,
   .btn-export-excel,
-  .btn-print-pdf,
   .btn-analytics,
   .fy-switcher-wrapper {
     display: none !important;

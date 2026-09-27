@@ -53,12 +53,13 @@
                 <th class="table-header-cell">Activity Title</th>
                 <th class="table-header-cell">Office / Unit</th>
                 <th class="table-header-cell">Type</th>
+                <th class="table-header-cell">Status</th>
                 <th class="table-header-cell">Date Submitted</th>
               </tr>
             </thead>
             <tbody class="table-body">
               <tr v-if="submissions.length === 0" class="empty-row">
-                <td colspan="4" class="empty-cell">
+                <td colspan="5" class="empty-cell">
                   <div class="empty-content">
                     <span class="material-symbols-outlined empty-icon">history_edu</span>
                     <p>No pending activities found</p>
@@ -71,6 +72,11 @@
                 <td class="type-cell">
                   <span class="type-badge" :class="sub.type === 'design' ? 'type-badge-design' : 'type-badge-report'">
                     {{ sub.typeName }}
+                  </span>
+                </td>
+                <td class="status-cell">
+                  <span class="status-pill" :class="sub.statusClass">
+                    {{ sub.status }}
                   </span>
                 </td>
                 <td class="date-cell">{{ sub.date }}</td>
@@ -323,13 +329,18 @@ const getStatusClass = (status) => {
   const s = (status || '').toLowerCase();
   if (s === 'approved' || s === 'verified' || s === 'completed') return 'status-approved';
   if (s === 'pending') return 'status-review';
-  if (s === 'revision required' || s === 'revision') return 'status-revision';
-  return 'status-approved';
+  if (s === 'revision required' || s === 'revision' || s === 'for revision') return 'status-revision';
+  if (s === 'disapproved') return 'status-disapproved';
+  return 'status-review';
 };
 
 const formatStatus = (status) => {
   if (!status) return 'Unknown';
-  if (status.toLowerCase() === 'revision required') return 'For Revision';
+  const s = status.toLowerCase();
+  if (s === 'revision required' || s === 'for revision' || s === 'revision') return 'For Revision';
+  if (s === 'pending') return 'Pending';
+  if (s === 'disapproved') return 'Disapproved';
+  if (s === 'approved' || s === 'completed' || s === 'verified') return 'Approved';
   return status.charAt(0).toUpperCase() + status.slice(1);
 };
 
@@ -825,20 +836,44 @@ onMounted(() => {
 }
 
 .status-cell {
-  padding: 1.25rem 1rem;
+  padding: 1rem;
 }
 
 .status-pill {
   display: inline-flex;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 1rem;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
-.status-approved { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; }
-.status-review { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-.status-revision { background-color: rgba(239, 68, 68, 0.15); color: #f87171; }
+.status-approved { 
+  background-color: rgba(34, 197, 94, 0.15); 
+  color: #4ade80; 
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-review { 
+  background-color: rgba(234, 179, 8, 0.15); 
+  color: #facc15; 
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.status-revision { 
+  background-color: rgba(239, 68, 68, 0.15); 
+  color: #f87171; 
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-disapproved { 
+  background-color: rgba(239, 68, 68, 0.2); 
+  color: #f87171; 
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
 
 .actions-cell {
   padding: 1.25rem 1rem;

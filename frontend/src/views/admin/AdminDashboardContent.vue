@@ -53,12 +53,13 @@
                     <th class="table-header-cell">Activity Title</th>
                     <th class="table-header-cell">Office / Unit</th>
                     <th class="table-header-cell">Type</th>
+                    <th class="table-header-cell">Status</th>
                     <th class="table-header-cell">Date Submitted</th>
                   </tr>
                 </thead>
                 <tbody class="table-body">
                   <tr v-if="pendingActivities.length === 0">
-                    <td colspan="4" class="empty-state-cell">
+                    <td colspan="5" class="empty-state-cell">
                       No pending activities found matching evaluation workflows
                     </td>
                   </tr>
@@ -68,6 +69,11 @@
                     <td class="type-cell">
                       <span class="type-badge" :class="activity.type === 'design' ? 'type-badge-design' : 'type-badge-report'">
                         {{ activity.typeName }}
+                      </span>
+                    </td>
+                    <td class="status-cell">
+                      <span class="status-pill" :class="activity.statusClass">
+                        {{ activity.status }}
                       </span>
                     </td>
                     <td class="date-cell">{{ activity.date }}</td>
@@ -437,6 +443,25 @@ const fetchStats = async () => {
       const pendingDesigns = designsRes.data.data.filter(d => d.status === 'Pending').length;
       metricsStats.value[0].value = pendingDesigns.toString();
       
+      const getStatusClass = (status) => {
+        const s = (status || '').toLowerCase();
+        if (s === 'approved' || s === 'verified' || s === 'completed') return 'status-approved';
+        if (s === 'pending') return 'status-review';
+        if (s === 'revision required' || s === 'revision' || s === 'for revision') return 'status-revision';
+        if (s === 'disapproved') return 'status-disapproved';
+        return 'status-review';
+      };
+
+      const formatStatus = (status) => {
+        if (!status) return 'Unknown';
+        const s = status.toLowerCase();
+        if (s === 'revision required' || s === 'for revision' || s === 'revision') return 'For Revision';
+        if (s === 'pending') return 'Pending';
+        if (s === 'disapproved') return 'Disapproved';
+        if (s === 'approved' || s === 'completed' || s === 'verified') return 'Approved';
+        return status.charAt(0).toUpperCase() + status.slice(1);
+      };
+
       // Also update pending activities list
       const pDesigns = designsRes.data.data
         .filter(d => ['pending', 'revision required', 'for revision'].includes((d.status || '').toLowerCase()))
@@ -446,7 +471,9 @@ const fetchStats = async () => {
           title: d.title,
           typeName: 'Activity Design',
           office: d.office || d.submitter_name || 'N/A',
-          date: d.date || 'Pending Review'
+          date: d.date || 'Pending Review',
+          status: formatStatus(d.status),
+          statusClass: getStatusClass(d.status)
         }));
       pendingActivities.value = pDesigns;
     }
@@ -463,7 +490,9 @@ const fetchStats = async () => {
           title: r.title,
           typeName: 'Accomplishment Report',
           office: r.office || r.submitter_name || 'N/A',
-          date: r.date || 'Pending Verification'
+          date: r.date || 'Pending Verification',
+          status: formatStatus(r.status),
+          statusClass: getStatusClass(r.status)
         }));
       
       pendingActivities.value = [...pendingActivities.value, ...pReports];
@@ -929,6 +958,46 @@ onMounted(() => {
   font-size: 1rem;
   font-family: monospace;
   color: #94a3b8;
+}
+
+.status-cell {
+  padding: 1rem;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.status-approved { 
+  background-color: rgba(34, 197, 94, 0.15); 
+  color: #4ade80; 
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-review { 
+  background-color: rgba(234, 179, 8, 0.15); 
+  color: #facc15; 
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.status-revision { 
+  background-color: rgba(239, 68, 68, 0.15); 
+  color: #f87171; 
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-disapproved { 
+  background-color: rgba(239, 68, 68, 0.2); 
+  color: #f87171; 
+  border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 .table-footer {

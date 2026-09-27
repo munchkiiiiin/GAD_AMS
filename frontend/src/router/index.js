@@ -76,6 +76,7 @@ const routes = [
       { path: 'trashbin', name: 'college-trashbin', component: () => import('../views/college/DocumentTrashBin.vue') },
       { path: 'plan-and-budget', name: 'college-plan-and-budget', component: () => import('../views/college/PlanAndBudgetView.vue') },
       { path: 'budget-distribution', name: 'college-budget-distribution', component: () => import('../views/BudgetDistributionView.vue') },
+      { path: 'budget', name: 'college-budget', component: () => import('../views/college/BudgetView.vue') },
       { path: 'user-manual', name: 'college-user-manual', component: () => import('../views/college/UserManualView.vue') },
       { path: 'data-privacy-policy', name: 'college-privacy-policy', component: () => import('../views/college/PrivacyPolicyView.vue') },
       { path: 'tech-assist', name: 'college-tech-assist', component: () => import('../views/PlaceholderContent.vue') },

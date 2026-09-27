@@ -318,6 +318,8 @@ $routes->group((ENVIRONMENT === 'production' ? '' : 'api'), function($routes) {
     // Office Budget Utilization and Realignment Monitoring
     $routes->options('staff/budget-monitoring', 'BudgetController::optionsHandler');
     $routes->get('staff/budget-monitoring', 'BudgetController::getOfficeUtilization');
+    $routes->options('college/budget-monitoring', 'BudgetController::optionsHandler');
+    $routes->get('college/budget-monitoring', 'BudgetController::getOfficeUtilization');
     
     $routes->options('staff/budget-monitoring/update', 'BudgetController::optionsHandler');
     $routes->post('staff/budget-monitoring/update', 'BudgetController::updateOfficeBudget');

@@ -148,6 +148,22 @@ class BudgetController extends Controller
         $db = \Config\Database::connect();
         $fiscalYear = $this->request->getGet('fiscal_year');
 
+        // Check if caller is a College/TWG user to scope the audit trail
+        $requestUserId = $this->request->getHeaderLine('X-User-Id');
+        $isCollegeScoped = false;
+        $collegeUserId = null;
+
+        if (!empty($requestUserId)) {
+            $requestUser = $db->table('users')->where('id', $requestUserId)->get()->getRowArray();
+            if ($requestUser) {
+                $userRole = strtolower($requestUser['user_role'] ?? $requestUser['role'] ?? '');
+                if ($userRole === 'college' || $userRole === 'twg' || $userRole === 'non-twg') {
+                    $isCollegeScoped = true;
+                    $collegeUserId = (int)$requestUser['id'];
+                }
+            }
+        }
+
         // Fetch distinct fiscal years for switcher
         $yearsRows = $db->table('gpb_items')
             ->select('DISTINCT(fiscal_year) as year')
@@ -177,7 +193,7 @@ class BudgetController extends Controller
             // Get approved activity designs for this mandate (GPB item)
             // Check both modern activity_design_mandates and direct gpb_id
             $designs = $db->table('activity_design ad')
-                ->select('ad.act_design_id, ad.control_number, ad.activity_title, ad.proposed_budget, COALESCE(u.user_acronym, u.username, "") as college, COALESCE(ad.start_date, "") as created_at, ad.attachment')
+                ->select('ad.act_design_id, ad.user_id, ad.control_number, ad.activity_title, ad.proposed_budget, COALESCE(u.user_acronym, u.username, "") as college, COALESCE(ad.start_date, "") as created_at, ad.attachment')
                 ->join('users u', 'u.id = ad.user_id', 'left')
                 ->join('activity_design_mandates adm', 'adm.act_design_id = ad.act_design_id', 'left')
                 ->join('activity_design_issues adi', 'adi.act_design_id = ad.act_design_id', 'left')
@@ -205,7 +221,7 @@ class BudgetController extends Controller
             foreach ($designs as $design) {
                 // Check for a completed accomplishment report (active or archived)
                 $report = $db->table('accomplishment_report ar')
-                    ->select('ar.*, COALESCE(u_ar.user_acronym, u_ar.username, "") as college, COALESCE(ar.start_date, "") as report_date')
+                    ->select('ar.*, ar.user_id, COALESCE(u_ar.user_acronym, u_ar.username, "") as college, COALESCE(ar.start_date, "") as report_date')
                     ->join('users u_ar', 'u_ar.id = ar.user_id', 'left')
                     ->where('ar.control_number', $design['control_number'])
                     ->whereIn('ar.status', ['Completed', 'Verified', 'Approved'])
@@ -240,15 +256,18 @@ class BudgetController extends Controller
                     }
                     $utilized += $arAmount;
 
-                    $completedArs[] = [
-                        'id'             => $reportId,
-                        'control_number' => $report['control_number'],
-                        'title'          => !empty($report['activity_title']) ? $report['activity_title'] : (!empty($design['activity_title']) ? $design['activity_title'] : 'Accomplishment Report'),
-                        'amount'         => $arAmount,
-                        'college'        => !empty($report['college']) ? $report['college'] : ($design['college'] ?? ''),
-                        'created_at'     => $report['report_date'] ?? '',
-                        'attachment'     => $report['attachment'] ?? null
-                    ];
+                    // Audit trail: if college/twg user, only include reports they submitted
+                    if (!$isCollegeScoped || (int)($report['user_id'] ?? 0) === $collegeUserId) {
+                        $completedArs[] = [
+                            'id'             => $reportId,
+                            'control_number' => $report['control_number'],
+                            'title'          => !empty($report['activity_title']) ? $report['activity_title'] : (!empty($design['activity_title']) ? $design['activity_title'] : 'Accomplishment Report'),
+                            'amount'         => $arAmount,
+                            'college'        => !empty($report['college']) ? $report['college'] : ($design['college'] ?? ''),
+                            'created_at'     => $report['report_date'] ?? '',
+                            'attachment'     => $report['attachment'] ?? null
+                        ];
+                    }
                 } else {
                     // Check if manual allocation exists in budget_item_mandate_allocations for this mandate
                     $adAllocRow = $db->table('budget_item_mandate_allocations bima')
@@ -272,15 +291,18 @@ class BudgetController extends Controller
                     }
                     $pendingApproved += $adAmount;
 
-                    $pendingAds[] = [
-                        'id'             => $design['act_design_id'],
-                        'control_number' => $design['control_number'],
-                        'title'          => !empty($design['activity_title']) ? $design['activity_title'] : 'Activity Design',
-                        'amount'         => $adAmount,
-                        'college'        => $design['college'] ?? '',
-                        'created_at'     => $design['created_at'] ?? '',
-                        'attachment'     => $design['attachment'] ?? null
-                    ];
+                    // Audit trail: if college/twg user, only include designs they submitted
+                    if (!$isCollegeScoped || (int)($design['user_id'] ?? 0) === $collegeUserId) {
+                        $pendingAds[] = [
+                            'id'             => $design['act_design_id'],
+                            'control_number' => $design['control_number'],
+                            'title'          => !empty($design['activity_title']) ? $design['activity_title'] : 'Activity Design',
+                            'amount'         => $adAmount,
+                            'college'        => $design['college'] ?? '',
+                            'created_at'     => $design['created_at'] ?? '',
+                            'attachment'     => $design['attachment'] ?? null
+                        ];
+                    }
                 }
             }
 

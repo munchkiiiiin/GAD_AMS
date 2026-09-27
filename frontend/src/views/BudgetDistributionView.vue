@@ -741,10 +741,10 @@ onMounted(() => {
   --text-primary: #ffffff;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
-  --emerald: #10b981;
-  --amber: #f59e0b;
-  --rose: #ef4444;
-  --blue: #3b82f6;
+  --emerald: #34d399;
+  --amber: #fbbf24;
+  --rose: #f87171;
+  --blue: #60a5fa;
 
   width: 100%;
   display: flex;
@@ -1232,13 +1232,16 @@ onMounted(() => {
 .finance-label {
   color: #cbd5e1;
   font-weight: 500;
+  font-size: 0.85rem;
 }
 .finance-val {
   font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
 }
 .finance-remaining {
   padding-top: 8px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
   margin-top: 2px;
 }
 .remaining-label {
@@ -1281,9 +1284,9 @@ onMounted(() => {
 }
 .line-card {
   background: rgba(0, 0, 0, 0.25);
-  border-radius: 6px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(192, 132, 252, 0.12);
   font-size: 0.8rem;
 }
 .line-label {
@@ -1294,12 +1297,24 @@ onMounted(() => {
 .line-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 .line-detail-row {
   display: flex;
   justify-content: space-between;
   color: #cbd5e1;
+}
+.line-detail-row .mono {
+  color: #ffffff;
+  font-weight: 600;
+}
+.line-detail-row.text-emerald,
+.line-detail-row.text-emerald .mono {
+  color: #34d399 !important;
+}
+.line-detail-row.text-amber,
+.line-detail-row.text-amber .mono {
+  color: #fbbf24 !important;
 }
 
 /* ── Manage Allocations Button ───────────────────────── */

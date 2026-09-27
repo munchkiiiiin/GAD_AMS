@@ -98,15 +98,40 @@
       </div>
 
       <div class="filters-wrap">
-        <label class="filter-label">Filter by Classification:</label>
-        <div class="select-wrapper">
-          <select v-model="mandateStatsFilter" class="filter-select">
-            <option value="all">All Classifications</option>
-            <option value="client">Client-Focused</option>
-            <option value="org">Organization-Focused</option>
-            <option value="attributed">Attributed Program</option>
-          </select>
+        <div class="filter-item">
+          <label class="filter-label">Classification:</label>
+          <div class="select-wrapper">
+            <select v-model="mandateStatsFilter" class="filter-select">
+              <option value="all">All Classifications</option>
+              <option value="client">Client-Focused</option>
+              <option value="org">Organization-Focused</option>
+              <option value="attributed">Attributed Program</option>
+            </select>
+          </div>
         </div>
+
+        <div class="filter-item">
+          <label class="filter-label">Pending Allocations:</label>
+          <div class="select-wrapper">
+            <select v-model="allocationFilter" class="filter-select">
+              <option value="all">All Allocations</option>
+              <option value="has_pending">Has Pending Allocations (ADs)</option>
+              <option value="no_pending">No Pending Allocations</option>
+              <option value="has_utilized">Has Utilized Budget (ARs)</option>
+              <option value="no_activity">No Activity / Zero Commitments</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          v-if="mandateStatsFilter !== 'all' || allocationFilter !== 'all' || searchQuery"
+          @click="resetFilters"
+          class="btn-reset-filters"
+          title="Reset all filters"
+        >
+          <span class="material-symbols-outlined icon-reset">filter_alt_off</span>
+          <span>Reset</span>
+        </button>
       </div>
     </div>
 
@@ -287,10 +312,10 @@
                 </thead>
                 <tbody>
                   <tr v-for="bl in currentAllocationStat.budget_lines" :key="bl.id">
-                    <td class="font-medium">{{ bl.label || 'Unnamed Line' }}</td>
-                    <td class="mono">₱{{ formatNum(bl.amount) }}</td>
-                    <td class="mono text-amber">₱{{ formatNum(bl.pending_budget) }}</td>
-                    <td class="mono text-emerald">₱{{ formatNum(bl.utilized_budget) }}</td>
+                    <td class="font-medium text-white">{{ bl.label || 'Unnamed Line' }}</td>
+                    <td class="mono font-semibold text-white">₱{{ formatNum(bl.amount) }}</td>
+                    <td class="mono text-amber font-semibold">₱{{ formatNum(bl.pending_budget) }}</td>
+                    <td class="mono text-emerald font-semibold">₱{{ formatNum(bl.utilized_budget) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -359,10 +384,10 @@
                     <tbody>
                       <tr v-for="item in doc.items" :key="item.id">
                         <td>
-                          <div class="font-medium">{{ item.item_name }}</div>
+                          <div class="font-medium text-white">{{ item.item_name }}</div>
                           <div v-if="item.sub_item" class="item-subtext">{{ item.sub_item }}</div>
                         </td>
-                        <td class="mono font-semibold">₱{{ formatNum(item.amount) }}</td>
+                        <td class="mono font-semibold text-white">₱{{ formatNum(item.amount) }}</td>
                         <td>
                           <select
                             v-if="item.amount > 0"
@@ -456,6 +481,7 @@ const planAndBudgetPath = computed(() => {
 // State for Mandates
 const mandateStats = ref([]);
 const mandateStatsFilter = ref('all');
+const allocationFilter = ref('all');
 const searchQuery = ref('');
 const loadingStats = ref(true);
 
@@ -469,6 +495,23 @@ const filteredMandateStats = computed(() => {
   let list = mandateStats.value;
   if (mandateStatsFilter.value !== 'all') {
     list = list.filter((s) => s.classification === mandateStatsFilter.value);
+  }
+  if (allocationFilter.value !== 'all') {
+    if (allocationFilter.value === 'has_pending') {
+      list = list.filter((s) => (parseFloat(s.pending_budget) || 0) > 0 || (s.approved_ad_count || 0) > 0);
+    } else if (allocationFilter.value === 'no_pending') {
+      list = list.filter((s) => (parseFloat(s.pending_budget) || 0) === 0 && (s.approved_ad_count || 0) === 0);
+    } else if (allocationFilter.value === 'has_utilized') {
+      list = list.filter((s) => (parseFloat(s.utilized_budget) || 0) > 0 || (s.approved_ar_count || 0) > 0);
+    } else if (allocationFilter.value === 'no_activity') {
+      list = list.filter(
+        (s) =>
+          (parseFloat(s.pending_budget) || 0) === 0 &&
+          (parseFloat(s.utilized_budget) || 0) === 0 &&
+          (s.approved_ad_count || 0) === 0 &&
+          (s.approved_ar_count || 0) === 0
+      );
+    }
   }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
@@ -498,6 +541,7 @@ const totals = computed(() => {
 
 const resetFilters = () => {
   mandateStatsFilter.value = 'all';
+  allocationFilter.value = 'all';
   searchQuery.value = '';
 };
 
@@ -932,11 +976,19 @@ onMounted(() => {
 .filters-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .filter-label {
   font-size: 0.85rem;
   color: #cbd5e1;
+  font-weight: 500;
+  white-space: nowrap;
 }
 .filter-select {
   background: #1e1b2e;
@@ -947,10 +999,37 @@ onMounted(() => {
   outline: none;
   font-size: 0.88rem;
   cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-select:focus {
+  border-color: rgba(192, 132, 252, 0.5);
+  box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.15);
 }
 .filter-select option {
   background: #1e293b;
   color: #ffffff;
+}
+
+.btn-reset-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-reset-filters:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+}
+.icon-reset {
+  font-size: 16px;
 }
 
 /* ── Content States ──────────────────────────────────── */
@@ -1181,27 +1260,29 @@ onMounted(() => {
   justify-content: center;
   gap: 8px;
   padding: 10px 14px;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: #93c5fd;
-  font-weight: 600;
+  background: rgba(147, 51, 234, 0.12);
+  border: 1px solid rgba(192, 132, 252, 0.28);
+  color: #c084fc;
+  font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .btn-manage-allocations:hover {
-  background: rgba(59, 130, 246, 0.25);
+  background: rgba(147, 51, 234, 0.24);
   color: #ffffff;
-  border-color: rgba(59, 130, 246, 0.6);
+  border-color: rgba(192, 132, 252, 0.55);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
+  transform: translateY(-1px);
 }
 .icon-inline {
   font-size: 1.1rem;
 }
 
-/* ── Modal Styling ───────────────────────────────────── */
+/* ── Modal Styling (Consistent with GAD-AMS Dark Theme) ── */
 .modal-backdrop {
   z-index: 1000;
   position: fixed;
@@ -1209,118 +1290,183 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-card {
   width: 100%;
-  max-width: 860px;
+  max-width: 900px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  background: #1e293b;
-  border-radius: 14px;
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(145deg, #13111f 0%, #1c182d 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(192, 132, 252, 0.24);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 35px rgba(147, 51, 234, 0.15);
   overflow: hidden;
+  color: #f1f5f9;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 22px 26px 18px;
+  background: #171326;
+  border-bottom: 1px solid rgba(192, 132, 252, 0.15);
 }
 .modal-title {
   margin: 0 0 4px 0;
   font-size: 1.35rem;
+  font-weight: 800;
   color: #ffffff;
+  letter-spacing: -0.015em;
 }
 .modal-subtitle {
   margin: 0;
   font-size: 0.88rem;
-  color: var(--text-muted);
+  color: #94a3b8;
+  line-height: 1.4;
 }
 .btn-close-modal {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(192, 132, 252, 0.2);
+  border-radius: 8px;
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
   cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
 }
 .btn-close-modal:hover {
-  color: #ffffff;
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  transform: scale(1.05);
 }
 
 .modal-body {
-  padding: 20px 24px;
+  padding: 22px 26px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
+  background: #120f1e;
 }
 
 .modal-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .section-title {
   margin: 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #ffffff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(192, 132, 252, 0.15);
   padding-bottom: 8px;
 }
 
 .table-scroll {
   overflow-x: auto;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border: 1px solid rgba(192, 132, 252, 0.16);
+  border-radius: 10px;
+  background: #141120;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 .modal-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
+  color: #f1f5f9;
 }
 .modal-table thead tr {
-  background: rgba(0, 0, 0, 0.25);
+  background: #1b172a;
   text-align: left;
-  color: var(--text-muted);
+  border-bottom: 1px solid rgba(192, 132, 252, 0.16);
 }
-.modal-table th,
+.modal-table th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #c084fc;
+}
 .modal-table td {
-  padding: 10px 12px;
+  padding: 12px 14px;
+  color: #f1f5f9;
+  border-top: 1px solid rgba(192, 132, 252, 0.08);
 }
-.modal-table tbody tr {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+.modal-table tbody tr:hover {
+  background: rgba(192, 132, 252, 0.04);
+}
+
+.modal-table td.mono {
+  font-family: 'IBM Plex Mono', monospace;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.text-amber {
+  color: #fbbf24 !important;
+  font-weight: 600;
+}
+.text-emerald {
+  color: #34d399 !important;
+  font-weight: 600;
 }
 
 .empty-allocations {
   padding: 24px;
   text-align: center;
-  color: var(--text-muted);
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
+  color: #94a3b8;
+  background: #161224;
+  border: 1px dashed rgba(192, 132, 252, 0.25);
+  border-radius: 10px;
+  font-size: 0.9rem;
 }
 
 .docs-stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 .doc-card {
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border: 1px solid rgba(192, 132, 252, 0.18);
+  border-radius: 12px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.15);
+  background: #151122;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease;
+}
+.doc-card:hover {
+  border-color: rgba(192, 132, 252, 0.35);
 }
 .doc-header {
   padding: 12px 16px;
@@ -1328,7 +1474,12 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.02);
+  background: #1b172a;
+  border-bottom: 1px solid rgba(192, 132, 252, 0.1);
+  transition: background 0.15s ease;
+}
+.doc-header:hover {
+  background: #221d36;
 }
 .doc-title-row {
   display: flex;
@@ -1337,90 +1488,163 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 .badge-type {
-  font-weight: 700;
-  font-size: 0.8rem;
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-.badge-ar { color: var(--emerald); }
-.badge-ad { color: var(--amber); }
+.badge-ar {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-ad {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
 
 .doc-title-text {
   font-weight: 600;
   color: #ffffff;
+  font-size: 0.92rem;
+  line-height: 1.4;
 }
 
 .btn-preview-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  color: #60a5fa;
-  font-size: 0.8rem;
+  gap: 5px;
+  background: rgba(192, 132, 252, 0.12);
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  color: #c084fc;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.btn-preview-link:hover {
+  background: rgba(192, 132, 252, 0.25);
+  color: #ffffff;
+  border-color: rgba(192, 132, 252, 0.45);
 }
 .expand-arrow {
-  color: var(--text-muted);
+  color: #94a3b8;
+  font-size: 0.8rem;
 }
 .doc-body {
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 14px 16px;
+  background: #120f1e;
 }
 
 .item-subtext {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-top: 3px;
+  font-weight: 500;
 }
 
 .line-select {
-  padding: 6px 10px;
-  background: #0f172a;
-  border: 1px solid var(--border-subtle);
+  padding: 7px 12px;
+  background: #1a1628;
+  border: 1px solid rgba(192, 132, 252, 0.25);
   color: #ffffff;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.85rem;
   outline: none;
-  max-width: 220px;
+  max-width: 240px;
+  transition: all 0.2s ease;
+}
+.line-select:focus {
+  border-color: #c084fc;
+  box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.2);
+}
+.line-select option {
+  background: #1a1628;
+  color: #ffffff;
 }
 
 .status-pill {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
-.status-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-.status-red   { background: rgba(239, 68, 68, 0.15);  color: #f87171; }
-.status-gray  { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); }
+.status-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.status-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-gray {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
 
 .modal-footer {
-  padding: 16px 24px;
+  padding: 18px 26px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  border-top: 1px solid var(--border-subtle);
+  background: #171326;
+  border-top: 1px solid rgba(192, 132, 252, 0.15);
 }
 
 .btn-outline {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .btn-save-alloc {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #7b2cbf, #6100a4);
+  border: 1px solid rgba(192, 132, 252, 0.3);
   color: #ffffff;
+  padding: 8px 22px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(123, 44, 191, 0.35);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .btn-save-alloc:hover:not(:disabled) {
-  background: #2563eb;
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(123, 44, 191, 0.5);
 }
 .btn-save-alloc:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .modal-loading {
@@ -1428,6 +1652,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--text-muted);
+  gap: 12px;
+  color: #94a3b8;
 }
 </style>

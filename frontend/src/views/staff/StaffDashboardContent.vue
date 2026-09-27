@@ -89,6 +89,106 @@
           </div>
         </div>
 
+        <!-- PENDING BUDGET ALLOCATION TRACKER SECTION -->
+        <div class="pending-activities-section pending-allocations-section">
+          <div class="section-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="title-indicator"></span>
+              <h4 class="section-title">Pending Budget Allocation Tracker</h4>
+              <span v-if="pendingAllocations.length > 0" class="badge-alloc-count">
+                {{ pendingAllocations.length }} Needs Allocation
+              </span>
+            </div>
+            <router-link to="/staff/budget-distribution?filter=pending_allocation" class="header-action-link" title="Open full budget distribution with pending filter">
+              <span>Open Budget Distribution</span>
+              <span class="material-symbols-outlined" style="font-size: 16px;">open_in_new</span>
+            </router-link>
+          </div>
+
+          <div class="table-container">
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr class="table-header-row">
+                    <th class="table-header-cell">Activity / Document</th>
+                    <th class="table-header-cell">Office / Unit</th>
+                    <th class="table-header-cell">Type</th>
+                    <th class="table-header-cell">Target Mandate</th>
+                    <th class="table-header-cell">Unallocated Budget</th>
+                    <th class="table-header-cell" style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="table-body">
+                  <tr v-if="loadingAllocations">
+                    <td colspan="6" class="loading-state-cell">
+                      <div class="tracker-spinner"></div>
+                      <span>Loading pending budget allocations…</span>
+                    </td>
+                  </tr>
+                  <tr v-else-if="pendingAllocations.length === 0">
+                    <td colspan="6" class="empty-state-cell">
+                      <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0;">
+                        <span class="material-symbols-outlined" style="color: #34d399; font-size: 32px;">verified</span>
+                        <span style="color: #e2e8f0; font-weight: 600; font-size: 0.95rem;">All Budget Allocations Up to Date</span>
+                        <span style="color: #94a3b8; font-size: 0.8rem;">All approved Activity Designs and Accomplishment Reports have been allocated to planned budget lines.</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr
+                    v-else
+                    v-for="item in pendingAllocations"
+                    :key="item.type + '-' + item.id"
+                    @click="navigateToAllocate(item)"
+                    class="table-row alloc-row"
+                    title="Click to allocate budget for this activity"
+                  >
+                    <td class="activity-title-cell">
+                      <div class="alloc-title-wrap">
+                        <span class="alloc-title-text">{{ item.title }}</span>
+                        <span class="alloc-control-no">{{ item.control_number }}</span>
+                      </div>
+                    </td>
+                    <td class="office-cell">{{ item.office }}</td>
+                    <td class="type-cell">
+                      <span class="type-badge" :class="item.type === 'AD' ? 'type-badge-design' : 'type-badge-report'">
+                        {{ item.type }}
+                      </span>
+                    </td>
+                    <td class="mandate-cell">
+                      <div class="alloc-mandate-name" :title="item.mandate_title">
+                        {{ item.mandate_title }}
+                      </div>
+                    </td>
+                    <td class="amount-cell">
+                      <div class="alloc-amount-wrap">
+                        <span class="alloc-amount-text">₱{{ Number(item.unallocated_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                        <span class="alloc-items-badge">
+                          {{ item.unallocated_count }} of {{ item.total_items_count }} items pending
+                        </span>
+                      </div>
+                    </td>
+                    <td class="action-cell" style="text-align: right;">
+                      <button class="btn-allocate-now" @click.stop="navigateToAllocate(item)" title="Allocate budget for this document">
+                        <span>Allocate</span>
+                        <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="table-footer">
+              <p class="footer-text">
+                Showing {{ pendingAllocations.length }} document{{ pendingAllocations.length === 1 ? '' : 's' }} requiring budget line allocation
+              </p>
+              <router-link to="/staff/budget-distribution?filter=pending_allocation" class="view-all-link">
+                View All in Budget Distribution →
+              </router-link>
+            </div>
+          </div>
+        </div>
+
         <div class="analytics-section">
           <div class="analytics-chart-container" style="background: rgba(0, 0, 0, 0.25); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(147, 51, 234, 0.15); box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.1);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -508,6 +608,38 @@ const navigateToView = (type, id) => {
   }
 };
 
+const pendingAllocations = ref([]);
+const loadingAllocations = ref(false);
+
+const fetchPendingAllocations = async () => {
+  loadingAllocations.value = true;
+  try {
+    const res = await api.get('/plan/pending-allocations-tracker');
+    if (res.data && res.data.success) {
+      pendingAllocations.value = res.data.data || [];
+    } else {
+      pendingAllocations.value = [];
+    }
+  } catch (err) {
+    console.error('Failed to fetch pending allocations:', err);
+    pendingAllocations.value = [];
+  } finally {
+    loadingAllocations.value = false;
+  }
+};
+
+const navigateToAllocate = (item) => {
+  const gpbId = item.mandate_id || (item.gpb_ids && item.gpb_ids[0]) || '';
+  router.push({
+    path: '/staff/budget-distribution',
+    query: {
+      open_mandate: gpbId,
+      doc_id: item.id,
+      doc_type: item.type
+    }
+  });
+};
+
 /* ==============================================================
   DYNAMIC MATRIX STATE (API READY)
   ==============================================================
@@ -730,6 +862,8 @@ onMounted(async () => {
       metricsStats.value[3].value = '₱' + budgetFormat.format(remaining);
       metricsStats.value[4].value = percent + '%';
     }
+
+    await fetchPendingAllocations();
   } catch (err) {
     console.error('Dashboard load error:', err);
   }
@@ -1046,6 +1180,140 @@ onMounted(async () => {
 
 .view-all-link:hover {
   color: #c084fc;
+}
+
+/* Pending Allocation Tracker Specific Styles */
+.pending-allocations-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.badge-alloc-count {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #c084fc;
+  text-decoration: none;
+  padding: 5px 12px;
+  background: rgba(147, 51, 234, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.25);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+.header-action-link:hover {
+  background: rgba(147, 51, 234, 0.2);
+  border-color: #c084fc;
+  color: #f3e8ff;
+}
+
+.alloc-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.alloc-title-text {
+  font-weight: 600;
+  color: #f8fafc;
+  line-height: 1.35;
+  font-size: 0.95rem;
+}
+.alloc-control-no {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.alloc-mandate-name {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alloc-amount-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.alloc-amount-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fbbf24;
+  font-family: monospace;
+}
+.alloc-items-badge {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.btn-allocate-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.35), rgba(192, 132, 252, 0.2));
+  border: 1px solid rgba(192, 132, 252, 0.4);
+  color: #f3e8ff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-allocate-now:hover {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.55), rgba(192, 132, 252, 0.35));
+  border-color: #c084fc;
+  color: #ffffff;
+  transform: translateX(2px);
+  box-shadow: 0 0 12px rgba(192, 132, 252, 0.35);
+}
+
+.alloc-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.alloc-row:hover {
+  background: rgba(147, 51, 234, 0.08) !important;
+}
+
+.loading-state-cell {
+  padding: 2.5rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+.tracker-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(147, 51, 234, 0.2);
+  border-top-color: #c084fc;
+  border-radius: 50%;
+  animation: spin-tracker 0.8s linear infinite;
+  margin: 0 auto 8px auto;
+}
+@keyframes spin-tracker {
+  to { transform: rotate(360deg); }
 }
 
 /* Analytics Placeholder */

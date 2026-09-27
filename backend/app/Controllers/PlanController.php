@@ -681,4 +681,178 @@ class PlanController extends ResourceController
 
         return $this->respond(['success' => true]);
     }
+
+    public function getPendingAllocationsTracker()
+    {
+        $db = \Config\Database::connect();
+
+        // 1. Fetch approved ADs
+        $ads = $db->table('activity_design ad')
+            ->select('ad.act_design_id as id, ad.activity_title as title, ad.control_number, ad.proposed_budget, ad.start_date, ad.end_date, ad.gpb_id, ad.gad_mandate_id, office_units.office_name as office')
+            ->join('users', 'users.id = ad.user_id', 'left')
+            ->join('office_units', 'office_units.office_id = users.office_id', 'left')
+            ->where('ad.status', 'Approved')
+            ->where('ad.deleted_at', null)
+            ->orderBy('ad.act_design_id', 'DESC')
+            ->get()->getResultArray();
+
+        $pendingTrackerList = [];
+
+        foreach ($ads as $ad) {
+            // Check if there is a verified AR
+            $ar = $db->table('accomplishment_report')
+                ->where('control_number', $ad['control_number'])
+                ->where('deleted_at', null)
+                ->get()->getRowArray();
+
+            $isArVerified = ($ar && $ar['status'] === 'Verified');
+            $hasVerifiedAndArchivedAR = ($ar && $ar['status'] === 'Verified' && $ar['is_archived'] == 1);
+            if ($hasVerifiedAndArchivedAR) {
+                continue; // completely finished and archived
+            }
+
+            // Resolve GPB Mandate information
+            $gpbIds = [];
+            if (!empty($ad['gpb_id'])) {
+                $gpbIds[] = (int)$ad['gpb_id'];
+            }
+            if (!empty($ad['gad_mandate_id'])) {
+                $mIds = explode(',', $ad['gad_mandate_id']);
+                foreach ($mIds as $mid) {
+                    if (is_numeric($mid)) $gpbIds[] = (int)$mid;
+                }
+            }
+            // Also check activity_design_mandates
+            $admRows = $db->table('activity_design_mandates')->where('act_design_id', $ad['id'])->get()->getResultArray();
+            foreach ($admRows as $r) {
+                if (!empty($r['mandate_id'])) $gpbIds[] = (int)$r['mandate_id'];
+            }
+            $gpbIds = array_values(array_unique(array_filter($gpbIds)));
+
+            $mandateName = 'Mandate Activity';
+            if (!empty($gpbIds)) {
+                $gpbRow = $db->table('gpb_items')->whereIn('id', $gpbIds)->get()->getRowArray();
+                if ($gpbRow) {
+                    $mandateName = !empty($gpbRow['activity']) ? $gpbRow['activity'] : (!empty($gpbRow['mandate']) ? $gpbRow['mandate'] : 'Mandate Activity');
+                }
+            }
+
+            // If AR is verified, check the AR budget items
+            if ($isArVerified) {
+                $arItems = $db->table('accomplishment_budget_items')
+                    ->where('accomplishment_report_id', $ar['id'])
+                    ->where('amount >', 0)
+                    ->get()->getResultArray();
+
+                $totalItems = count($arItems);
+                $unallocatedCount = 0;
+                $unallocatedAmount = 0.0;
+                $totalAmount = 0.0;
+
+                foreach ($arItems as $item) {
+                    $itemAmt = (float)$item['amount'];
+                    $totalAmount += $itemAmt;
+
+                    $allocQuery = $db->table('budget_item_mandate_allocations')
+                        ->where('item_type', 'AR')
+                        ->where('budget_item_id', $item['id'])
+                        ->where('gpb_budget_line_id !=', null)
+                        ->where('allocated_amount >', 0);
+                    if (!empty($gpbIds)) {
+                        $allocQuery->whereIn('mandate_id', $gpbIds);
+                    }
+                    $isAllocated = $allocQuery->countAllResults() > 0;
+
+                    if (!$isAllocated) {
+                        $unallocatedCount++;
+                        $unallocatedAmount += $itemAmt;
+                    }
+                }
+
+                if ($unallocatedCount > 0) {
+                    $pendingTrackerList[] = [
+                        'id' => (int)$ar['id'],
+                        'ad_id' => (int)$ad['id'],
+                        'type' => 'AR',
+                        'typeName' => 'Accomplishment Report',
+                        'title' => 'AR for ' . ($ad['title'] ?: $ad['control_number']),
+                        'control_number' => $ar['control_number'] ?: $ad['control_number'],
+                        'office' => $ad['office'] ?: 'GAD Unit',
+                        'gpb_ids' => $gpbIds,
+                        'mandate_id' => !empty($gpbIds) ? $gpbIds[0] : null,
+                        'mandate_title' => $mandateName,
+                        'unallocated_count' => $unallocatedCount,
+                        'total_items_count' => $totalItems,
+                        'unallocated_amount' => $unallocatedAmount,
+                        'total_amount' => $totalAmount,
+                        'date' => !empty($ar['start_date']) ? date('M d, Y', strtotime($ar['start_date'])) : 'Recent',
+                        'timestamp' => (int)$ar['id']
+                    ];
+                }
+            } else {
+                // Check the AD budget items
+                $adItems = $db->table('activity_budget_items')
+                    ->where('act_design_id', $ad['id'])
+                    ->where('amount >', 0)
+                    ->get()->getResultArray();
+
+                $totalItems = count($adItems);
+                $unallocatedCount = 0;
+                $unallocatedAmount = 0.0;
+                $totalAmount = 0.0;
+
+                foreach ($adItems as $item) {
+                    $itemAmt = (float)$item['amount'];
+                    $totalAmount += $itemAmt;
+
+                    $allocQuery = $db->table('budget_item_mandate_allocations')
+                        ->where('item_type', 'AD')
+                        ->where('budget_item_id', $item['id'])
+                        ->where('gpb_budget_line_id !=', null)
+                        ->where('allocated_amount >', 0);
+                    if (!empty($gpbIds)) {
+                        $allocQuery->whereIn('mandate_id', $gpbIds);
+                    }
+                    $isAllocated = $allocQuery->countAllResults() > 0;
+
+                    if (!$isAllocated) {
+                        $unallocatedCount++;
+                        $unallocatedAmount += $itemAmt;
+                    }
+                }
+
+                if ($unallocatedCount > 0) {
+                    $pendingTrackerList[] = [
+                        'id' => (int)$ad['id'],
+                        'ad_id' => (int)$ad['id'],
+                        'type' => 'AD',
+                        'typeName' => 'Activity Design',
+                        'title' => $ad['title'],
+                        'control_number' => $ad['control_number'],
+                        'office' => $ad['office'] ?: 'GAD Unit',
+                        'gpb_ids' => $gpbIds,
+                        'mandate_id' => !empty($gpbIds) ? $gpbIds[0] : null,
+                        'mandate_title' => $mandateName,
+                        'unallocated_count' => $unallocatedCount,
+                        'total_items_count' => $totalItems,
+                        'unallocated_amount' => $unallocatedAmount,
+                        'total_amount' => $totalAmount ?: (float)$ad['proposed_budget'],
+                        'date' => !empty($ad['start_date']) ? date('M d, Y', strtotime($ad['start_date'])) : 'Recent',
+                        'timestamp' => (int)$ad['id']
+                    ];
+                }
+            }
+        }
+
+        // Sort by newest timestamp (ID) first
+        usort($pendingTrackerList, function ($a, $b) {
+            return ($b['timestamp'] ?? 0) <=> ($a['timestamp'] ?? 0);
+        });
+
+        return $this->respond([
+            'success' => true,
+            'data' => $pendingTrackerList,
+            'count' => count($pendingTrackerList)
+        ]);
+    }
 }

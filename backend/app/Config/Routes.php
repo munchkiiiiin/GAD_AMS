@@ -391,6 +391,9 @@ $routes->group((ENVIRONMENT === 'production' ? '' : 'api'), function($routes) {
     $routes->get('plan/mandate-allocations', 'PlanController::getMandateAllocations');
     $routes->post('plan/mandate-allocations', 'PlanController::saveMandateAllocations');
     
+    $routes->options('plan/pending-allocations-tracker', 'AuthController::handleOptions');
+    $routes->get('plan/pending-allocations-tracker', 'PlanController::getPendingAllocationsTracker');
+    
     $routes->options('gpb/export/(:num)', 'AuthController::handleOptions');
     $routes->get('gpb/export/(:num)', 'GpbExportController::export/$1');
     

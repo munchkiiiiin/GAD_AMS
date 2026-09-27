@@ -364,7 +364,7 @@
             </div>
 
             <div v-else class="docs-stack">
-              <div v-for="doc in allocationsData" :key="doc.type + doc.id" class="doc-card">
+              <div v-for="doc in allocationsData" :key="doc.type + doc.id" class="doc-card" :class="{ 'doc-card-highlight': doc._highlight }">
                 <div class="doc-header" @click="doc._expanded = !doc._expanded">
                   <div class="doc-title-row">
                     <span class="badge-type" :class="doc.type === 'AR' ? 'badge-ar' : 'badge-ad'">
@@ -613,7 +613,7 @@ const arVerifiedTotals = computed(() => {
   return Object.entries(map).map(([name, amount]) => ({ name, amount }));
 });
 
-const openAllocationModal = async (stat) => {
+const openAllocationModal = async (stat, highlightDocId = null) => {
   currentAllocationStat.value = stat;
   showAllocationModal.value = true;
   loadingAllocations.value = true;
@@ -626,7 +626,8 @@ const openAllocationModal = async (stat) => {
     if (res.data && res.data.success) {
       allocationsData.value = (res.data.data || []).map((d) => ({
         ...d,
-        _expanded: true
+        _expanded: true,
+        _highlight: highlightDocId ? (String(d.id) === String(highlightDocId)) : false
       }));
     } else {
       Swal.fire('Notice', res.data?.message || 'No allocations data found for this mandate.', 'info');
@@ -728,8 +729,17 @@ const closePdfModal = () => {
   pdfFileUrl.value = '';
 };
 
-onMounted(() => {
-  fetchMandateStats();
+onMounted(async () => {
+  await fetchMandateStats();
+  if (route.query.open_mandate) {
+    const targetGpbId = Number(route.query.open_mandate);
+    const targetStat = mandateStats.value.find(s => 
+      (s.gpb_ids || []).includes(targetGpbId) || String(s.key) === String(route.query.open_mandate)
+    );
+    if (targetStat) {
+      openAllocationModal(targetStat, route.query.doc_id);
+    }
+  }
 });
 </script>
 
@@ -1532,6 +1542,15 @@ onMounted(() => {
 }
 .doc-card:hover {
   border-color: rgba(192, 132, 252, 0.35);
+}
+.doc-card-highlight {
+  border-color: #b979cc !important;
+  box-shadow: 0 0 20px rgba(185, 121, 204, 0.45) !important;
+  animation: pulse-border 2s infinite alternate;
+}
+@keyframes pulse-border {
+  from { box-shadow: 0 0 10px rgba(185, 121, 204, 0.3); }
+  to { box-shadow: 0 0 22px rgba(185, 121, 204, 0.6); }
 }
 .doc-header {
   padding: 12px 16px;

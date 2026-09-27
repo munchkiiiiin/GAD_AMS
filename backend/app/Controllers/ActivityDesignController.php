@@ -1085,6 +1085,21 @@ class ActivityDesignController extends BaseController
             }
             $amount = filter_var($item['amount'] ?? null, FILTER_VALIDATE_FLOAT);
             $pax = ($item['pax'] ?? null) === null || $item['pax'] === '' ? null : filter_var($item['pax'], FILTER_VALIDATE_INT);
+            if (($pax === null || $pax <= 0) && !empty($item['multipliers'])) {
+                $mults = is_string($item['multipliers']) ? json_decode($item['multipliers'], true) : $item['multipliers'];
+                if (is_array($mults)) {
+                    foreach ($mults as $m) {
+                        $q = (int)($m['value'] ?? $m['q'] ?? 0);
+                        if ($q > 0) {
+                            $pax = $q;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (($pax === null || $pax <= 0) && !empty($item['sub_item']) && preg_match('/(\d+)\s*(?:speakers?|recipients?|pax|persons?|heads?|pcs?|pieces?)/i', (string)$item['sub_item'], $subMatch)) {
+                $pax = (int)$subMatch[1];
+            }
             if ($amount === false || $amount < 0 || ($pax !== null && ($pax === false || $pax < 0))) {
                 return 'Budget amounts and pax counts must be non-negative numbers.';
             }

@@ -81,7 +81,26 @@ const budgetGroups = [
 let lineSeq = 1;
 const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const lineTotal = it => (Number(it.rate) || 0) * it.mult.reduce((p, m) => p * (Number(m.q) || 0), 1);
-const paxOf = it => Number((it.mult.find(m => /^(pax|person|persons|head|heads)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
+const getHeadcountMultiplier = (item, multipliers) => {
+  const isPF = /professional fee|honoraria/i.test(item?.name || '');
+  const isToken = /token/i.test(item?.name || '');
+
+  if (isPF) {
+    return multipliers.find(m => /^(speaker|speakers|pax|person|persons|head|heads|expert|experts|facilitator|facilitators|resource\s*person|trainer|trainers|moderator|panelist|session|sessions|hr|hrs|hour|hours|day|days)$/i.test(String(m.u || '').trim())) || multipliers[0];
+  }
+  if (isToken) {
+    return multipliers.find(m => /^(recipient|recipients|speaker|speakers|pax|person|persons|head|heads|pc|pcs|piece|pieces|item|items|set|sets)$/i.test(String(m.u || '').trim())) || multipliers[0];
+  }
+  return multipliers.find(m => /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(m.u || '').trim()))
+    || multipliers.find(m => !/^(day|days|night|nights|hr|hrs|hour|hours|trip|trips)$/i.test(String(m.u || '').trim()))
+    || multipliers[0];
+};
+
+const paxOf = it => {
+  if (!it || !Array.isArray(it.mult)) return 0;
+  const hm = getHeadcountMultiplier(it, it.mult);
+  return Number(hm?.q) || 0;
+};
 const lineFormula = it => [peso(it.rate), ...it.mult.map(m => `${Number(m.q) || 0} ${String(m.u || '').trim()}`.trim())].join(' × ');
 
 const baseFor = l => {

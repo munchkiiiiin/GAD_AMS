@@ -1613,6 +1613,21 @@ const handleUpdate = async () => {
   }
 
 
+  const getHeadcountMultiplier = (item, multipliers) => {
+    const isPF = /professional fee|honoraria/i.test(item?.name || '');
+    const isToken = /token/i.test(item?.name || '');
+
+    if (isPF) {
+      return multipliers.find(m => /^(speaker|speakers|pax|person|persons|head|heads|expert|experts|facilitator|facilitators|resource\s*person|trainer|trainers|moderator|panelist|session|sessions|hr|hrs|hour|hours|day|days)$/i.test(String(m.u || '').trim())) || multipliers[0];
+    }
+    if (isToken) {
+      return multipliers.find(m => /^(recipient|recipients|speaker|speakers|pax|person|persons|head|heads|pc|pcs|piece|pieces|item|items|set|sets)$/i.test(String(m.u || '').trim())) || multipliers[0];
+    }
+    return multipliers.find(m => /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(m.u || '').trim()))
+      || multipliers.find(m => !/^(day|days|night|nights|hr|hrs|hour|hours|trip|trips)$/i.test(String(m.u || '').trim()))
+      || multipliers[0];
+  };
+
   const paxBased = /(breakfast|lunch|dinner|snack|professional fee|honoraria|token)/i;
   for (const venueId of formData.value.venues || []) {
     const items = formData.value.venue_budgets?.[venueId] || [];
@@ -1620,14 +1635,20 @@ const handleUpdate = async () => {
     for (const item of items) {
       const multipliers = Array.isArray(item.mult) ? item.mult.filter(multiplier => multiplier && typeof multiplier === 'object') : [];
       const amount = (Number(item.rate) || 0) * multipliers.reduce((total, multiplier) => total * (Number(multiplier.q) || 0), 1);
-      const paxMultiplier = multipliers.find(multiplier => /^(pax|person|persons|head|heads)$/i.test(String(multiplier.u || '').trim()));
-      const pax = paxMultiplier ? Number(paxMultiplier.q) : 0;
-      if (amount < 0 || pax < 0 || (amount === 0 && pax > 0)) {
-        Swal.fire({ icon: 'warning', title: 'Invalid Budget', text: 'Each budget line must have a non-negative amount, and a zero-cost line cannot have a positive pax count.', confirmButtonColor: '#b979cc' });
+      const headMultiplier = getHeadcountMultiplier(item, multipliers);
+      const count = headMultiplier ? Number(headMultiplier.q) : 0;
+      if (amount < 0 || count < 0 || (amount === 0 && count > 0)) {
+        Swal.fire({ icon: 'warning', title: 'Invalid Budget', text: 'Each budget line must have a non-negative amount, and a zero-cost line cannot have a positive quantity count.', confirmButtonColor: '#b979cc' });
         return;
       }
-      if (amount > 0 && paxBased.test(String(item.name || '')) && pax <= 0) {
-        Swal.fire({ icon: 'warning', title: 'Invalid Budget', text: `${item.name} requires a pax count greater than zero when it has an amount.`, confirmButtonColor: '#b979cc' });
+      if (amount > 0 && paxBased.test(String(item.name || '')) && count <= 0) {
+        let msg = `${item.name} requires a pax/participant count greater than zero when it has an amount.`;
+        if (/professional fee|honoraria/i.test(item.name || '')) {
+          msg = `${item.name} requires a speaker or quantity count greater than zero when it has an amount.`;
+        } else if (/token/i.test(item.name || '')) {
+          msg = `${item.name} requires a recipient or item count greater than zero when it has an amount.`;
+        }
+        Swal.fire({ icon: 'warning', title: 'Invalid Budget', text: msg, confirmButtonColor: '#b979cc' });
         return;
       }
       venueTotal += amount;
@@ -1680,7 +1701,8 @@ const handleUpdate = async () => {
         if (item.custom && (!String(item.name).trim() || lineTotalAmount <= 0)) return;
         const isOther = item.custom && item.group === 'materials';
         
-        const paxOfItem = Number(((item.mult || []).find(m => /^(pax|person|persons|head|heads)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
+        const headMultiplier = getHeadcountMultiplier(item, item.mult || []);
+        const paxOfItem = Number(headMultiplier?.q) || 0;
         const lineFormulaStr = [('₱' + (Number(item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })), ...(item.mult ? item.mult.map(m => `${Number(m.q) || 0} ${String(m.u || '').trim()}`.trim()) : [])].join(' × ');
         
         normalizedBudgetItems.push({

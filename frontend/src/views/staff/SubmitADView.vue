@@ -1128,6 +1128,21 @@ const paxOf = item => Number(
     /^(pax|person|persons|head|heads)$/i.test(String(multiplier.u || '').trim())
   ) || {}).q
 ) || 0;
+const getHeadcountMultiplier = (item, multipliers) => {
+  const isPF = /professional fee|honoraria/i.test(item?.name || '');
+  const isToken = /token/i.test(item?.name || '');
+
+  if (isPF) {
+    return multipliers.find(m => /^(speaker|speakers|pax|person|persons|head|heads|expert|experts|facilitator|facilitators|resource\s*person|trainer|trainers|moderator|panelist|session|sessions|hr|hrs|hour|hours|day|days)$/i.test(String(m.u || '').trim())) || multipliers[0];
+  }
+  if (isToken) {
+    return multipliers.find(m => /^(recipient|recipients|speaker|speakers|pax|person|persons|head|heads|pc|pcs|piece|pieces|item|items|set|sets)$/i.test(String(m.u || '').trim())) || multipliers[0];
+  }
+  return multipliers.find(m => /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(m.u || '').trim()))
+    || multipliers.find(m => !/^(day|days|night|nights|hr|hrs|hour|hours|trip|trips)$/i.test(String(m.u || '').trim()))
+    || multipliers[0];
+};
+
 const budgetValidationError = () => {
   const paxBased = /(breakfast|lunch|dinner|snack|professional fee|honoraria|token)/i;
   for (const venueId of form.value.venues || []) {
@@ -1136,13 +1151,19 @@ const budgetValidationError = () => {
     for (const item of items) {
       const multipliers = validMultipliers(item);
       const amount = (Number(item.rate) || 0) * multipliers.reduce((total, multiplier) => total * (Number(multiplier.q) || 0), 1);
-      const paxMultiplier = multipliers.find(multiplier => /^(pax|person|persons|head|heads)$/i.test(String(multiplier.u || '').trim()));
-      const pax = paxMultiplier ? Number(paxMultiplier.q) : 0;
-      if (amount < 0 || pax < 0 || (amount === 0 && pax > 0)) {
-        return 'Each budget line must have a non-negative amount, and a zero-cost line cannot have a positive pax count.';
+      const headMultiplier = getHeadcountMultiplier(item, multipliers);
+      const count = headMultiplier ? Number(headMultiplier.q) : 0;
+      if (amount < 0 || count < 0 || (amount === 0 && count > 0)) {
+        return 'Each budget line must have a non-negative amount, and a zero-cost line cannot have a positive quantity count.';
       }
-      if (amount > 0 && paxBased.test(String(item.name || '')) && pax <= 0) {
-        return `${item.name} requires a pax count greater than zero when it has an amount.`;
+      if (amount > 0 && paxBased.test(String(item.name || '')) && count <= 0) {
+        if (/professional fee|honoraria/i.test(item.name || '')) {
+          return `${item.name} requires a speaker or quantity count greater than zero when it has an amount.`;
+        }
+        if (/token/i.test(item.name || '')) {
+          return `${item.name} requires a recipient or item count greater than zero when it has an amount.`;
+        }
+        return `${item.name} requires a pax/participant count greater than zero when it has an amount.`;
       }
       venueTotal += amount;
     }
@@ -1396,7 +1417,8 @@ const submitActivityDesign = async () => {
         if (item.custom && (!String(item.name).trim() || lineTotalAmount <= 0)) return;
         const isOther = item.custom && item.group === 'materials';
         
-        const paxOfItem = Number((multipliers.find(m => /^(pax|person|persons|head|heads)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
+        const headMultiplier = getHeadcountMultiplier(item, multipliers);
+        const paxOfItem = Number(headMultiplier?.q) || 0;
         const lineFormulaStr = [('₱' + (Number(item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })), ...multipliers.map(m => `${Number(m.q) || 0} ${String(m.u || '').trim()}`.trim())].join(' × ');
         
         normalizedBudgetItems.push({

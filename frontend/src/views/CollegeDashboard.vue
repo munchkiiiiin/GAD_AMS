@@ -20,7 +20,7 @@
       />
     </div>
 
-    <main :class="['flex-grow w-full min-w-0 overflow-x-hidden', ($route.path.includes('/plan-and-budget') || $route.path.includes('/budget-distribution')) ? 'p-0' : 'p-4 md:p-10']" :style="($route.path.includes('/plan-and-budget') || $route.path.includes('/budget-distribution')) ? 'overflow-x: auto;' : ''">
+    <main :class="['flex-grow w-full min-w-0 overflow-x-hidden', $route.path.includes('/plan-and-budget') ? 'p-0' : 'p-4 md:p-10']" :style="$route.path.includes('/plan-and-budget') ? 'overflow-x: auto;' : ''">
       <router-view />
     </main>
   </div>

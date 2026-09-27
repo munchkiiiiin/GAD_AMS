@@ -118,7 +118,19 @@ class ActivityDesignController extends BaseController
               if (is_numeric($issue)) {
                   $finalIssues[] = $issue;
               }
-          }
+            }
+
+            // If a specific gender issue was selected, resolve the exact GPB mandate item ID
+            if (!empty($finalIssues) && !empty($finalMandates)) {
+                $intersect = array_values(array_intersect($finalMandates, $finalIssues));
+                if (!empty($intersect)) {
+                    $finalMandates = $intersect;
+                } else if (count($finalMandates) > 1) {
+                    $finalMandates = [reset($finalMandates)];
+                }
+            } else if (count($finalMandates) > 1) {
+                $finalMandates = [reset($finalMandates)];
+            }
 
             // Save uploaded PDF to writable/uploads/drafts/
             $file = $this->request->getFile('design_file');
@@ -129,6 +141,7 @@ class ActivityDesignController extends BaseController
                 "activity_classification_id" => $this->request->getPost("activity_classification_id"),
                 "classification_id"          => $this->request->getPost("activity_classification_id"), // mapping to db column
                 "gad_mandate_id"             => !empty($finalMandates) ? $finalMandates[0] : null,
+                "gpb_id"                     => !empty($finalMandates) ? $finalMandates[0] : null,
                 "gender_issue_id"            => !empty($finalIssues) ? $finalIssues[0] : null,
                 "activity_title"             => $this->request->getPost("activity_title"),
                 "start_date"                 => $this->request->getPost("start_date"),
@@ -613,16 +626,29 @@ class ActivityDesignController extends BaseController
         $genderIssues = $genderIssueStr ? explode(',', $genderIssueStr) : [];
         $finalIssues = [];
         foreach ($genderIssues as $issue) {
-              if (is_numeric($issue)) {
-                  $finalIssues[] = $issue;
-              }
-          }
+            if (is_numeric($issue)) {
+                $finalIssues[] = $issue;
+            }
+        }
+
+        // If a specific gender issue was selected, resolve the exact GPB mandate item ID
+        if (!empty($finalIssues) && !empty($finalMandates)) {
+            $intersect = array_values(array_intersect($finalMandates, $finalIssues));
+            if (!empty($intersect)) {
+                $finalMandates = $intersect;
+            } else if (count($finalMandates) > 1) {
+                $finalMandates = [reset($finalMandates)];
+            }
+        } else if (count($finalMandates) > 1) {
+            $finalMandates = [reset($finalMandates)];
+        }
 
         $data = [
             'activity_title'      => $this->request->getPost('activity_title'),
             'form_type'           => $this->request->getPost('form_type'),
             'classification_id'   => $this->request->getPost('activity_classification_id'),
             'gad_mandate_id'      => !empty($finalMandates) ? $finalMandates[0] : null,
+            'gpb_id'              => !empty($finalMandates) ? $finalMandates[0] : null,
             'gender_issue_id'     => !empty($finalIssues) ? $finalIssues[0] : null,
             'start_date'          => $this->request->getPost('start_date'),
             'end_date'            => $this->request->getPost('end_date'),

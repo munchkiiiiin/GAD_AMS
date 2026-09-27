@@ -1189,7 +1189,7 @@ const fetchDesignDetails = async () => {
                 const mappedIds = gadMandates.value
                     .filter(m => {
                         const mIds = String(m.id).split(',');
-                        return mIds.every(id => savedMandates.includes(id));
+                        return mIds.some(id => savedMandates.includes(id));
                     })
                     .map(m => m.id.toString())[0] || '';
                 if (mappedIds.length > 0) {
@@ -1207,7 +1207,7 @@ const fetchDesignDetails = async () => {
             formData.value.gender_issue = genderIssues.value
                 .filter(m => {
                     const mIds = String(m.id).split(',');
-                    return mIds.every(id => savedIssues.includes(id));
+                    return mIds.some(id => savedIssues.includes(id));
                 })
                 .map(m => m.id.toString())[0] || '';
             if (savedIssues.includes('Other') && formData.value.gender_issue !== 'Other') {

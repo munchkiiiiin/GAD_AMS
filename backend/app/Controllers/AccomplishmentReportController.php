@@ -234,6 +234,21 @@ class AccomplishmentReportController extends BaseController
                       $adUpdateData['gender_issue_id'] = $finalIssues[0];
                   }
 
+                  if (!empty($finalIssues) && !empty($finalMandates)) {
+                      $intersect = array_values(array_intersect($finalMandates, $finalIssues));
+                      if (!empty($intersect)) {
+                          $finalMandates = $intersect;
+                      } else if (count($finalMandates) > 1) {
+                          $finalMandates = [reset($finalMandates)];
+                      }
+                  } else if (count($finalMandates) > 1) {
+                      $finalMandates = [reset($finalMandates)];
+                  }
+                  if (!empty($finalMandates)) {
+                      $adUpdateData['gad_mandate_id'] = $finalMandates[0];
+                      $adUpdateData['gpb_id'] = $finalMandates[0];
+                  }
+
                   // Junction table update logic will be injected below by another regex
                   if (!empty($adUpdateData) && !empty($actDesignId)) {
                     $db->table('activity_design')
@@ -793,6 +808,21 @@ class AccomplishmentReportController extends BaseController
                   }
                   if (!empty($finalIssues)) {
                       $adUpdateData['gender_issue_id'] = $finalIssues[0];
+                  }
+
+                  if (!empty($finalIssues) && !empty($finalMandates)) {
+                      $intersect = array_values(array_intersect($finalMandates, $finalIssues));
+                      if (!empty($intersect)) {
+                          $finalMandates = $intersect;
+                      } else if (count($finalMandates) > 1) {
+                          $finalMandates = [reset($finalMandates)];
+                      }
+                  } else if (count($finalMandates) > 1) {
+                      $finalMandates = [reset($finalMandates)];
+                  }
+                  if (!empty($finalMandates)) {
+                      $adUpdateData['gad_mandate_id'] = $finalMandates[0];
+                      $adUpdateData['gpb_id'] = $finalMandates[0];
                   }
 
                   // Junction table update logic will be injected below by another regex

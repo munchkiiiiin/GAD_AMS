@@ -959,7 +959,7 @@ watch(() => form.value.control_number, async (newVal) => {
     const savedMandates = selected.gad_mandate_ids ? String(selected.gad_mandate_ids).split(',').map(s=>s.trim()) : [];
     form.value.gad_mandate_id = GADMandates.value.filter(m => {
        const mIds = String(m.id).split(',');
-       return mIds.every(id => savedMandates.includes(id));
+       return mIds.some(id => savedMandates.includes(id));
     }).map(m => String(m.id))[0] || '';
     if (savedMandates.includes('Other') && form.value.gad_mandate_id !== 'Other') {
         form.value.gad_mandate_id = 'Other';
@@ -970,7 +970,7 @@ watch(() => form.value.control_number, async (newVal) => {
     const savedIssues = selected.gender_issue_ids ? String(selected.gender_issue_ids).split(',').map(s=>s.trim()) : [];
     form.value.gender_issue_id = genderIssues.value.filter(m => {
        const mIds = String(m.id).split(',');
-       return mIds.every(id => savedIssues.includes(id));
+       return mIds.some(id => savedIssues.includes(id));
     }).map(m => String(m.id))[0] || '';
     if (savedIssues.includes('Other') && form.value.gender_issue_id !== 'Other') {
         form.value.gender_issue_id = 'Other';

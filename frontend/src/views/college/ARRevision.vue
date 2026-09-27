@@ -2031,7 +2031,7 @@ const fetchReportDetails = async () => {
         const savedMandates = r.activity_design.gad_mandate_id ? String(r.activity_design.gad_mandate_id).split(',').map(s=>s.trim()) : [];
         form.value.gad_mandate_id = GADMandates.value.filter(m => {
            const mIds = String(m.id).split(',');
-           return mIds.every(id => savedMandates.includes(id));
+           return mIds.some(id => savedMandates.includes(id));
         }).map(m => String(m.id))[0] || '';
         if (savedMandates.includes('Other') && form.value.gad_mandate_id !== 'Other') {
             form.value.gad_mandate_id = 'Other';
@@ -2044,7 +2044,7 @@ const fetchReportDetails = async () => {
         const savedIssues = r.activity_design.gender_issue_id ? String(r.activity_design.gender_issue_id).split(',').map(s=>s.trim()) : [];
         form.value.gender_issue_id = genderIssues.value.filter(m => {
            const mIds = String(m.id).split(',');
-           return mIds.every(id => savedIssues.includes(id));
+           return mIds.some(id => savedIssues.includes(id));
         }).map(m => String(m.id))[0] || '';
         if (savedIssues.includes('Other') && form.value.gender_issue_id !== 'Other') {
             form.value.gender_issue_id = 'Other';

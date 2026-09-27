@@ -27,9 +27,10 @@
           </router-link>
         </div>
       </div>
+    </header>
 
-      <!-- KPI SUMMARY METRICS CARDS -->
-      <div class="kpi-grid">
+    <!-- KPI SUMMARY METRICS CARDS -->
+    <div class="kpi-grid">
         <div class="kpi-card kpi-mandates">
           <div class="kpi-icon-wrap indigo">
             <span class="material-symbols-outlined">account_tree</span>
@@ -82,7 +83,6 @@
           </div>
         </div>
       </div>
-    </header>
 
     <!-- TOOLBAR & FILTERS -->
     <div class="toolbar-section">
@@ -675,10 +675,6 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap');
 
 .budget-dist-page {
-  --bg-gradient: linear-gradient(135deg, #0f172a, #020617);
-  --card-bg: rgba(15, 23, 42, 0.7);
-  --card-border: rgba(147, 51, 234, 0.2);
-  --border-subtle: rgba(255, 255, 255, 0.08);
   --primary-bright: #c084fc;
   --text-primary: #ffffff;
   --text-muted: #94a3b8;
@@ -688,13 +684,10 @@ onMounted(() => {
   --rose: #ef4444;
   --blue: #3b82f6;
 
-  min-height: 100vh;
-  background: var(--bg-gradient);
-  color: var(--text-primary);
-  padding: 28px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 1.5rem;
 }
 
 .mono {
@@ -703,15 +696,7 @@ onMounted(() => {
 
 /* ── Top Header ────────────────────────────────────────── */
 .dist-header {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  padding: 0 0.25rem;
 }
 
 .dist-header-content {
@@ -719,7 +704,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 .header-titles {
@@ -730,37 +715,43 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: #64748b;
 }
 
 .badge-role {
-  background: rgba(192, 132, 252, 0.15);
-  border: 1px solid rgba(192, 132, 252, 0.3);
-  color: var(--primary-bright);
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 600;
+  background: rgba(147, 51, 234, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  color: #7e22ce;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11.5px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .breadcrumb-sep {
-  opacity: 0.5;
+  opacity: 0.6;
+}
+
+.breadcrumb-text {
+  font-weight: 500;
+  color: #64748b;
 }
 
 .page-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #ffffff;
-  margin: 0 0 6px 0;
-  letter-spacing: -0.02em;
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
 }
 
 .page-subtitle {
-  font-size: 0.92rem;
-  color: var(--text-muted);
+  font-size: 1rem;
+  color: #475569;
   line-height: 1.5;
   margin: 0;
 }
@@ -768,16 +759,17 @@ onMounted(() => {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn-action {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 8px 14px;
   border-radius: 8px;
-  font-size: 0.88rem;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -786,23 +778,27 @@ onMounted(() => {
 }
 
 .btn-refresh {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .btn-refresh:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: #f8fafc;
+  border-color: #9333ea;
+  color: #7e22ce;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.15);
 }
 
 .btn-primary-plan {
   background: linear-gradient(135deg, #7b2cbf, #6100a4);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(123, 44, 191, 0.3);
+  box-shadow: 0 2px 6px rgba(123, 44, 191, 0.25);
 }
 .btn-primary-plan:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(123, 44, 191, 0.35);
 }
 
 .spin-icon {
@@ -817,23 +813,24 @@ onMounted(() => {
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 16px;
-  margin-top: 6px;
+  gap: 1rem;
 }
 
 .kpi-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 14px 16px;
-  transition: transform 0.2s ease;
+  background: linear-gradient(135deg, #13111f 0%, #1e1b2e 100%);
+  border: 1px solid rgba(192, 132, 252, 0.15);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
 }
 .kpi-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(192, 132, 252, 0.35);
+  box-shadow: 0 14px 20px -3px rgba(0, 0, 0, 0.35);
 }
 
 .kpi-icon-wrap {
@@ -856,20 +853,21 @@ onMounted(() => {
   flex-direction: column;
 }
 .kpi-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.78rem;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-weight: 700;
 }
 .kpi-value {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
   color: #ffffff;
+  line-height: 1.2;
 }
 .kpi-subtotal {
-  font-size: 0.8rem;
-  color: var(--text-dim);
+  font-size: 11px;
+  color: #94a3b8;
   font-weight: 400;
 }
 
@@ -884,11 +882,12 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid var(--border-subtle);
+  gap: 1rem;
+  background: #141120;
+  border: 1px solid rgba(192, 132, 252, 0.15);
   border-radius: 12px;
-  padding: 12px 18px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .search-wrap {
@@ -902,14 +901,14 @@ onMounted(() => {
 .search-icon {
   position: absolute;
   left: 12px;
-  color: var(--text-muted);
+  color: #94a3b8;
   font-size: 1.2rem;
   pointer-events: none;
 }
 .search-input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border-subtle);
+  background: #1e1b2e;
+  border: 1px solid rgba(192, 132, 252, 0.2);
   border-radius: 8px;
   padding: 9px 36px 9px 38px;
   color: #ffffff;
@@ -926,7 +925,7 @@ onMounted(() => {
   right: 10px;
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: #94a3b8;
   cursor: pointer;
 }
 
@@ -937,11 +936,11 @@ onMounted(() => {
 }
 .filter-label {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: #cbd5e1;
 }
 .filter-select {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border-subtle);
+  background: #1e1b2e;
+  border: 1px solid rgba(192, 132, 252, 0.2);
   color: #ffffff;
   padding: 8px 14px;
   border-radius: 8px;
@@ -965,8 +964,8 @@ onMounted(() => {
   text-align: center;
 }
 .state-container.empty-box {
-  background: rgba(30, 41, 59, 0.3);
-  border: 1px dashed var(--border-subtle);
+  background: #141120;
+  border: 1px dashed rgba(192, 132, 252, 0.3);
   border-radius: 16px;
 }
 .empty-icon {
@@ -998,24 +997,24 @@ onMounted(() => {
 .mandates-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 22px;
+  gap: 1.25rem;
 }
 
 .mandate-card {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, #13111f 0%, #1e1b2e 100%);
+  border: 1px solid rgba(192, 132, 252, 0.15);
   border-radius: 14px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .mandate-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(192, 132, 252, 0.3);
-  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.35);
+  border-color: rgba(192, 132, 252, 0.35);
+  box-shadow: 0 14px 20px -3px rgba(0, 0, 0, 0.35);
 }
 
 .card-content-stack {

@@ -293,6 +293,8 @@ class PlanController extends ResourceController
                 ->get()->getResultArray();
                 
             $stat['approved_ad_count'] = count($adLinks);
+            $unallocatedItemsCount = 0;
+            $totalActiveItemsCount = 0;
             
             foreach($adLinks as $ad) {
                 // Check AR
@@ -305,6 +307,25 @@ class PlanController extends ResourceController
                 if ($ar) {
                     $stat['approved_ar_count']++;
                     
+                    // Track AR unallocated items
+                    $arItems = $db->table('accomplishment_budget_items')
+                        ->where('accomplishment_report_id', $ar['id'])
+                        ->where('amount >', 0)
+                        ->get()->getResultArray();
+                    foreach ($arItems as $abi) {
+                        $totalActiveItemsCount++;
+                        $hasAlloc = $db->table('budget_item_mandate_allocations')
+                            ->where('item_type', 'AR')
+                            ->where('budget_item_id', $abi['id'])
+                            ->whereIn('mandate_id', $stat['gpb_ids'])
+                            ->where('gpb_budget_line_id !=', null)
+                            ->where('allocated_amount >', 0)
+                            ->countAllResults() > 0;
+                        if (!$hasAlloc) {
+                            $unallocatedItemsCount++;
+                        }
+                    }
+
                     $arAllocationsExist = $db->table('budget_item_mandate_allocations bima')
                         ->join('accomplishment_budget_items abi', 'abi.id = bima.budget_item_id')
                         ->where('bima.item_type', 'AR')
@@ -334,6 +355,25 @@ class PlanController extends ResourceController
                     
                     $stat['utilized_budget'] += $actualCost;
                 } else {
+                    // Track AD unallocated items
+                    $adItems = $db->table('activity_budget_items')
+                        ->where('act_design_id', $ad['act_design_id'])
+                        ->where('amount >', 0)
+                        ->get()->getResultArray();
+                    foreach ($adItems as $abi) {
+                        $totalActiveItemsCount++;
+                        $hasAlloc = $db->table('budget_item_mandate_allocations')
+                            ->where('item_type', 'AD')
+                            ->where('budget_item_id', $abi['id'])
+                            ->whereIn('mandate_id', $stat['gpb_ids'])
+                            ->where('gpb_budget_line_id !=', null)
+                            ->where('allocated_amount >', 0)
+                            ->countAllResults() > 0;
+                        if (!$hasAlloc) {
+                            $unallocatedItemsCount++;
+                        }
+                    }
+
                     // Sum only manually allocated activity_budget_items for this specific group of mandates
                     $manualPendingRow = $db->table('budget_item_mandate_allocations bima')
                         ->selectSum('bima.allocated_amount')
@@ -347,6 +387,11 @@ class PlanController extends ResourceController
                     $stat['pending_budget'] += $pendingCost;
                 }
             }
+            
+            $stat['unallocated_item_count'] = $unallocatedItemsCount;
+            $stat['total_active_item_count'] = $totalActiveItemsCount;
+            $stat['has_unallocated'] = ($unallocatedItemsCount > 0);
+            $stat['is_fully_allocated'] = ($totalActiveItemsCount > 0 && $unallocatedItemsCount === 0);
             // Now, populate per-budget-line totals
             // For ARs (Utilized)
             $arLineCosts = $db->table('budget_item_mandate_allocations bima')
@@ -610,6 +655,26 @@ class PlanController extends ResourceController
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s')
                     ]);
+                }
+            }
+        }
+
+        // Ensure activity_design proposed_budget is in sync with budget items sum
+        foreach ($allocations as $alloc) {
+            if (($alloc['item_type'] ?? '') === 'AD') {
+                $abi = $db->table('activity_budget_items')->where('id', $alloc['budget_item_id'])->get()->getRowArray();
+                if ($abi && !empty($abi['act_design_id'])) {
+                    $sumRow = $db->table('activity_budget_items')
+                        ->selectSum('amount')
+                        ->where('act_design_id', $abi['act_design_id'])
+                        ->get()->getRowArray();
+                    $tot = $sumRow ? (float)$sumRow['amount'] : 0.0;
+                    if ($tot > 0) {
+                        $db->table('activity_design')
+                            ->where('act_design_id', $abi['act_design_id'])
+                            ->where('proposed_budget', 0)
+                            ->update(['proposed_budget' => $tot]);
+                    }
                 }
             }
         }

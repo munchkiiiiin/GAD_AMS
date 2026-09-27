@@ -115,8 +115,9 @@
           <div class="select-wrapper">
             <select v-model="allocationFilter" class="filter-select">
               <option value="all">All Allocations</option>
-              <option value="has_pending">Has Pending Allocations (ADs)</option>
-              <option value="no_pending">No Pending Allocations</option>
+              <option value="pending_allocation">Needs Allocation (Pending Items)</option>
+              <option value="fully_allocated">Fully Allocated</option>
+              <option value="has_pending_ads">Has Committed ADs (₱ Pending)</option>
               <option value="has_utilized">Has Utilized Budget (ARs)</option>
               <option value="no_activity">No Activity / Zero Commitments</option>
             </select>
@@ -209,6 +210,18 @@
                 <span class="counter-label">Approved ARs</span>
                 <span class="counter-value">{{ stat.approved_ar_count || 0 }}</span>
               </div>
+            </div>
+
+            <!-- Allocation Status Banner -->
+            <div v-if="stat.approved_ad_count > 0 || stat.approved_ar_count > 0" class="alloc-status-banner">
+              <span v-if="stat.has_unallocated" class="alloc-badge alloc-badge-pending">
+                <span class="material-symbols-outlined alloc-badge-icon">pending_actions</span>
+                <span>{{ stat.unallocated_item_count }} item(s) pending allocation</span>
+              </span>
+              <span v-else class="alloc-badge alloc-badge-success">
+                <span class="material-symbols-outlined alloc-badge-icon">check_circle</span>
+                <span>All budget items allocated</span>
+              </span>
             </div>
 
             <!-- Financial Figures -->
@@ -497,10 +510,15 @@ const filteredMandateStats = computed(() => {
     list = list.filter((s) => s.classification === mandateStatsFilter.value);
   }
   if (allocationFilter.value !== 'all') {
-    if (allocationFilter.value === 'has_pending') {
+    if (allocationFilter.value === 'pending_allocation' || allocationFilter.value === 'has_pending') {
+      // Mandates that still have items requiring allocation / assignment
+      list = list.filter((s) => s.has_unallocated === true || (s.unallocated_item_count || 0) > 0);
+    } else if (allocationFilter.value === 'fully_allocated' || allocationFilter.value === 'no_pending') {
+      // Mandates where all items from approved ADs/ARs have been assigned to budget lines
+      list = list.filter((s) => s.is_fully_allocated === true || (s.approved_ad_count > 0 && !s.has_unallocated));
+    } else if (allocationFilter.value === 'has_pending_ads') {
+      // Mandates with active approved AD commitments (pending AR)
       list = list.filter((s) => (parseFloat(s.pending_budget) || 0) > 0 || (s.approved_ad_count || 0) > 0);
-    } else if (allocationFilter.value === 'no_pending') {
-      list = list.filter((s) => (parseFloat(s.pending_budget) || 0) === 0 && (s.approved_ad_count || 0) === 0);
     } else if (allocationFilter.value === 'has_utilized') {
       list = list.filter((s) => (parseFloat(s.utilized_budget) || 0) > 0 || (s.approved_ar_count || 0) > 0);
     } else if (allocationFilter.value === 'no_activity') {
@@ -1166,6 +1184,38 @@ onMounted(() => {
   font-size: 1.15rem;
   color: #ffffff;
   font-weight: 700;
+}
+
+.alloc-status-banner {
+  margin-top: -4px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+.alloc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  width: 100%;
+  justify-content: center;
+}
+.alloc-badge-pending {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+.alloc-badge-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+.alloc-badge-icon {
+  font-size: 14px;
 }
 
 .finance-list {

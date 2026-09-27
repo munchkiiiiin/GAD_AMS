@@ -75,9 +75,14 @@ class BudgetController extends Controller
                     ->get()
                     ->getRow()->amount ?? 0.0;
 
-                $utilized += (float) $sum;
             } else {
-                $pendingApproved += (float) $design['proposed_budget'];
+                $sum = $db->table('activity_budget_items')
+                    ->selectSum('amount')
+                    ->where('act_design_id', $designId)
+                    ->get()
+                    ->getRow()->amount ?? 0.0;
+                $adBudget = (float)$sum > 0 ? (float)$sum : (float)$design['proposed_budget'];
+                $pendingApproved += $adBudget;
             }
         }
 
@@ -209,19 +214,29 @@ class BudgetController extends Controller
                     ->getRowArray();
 
                 if ($report) {
-                    // Use actual spending total from accomplishment_budget_items
                     $reportId = $report['id'];
-                    $actualTotalRow = $db->table('accomplishment_budget_items')
-                        ->select('SUM(amount) as total')
-                        ->where('accomplishment_report_id', $reportId)
-                        ->get()
-                        ->getRowArray();
+                    $arAllocRow = $db->table('budget_item_mandate_allocations bima')
+                        ->selectSum('bima.allocated_amount')
+                        ->join('accomplishment_budget_items abi', 'abi.id = bima.budget_item_id')
+                        ->where('bima.item_type', 'AR')
+                        ->where('abi.accomplishment_report_id', $reportId)
+                        ->where('bima.mandate_id', $gpbId)
+                        ->get()->getRowArray();
 
-                    $arAmount = 0.0;
-                    if ($actualTotalRow && $actualTotalRow['total'] !== null) {
-                        $arAmount = (float)$actualTotalRow['total'];
+                    if ($arAllocRow && $arAllocRow['allocated_amount'] !== null && (float)$arAllocRow['allocated_amount'] > 0) {
+                        $arAmount = (float)$arAllocRow['allocated_amount'];
                     } else {
-                        $arAmount = (float)$design['proposed_budget'];
+                        $actualTotalRow = $db->table('accomplishment_budget_items')
+                            ->select('SUM(amount) as total')
+                            ->where('accomplishment_report_id', $reportId)
+                            ->get()
+                            ->getRowArray();
+
+                        if ($actualTotalRow && $actualTotalRow['total'] !== null) {
+                            $arAmount = (float)$actualTotalRow['total'];
+                        } else {
+                            $arAmount = (float)$design['proposed_budget'];
+                        }
                     }
                     $utilized += $arAmount;
 
@@ -235,8 +250,26 @@ class BudgetController extends Controller
                         'attachment'     => $report['attachment'] ?? null
                     ];
                 } else {
-                    // No completed report yet, so it counts as pending approved commitment
-                    $adAmount = (float) $design['proposed_budget'];
+                    // Check if manual allocation exists in budget_item_mandate_allocations for this mandate
+                    $adAllocRow = $db->table('budget_item_mandate_allocations bima')
+                        ->selectSum('bima.allocated_amount')
+                        ->join('activity_budget_items abi', 'abi.id = bima.budget_item_id')
+                        ->where('bima.item_type', 'AD')
+                        ->where('abi.act_design_id', $design['act_design_id'])
+                        ->where('bima.mandate_id', $gpbId)
+                        ->get()->getRowArray();
+
+                    if ($adAllocRow && $adAllocRow['allocated_amount'] !== null && (float)$adAllocRow['allocated_amount'] > 0) {
+                        $adAmount = (float)$adAllocRow['allocated_amount'];
+                    } else {
+                        // Fallback: sum of activity_budget_items or proposed_budget
+                        $adItemsSumRow = $db->table('activity_budget_items')
+                            ->selectSum('amount')
+                            ->where('act_design_id', $design['act_design_id'])
+                            ->get()->getRowArray();
+                        $itemsSum = $adItemsSumRow && $adItemsSumRow['amount'] !== null ? (float)$adItemsSumRow['amount'] : 0.0;
+                        $adAmount = $itemsSum > 0 ? $itemsSum : (float)$design['proposed_budget'];
+                    }
                     $pendingApproved += $adAmount;
 
                     $pendingAds[] = [

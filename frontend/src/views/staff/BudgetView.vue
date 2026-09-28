@@ -502,10 +502,9 @@
                                   </span>
                                 </div>
                                 <button 
-                                  v-if="ad.attachment" 
-                                  @click.stop="openDocumentPreview(ad.attachment)"
+                                  @click.stop="navigateToDoc('AD', ad.id)"
                                   class="btn-preview-doc"
-                                  title="Preview Document"
+                                  title="View Activity Design"
                                 >
                                   <span class="material-symbols-outlined text-[14px]">visibility</span>
                                   <span>View Proposal</span>
@@ -555,10 +554,9 @@
                                   </span>
                                 </div>
                                 <button 
-                                  v-if="ar.attachment" 
-                                  @click.stop="openDocumentPreview(ar.attachment)"
+                                  @click.stop="navigateToDoc('AR', ar.id)"
                                   class="btn-preview-doc"
-                                  title="Preview Document"
+                                  title="View Accomplishment Report"
                                 >
                                   <span class="material-symbols-outlined text-[14px]">visibility</span>
                                   <span>View Report</span>
@@ -580,22 +578,15 @@
 
     </div>
 
-    <!-- PDF Document Preview Modal -->
-    <PdfPreviewModal 
-      :isOpen="isPdfModalOpen" 
-      :pdfUrl="pdfFileUrl" 
-      @close="closePdfModal" 
-    />
   </main>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import * as XLSX from 'xlsx';
+import XLSX from 'xlsx-js-style';
 import Swal from 'sweetalert2';
 import api from '../../api';
-import PdfPreviewModal from '../../components/PdfPreviewModal.vue';
 
 const router = useRouter();
 const user = ref(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -619,9 +610,17 @@ const availableYears = ref(['2026']);
 // Expandable drawer state
 const expandedRows = ref([]);
 
-// Document Preview Modal states
-const isPdfModalOpen = ref(false);
-const pdfFileUrl = ref('');
+// Direct document navigation
+const navigateToDoc = (type, id) => {
+  if (!id) return;
+  const role = (user.value.role || user.value.user_role || 'staff').toLowerCase();
+  const baseRole = (role === 'admin') ? 'admin' : ((role === 'college' || role === 'twg' || role === 'non-twg') ? 'college' : 'staff');
+  if (type === 'AD') {
+    router.push(`/${baseRole}/ad-view/${id}`);
+  } else {
+    router.push(`/${baseRole}/ar-view/${id}`);
+  }
+};
 
 const formatNum = (val) => {
   if (val === undefined || val === null) return '0.00';
@@ -842,25 +841,7 @@ const toggleExpandAll = () => {
   }
 };
 
-// PDF preview modal logic
-const openDocumentPreview = (attachment) => {
-  if (!attachment) return;
-  let fileName = attachment;
-  if (typeof attachment === 'string' && attachment.startsWith('[')) {
-    try {
-      const parsed = JSON.parse(attachment);
-      if (parsed.length > 0) fileName = parsed[0];
-    } catch(e) {}
-  }
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/api\/?$/, '');
-  pdfFileUrl.value = `${baseUrl}/api/files/archived/${fileName}`;
-  isPdfModalOpen.value = true;
-};
 
-const closePdfModal = () => {
-  isPdfModalOpen.value = false;
-  pdfFileUrl.value = '';
-};
 
 // Data Fetching
 const fetchBudgetData = async () => {
@@ -906,31 +887,45 @@ const fetchBudgetData = async () => {
   }
 };
 
-// Export formatted compliance Excel (.xlsx)
+// Export formatted compliance Excel (.xlsx) with institutional design & proper number formatting
 const exportToExcel = () => {
   const rows = [];
 
-  // Header Title Blocks
-  rows.push(['BENGUET STATE UNIVERSITY']);
-  rows.push(['GENDER AND DEVELOPMENT (GAD) ACTIVITY MANAGEMENT SYSTEM']);
-  rows.push([`BUDGET UTILIZATION AND EXPENDITURE MONITORING REPORT - FY ${selectedFiscalYear.value === 'all' ? 'ALL YEARS' : selectedFiscalYear.value}`]);
-  rows.push([`Generated on: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
-  rows.push([]);
+  const fiscalYearLabel = selectedFiscalYear.value === 'all' ? 'ALL YEARS' : selectedFiscalYear.value;
+  const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const userName = user.value.name || user.value.full_name || 'GAD Staff';
 
-  // High-Level Summary Block
-  rows.push(['FINANCIAL SUMMARY OVERVIEW']);
-  rows.push(['Total GAD Budget (PHP)', 'Proposed Budget / Committed ADs (PHP)', 'Actual Cost / Disbursed (PHP)', 'Remaining Available Balance (PHP)', 'Overall Utilization Rate (%)']);
+  // 1. Header Title Banner (Rows 0 - 3)
+  rows.push(['BENGUET STATE UNIVERSITY', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['GENDER AND DEVELOPMENT (GAD) ACTIVITY MANAGEMENT SYSTEM', '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push([`BUDGET UTILIZATION AND EXPENDITURE MONITORING REPORT - FY ${fiscalYearLabel}`, '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push([`Generated on: ${currentDate} | Generated by: ${userName}`, '', '', '', '', '', '', '', '', '', '', '', '']);
+  rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']); // Row 4 spacer
+
+  // 2. Executive Financial Summary Cards (Rows 5 - 7)
+  const remainingBudgetVal = Math.max(0, totalGadBudget.value - actualCost.value - proposedBudget.value);
   rows.push([
-    totalGadBudget.value,
-    proposedBudget.value,
-    actualCost.value,
-    Math.max(0, totalGadBudget.value - actualCost.value - proposedBudget.value),
-    `${overallUtilizationRate.value}%`
+    'TOTAL GAD ALLOCATED BUDGET', '', '',
+    'PROPOSED BUDGET (COMMITTED ADs)', '', '',
+    'ACTUAL DISBURSED COST (ARs)', '', '',
+    'REMAINING AVAILABLE BALANCE', '', '', ''
   ]);
-  rows.push([]);
-
-  // Mandate Data Table Header
   rows.push([
+    Number(totalGadBudget.value) || 0, '', '',
+    Number(proposedBudget.value) || 0, '', '',
+    Number(actualCost.value) || 0, '', '',
+    Number(remainingBudgetVal) || 0, '', '', ''
+  ]);
+  rows.push([
+    `${filteredRows.value.length} Active Mandate(s)`, '', '',
+    'Committed Proposals Pending Report', '', '',
+    'Verified Disbursed Expenditures', '', '',
+    `Overall Utilization Rate: ${overallUtilizationRate.value}%`, '', '', ''
+  ]);
+  rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']); // Row 8 spacer
+
+  // 3. Mandate Data Table Header (Row 9)
+  const tableHeaders = [
     '#',
     'GPB Code',
     'Classification',
@@ -940,28 +935,36 @@ const exportToExcel = () => {
     'Allocated Budget (PHP)',
     'Pending Approved ADs (PHP)',
     'Remaining Balance (PHP)',
-    'Actual Disbursed Cost / ARs (PHP)',
-    'Utilization Rate (%)',
+    'Actual Disbursed Cost (PHP)',
+    'Utilization Rate',
     'Approved ADs Count',
     'Verified ARs Count'
-  ]);
+  ];
+  rows.push(tableHeaders);
 
+  // 4. Data Rows
   let totalAlloc = 0;
   let totalPending = 0;
   let totalRem = 0;
   let totalDisbursed = 0;
+  let totalAdCount = 0;
+  let totalArCount = 0;
 
   filteredRows.value.forEach((r, idx) => {
     const alloc = Number(r.allocated) || 0;
     const pend = Number(r.pending_approved) || 0;
     const rem = Number(r.remaining) || 0;
     const disb = Number(r.actual_cost ?? r.utilized) || 0;
-    const rate = alloc > 0 ? ((disb / alloc) * 100).toFixed(2) + '%' : '0.00%';
+    const rate = alloc > 0 ? (disb / alloc) : 0;
+    const adCnt = (r.pending_ads || []).length;
+    const arCnt = (r.completed_ars || []).length;
 
     totalAlloc += alloc;
     totalPending += pend;
     totalRem += rem;
     totalDisbursed += disb;
+    totalAdCount += adCnt;
+    totalArCount += arCnt;
 
     rows.push([
       idx + 1,
@@ -975,15 +978,16 @@ const exportToExcel = () => {
       rem,
       disb,
       rate,
-      (r.pending_ads || []).length,
-      (r.completed_ars || []).length
+      adCnt,
+      arCnt
     ]);
   });
 
-  // Total Summary Row
-  rows.push([]);
+  // 5. Total Summary Row
+  const totalRowIdx = rows.length;
+  const overallRateDecimal = totalAlloc > 0 ? (totalDisbursed / totalAlloc) : 0;
   rows.push([
-    'TOTAL',
+    'TOTAL GAD FINANCIAL UTILIZATION',
     '',
     '',
     '',
@@ -993,32 +997,354 @@ const exportToExcel = () => {
     totalPending,
     totalRem,
     totalDisbursed,
-    totalAlloc > 0 ? ((totalDisbursed / totalAlloc) * 100).toFixed(2) + '%' : '0.00%',
-    '',
-    ''
+    overallRateDecimal,
+    totalAdCount,
+    totalArCount
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
 
-  // Column width configuration
-  ws['!cols'] = [
-    { wch: 5 },  // #
-    { wch: 12 }, // Code
-    { wch: 16 }, // Section
-    { wch: 40 }, // Mandate
-    { wch: 35 }, // Activity
-    { wch: 25 }, // Responsible
-    { wch: 18 }, // Allocated
-    { wch: 18 }, // Pending
-    { wch: 18 }, // Remaining
-    { wch: 18 }, // Disbursed
-    { wch: 12 }, // Rate
-    { wch: 12 }, // AD count
-    { wch: 12 }  // AR count
+  // Merges configuration
+  ws['!merges'] = [
+    // Banner rows
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 12 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 12 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 12 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 12 } },
+
+    // KPI Cards: Title
+    { s: { r: 5, c: 0 }, e: { r: 5, c: 2 } },
+    { s: { r: 5, c: 3 }, e: { r: 5, c: 5 } },
+    { s: { r: 5, c: 6 }, e: { r: 5, c: 8 } },
+    { s: { r: 5, c: 9 }, e: { r: 5, c: 12 } },
+
+    // KPI Cards: Value
+    { s: { r: 6, c: 0 }, e: { r: 6, c: 2 } },
+    { s: { r: 6, c: 3 }, e: { r: 6, c: 5 } },
+    { s: { r: 6, c: 6 }, e: { r: 6, c: 8 } },
+    { s: { r: 6, c: 9 }, e: { r: 6, c: 12 } },
+
+    // KPI Cards: Sub
+    { s: { r: 7, c: 0 }, e: { r: 7, c: 2 } },
+    { s: { r: 7, c: 3 }, e: { r: 7, c: 5 } },
+    { s: { r: 7, c: 6 }, e: { r: 7, c: 8 } },
+    { s: { r: 7, c: 9 }, e: { r: 7, c: 12 } },
+
+    // Total Row Label
+    { s: { r: totalRowIdx, c: 0 }, e: { r: totalRowIdx, c: 5 } }
   ];
 
+  // Column Widths
+  ws['!cols'] = [
+    { wch: 6 },  // #
+    { wch: 14 }, // GPB Code
+    { wch: 22 }, // Classification
+    { wch: 45 }, // Gender Issue / Mandate
+    { wch: 45 }, // GAD Activity
+    { wch: 28 }, // Responsible Office
+    { wch: 22 }, // Allocated Budget
+    { wch: 22 }, // Pending Approved ADs
+    { wch: 22 }, // Remaining Balance
+    { wch: 22 }, // Actual Disbursed Cost
+    { wch: 16 }, // Utilization Rate
+    { wch: 16 }, // Approved ADs Count
+    { wch: 16 }  // Verified ARs Count
+  ];
+
+  // Row Heights
+  ws['!rows'] = [
+    { hpt: 26 }, // Title 1
+    { hpt: 20 }, // Title 2
+    { hpt: 22 }, // Title 3
+    { hpt: 18 }, // Title 4
+    { hpt: 10 }, // Spacer
+    { hpt: 20 }, // Card Title
+    { hpt: 28 }, // Card Value
+    { hpt: 18 }, // Card Sub
+    { hpt: 12 }, // Spacer
+    { hpt: 28 }  // Table Header
+  ];
+
+  // Cell Styles
+  const borderThin = {
+    top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+  };
+
+  const cardBorderPurple = {
+    top: { style: 'thin', color: { rgb: 'C084FC' } },
+    bottom: { style: 'thin', color: { rgb: 'C084FC' } },
+    left: { style: 'thin', color: { rgb: 'C084FC' } },
+    right: { style: 'thin', color: { rgb: 'C084FC' } }
+  };
+  const cardBorderAmber = {
+    top: { style: 'thin', color: { rgb: 'FCD34D' } },
+    bottom: { style: 'thin', color: { rgb: 'FCD34D' } },
+    left: { style: 'thin', color: { rgb: 'FCD34D' } },
+    right: { style: 'thin', color: { rgb: 'FCD34D' } }
+  };
+  const cardBorderEmerald = {
+    top: { style: 'thin', color: { rgb: '6EE7B7' } },
+    bottom: { style: 'thin', color: { rgb: '6EE7B7' } },
+    left: { style: 'thin', color: { rgb: '6EE7B7' } },
+    right: { style: 'thin', color: { rgb: '6EE7B7' } }
+  };
+  const cardBorderBlue = {
+    top: { style: 'thin', color: { rgb: '93C5FD' } },
+    bottom: { style: 'thin', color: { rgb: '93C5FD' } },
+    left: { style: 'thin', color: { rgb: '93C5FD' } },
+    right: { style: 'thin', color: { rgb: '93C5FD' } }
+  };
+
+  // Helper to apply styles to range
+  const setRangeStyle = (rStart, rEnd, cStart, cEnd, styleObj, numFmt = null) => {
+    for (let r = rStart; r <= rEnd; r++) {
+      for (let c = cStart; c <= cEnd; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
+        ws[cellRef].s = JSON.parse(JSON.stringify(styleObj));
+        if (numFmt) {
+          ws[cellRef].z = numFmt;
+          ws[cellRef].s.numFmt = numFmt;
+        }
+      }
+    }
+  };
+
+  // 1. Banner Styles
+  setRangeStyle(0, 0, 0, 12, {
+    font: { name: 'Calibri', sz: 14, bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '2E1065' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  });
+  setRangeStyle(1, 1, 0, 12, {
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'E9D5FF' } },
+    fill: { fgColor: { rgb: '2E1065' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  });
+  setRangeStyle(2, 2, 0, 12, {
+    font: { name: 'Calibri', sz: 12, bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '3B0764' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  });
+  setRangeStyle(3, 3, 0, 12, {
+    font: { name: 'Calibri', sz: 9, italic: true, color: { rgb: 'DDD6FE' } },
+    fill: { fgColor: { rgb: '3B0764' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  });
+
+  // 2. KPI Cards Styles
+  // Card 1 (Purple)
+  setRangeStyle(5, 5, 0, 2, {
+    font: { name: 'Calibri', sz: 9, bold: true, color: { rgb: '581C87' } },
+    fill: { fgColor: { rgb: 'F3E8FF' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderPurple
+  });
+  setRangeStyle(6, 6, 0, 2, {
+    font: { name: 'Calibri', sz: 15, bold: true, color: { rgb: '581C87' } },
+    fill: { fgColor: { rgb: 'F3E8FF' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderPurple
+  }, '"₱"#,##0.00');
+  setRangeStyle(7, 7, 0, 2, {
+    font: { name: 'Calibri', sz: 8.5, color: { rgb: '7E22CE' } },
+    fill: { fgColor: { rgb: 'F3E8FF' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderPurple
+  });
+
+  // Card 2 (Amber)
+  setRangeStyle(5, 5, 3, 5, {
+    font: { name: 'Calibri', sz: 9, bold: true, color: { rgb: '92400E' } },
+    fill: { fgColor: { rgb: 'FEF3C7' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderAmber
+  });
+  setRangeStyle(6, 6, 3, 5, {
+    font: { name: 'Calibri', sz: 15, bold: true, color: { rgb: '92400E' } },
+    fill: { fgColor: { rgb: 'FEF3C7' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderAmber
+  }, '"₱"#,##0.00');
+  setRangeStyle(7, 7, 3, 5, {
+    font: { name: 'Calibri', sz: 8.5, color: { rgb: 'B45309' } },
+    fill: { fgColor: { rgb: 'FEF3C7' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderAmber
+  });
+
+  // Card 3 (Emerald)
+  setRangeStyle(5, 5, 6, 8, {
+    font: { name: 'Calibri', sz: 9, bold: true, color: { rgb: '065F46' } },
+    fill: { fgColor: { rgb: 'ECFDF5' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderEmerald
+  });
+  setRangeStyle(6, 6, 6, 8, {
+    font: { name: 'Calibri', sz: 15, bold: true, color: { rgb: '065F46' } },
+    fill: { fgColor: { rgb: 'ECFDF5' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderEmerald
+  }, '"₱"#,##0.00');
+  setRangeStyle(7, 7, 6, 8, {
+    font: { name: 'Calibri', sz: 8.5, color: { rgb: '047857' } },
+    fill: { fgColor: { rgb: 'ECFDF5' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderEmerald
+  });
+
+  // Card 4 (Blue)
+  setRangeStyle(5, 5, 9, 12, {
+    font: { name: 'Calibri', sz: 9, bold: true, color: { rgb: '1E40AF' } },
+    fill: { fgColor: { rgb: 'EFF6FF' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderBlue
+  });
+  setRangeStyle(6, 6, 9, 12, {
+    font: { name: 'Calibri', sz: 15, bold: true, color: { rgb: '1E40AF' } },
+    fill: { fgColor: { rgb: 'EFF6FF' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderBlue
+  }, '"₱"#,##0.00');
+  setRangeStyle(7, 7, 9, 12, {
+    font: { name: 'Calibri', sz: 8.5, color: { rgb: '2563EB' } },
+    fill: { fgColor: { rgb: 'EFF6FF' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: cardBorderBlue
+  });
+
+  // 3. Table Header Style (Row 9)
+  setRangeStyle(9, 9, 0, 12, {
+    font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '4C1D95' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: {
+      top: { style: 'thin', color: { rgb: '3B0764' } },
+      bottom: { style: 'medium', color: { rgb: '3B0764' } },
+      left: { style: 'thin', color: { rgb: '3B0764' } },
+      right: { style: 'thin', color: { rgb: '3B0764' } }
+    }
+  });
+
+  // 4. Data Rows Styles
+  const startDataRow = 10;
+  const numDataRows = filteredRows.value.length;
+  for (let i = 0; i < numDataRows; i++) {
+    const r = startDataRow + i;
+    const bgRgb = i % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+    const rowFill = { fgColor: { rgb: bgRgb } };
+
+    // Col 0: #
+    setRangeStyle(r, r, 0, 0, {
+      font: { name: 'Calibri', sz: 10 },
+      fill: rowFill,
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: borderThin
+    });
+    // Col 1: Code
+    setRangeStyle(r, r, 1, 1, {
+      font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '1E293B' } },
+      fill: rowFill,
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: borderThin
+    });
+    // Col 2: Classification
+    setRangeStyle(r, r, 2, 2, {
+      font: { name: 'Calibri', sz: 10 },
+      fill: rowFill,
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: borderThin
+    });
+    // Col 3: Mandate
+    setRangeStyle(r, r, 3, 3, {
+      font: { name: 'Calibri', sz: 9.5 },
+      fill: rowFill,
+      alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+      border: borderThin
+    });
+    // Col 4: Activity
+    setRangeStyle(r, r, 4, 4, {
+      font: { name: 'Calibri', sz: 9.5 },
+      fill: rowFill,
+      alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+      border: borderThin
+    });
+    // Col 5: Responsible
+    setRangeStyle(r, r, 5, 5, {
+      font: { name: 'Calibri', sz: 9.5 },
+      fill: rowFill,
+      alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+      border: borderThin
+    });
+    // Cols 6-9: Currency Columns
+    for (let c = 6; c <= 9; c++) {
+      setRangeStyle(r, r, c, c, {
+        font: { name: 'Calibri', sz: 10, color: { rgb: '0F172A' } },
+        fill: rowFill,
+        alignment: { horizontal: 'right', vertical: 'center' },
+        border: borderThin
+      }, '"₱"#,##0.00');
+    }
+    // Col 10: Utilization Rate (%)
+    setRangeStyle(r, r, 10, 10, {
+      font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '4338CA' } },
+      fill: rowFill,
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: borderThin
+    }, '0.00%');
+    // Cols 11-12: Counts
+    setRangeStyle(r, r, 11, 12, {
+      font: { name: 'Calibri', sz: 10 },
+      fill: rowFill,
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: borderThin
+    });
+  }
+
+  // 5. Total Row Styles
+  const totalBorder = {
+    top: { style: 'thin', color: { rgb: '7C3AED' } },
+    bottom: { style: 'double', color: { rgb: '5B21B6' } },
+    left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+  };
+  const totalFill = { fgColor: { rgb: 'EDE9FE' } };
+
+  setRangeStyle(totalRowIdx, totalRowIdx, 0, 5, {
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '3B0764' } },
+    fill: totalFill,
+    alignment: { horizontal: 'left', vertical: 'center' },
+    border: totalBorder
+  });
+
+  for (let c = 6; c <= 9; c++) {
+    setRangeStyle(totalRowIdx, totalRowIdx, c, c, {
+      font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '3B0764' } },
+      fill: totalFill,
+      alignment: { horizontal: 'right', vertical: 'center' },
+      border: totalBorder
+    }, '"₱"#,##0.00');
+  }
+
+  setRangeStyle(totalRowIdx, totalRowIdx, 10, 10, {
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '3B0764' } },
+    fill: totalFill,
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: totalBorder
+  }, '0.00%');
+
+  setRangeStyle(totalRowIdx, totalRowIdx, 11, 12, {
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '3B0764' } },
+    fill: totalFill,
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: totalBorder
+  });
+
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Budget Utilization');
+  XLSX.utils.book_append_sheet(wb, ws, 'Budget Monitoring');
 
   const fileName = `BSU_GAD_Budget_Utilization_Report_FY${selectedFiscalYear.value}_${new Date().toISOString().split('T')[0]}.xlsx`;
   XLSX.writeFile(wb, fileName);

@@ -11,7 +11,7 @@
               <span>College / TWG • Financial Monitoring</span>
             </div>
             <h1 class="page-title">Budget Utilization Monitoring</h1>
-            <p class="page-subtitle">Track institutional mandate allocations, committed funds, actual disbursed expenditures, and review audit trails for documents submitted by your unit.</p>
+            <p class="page-subtitle">Track institutional mandate allocations, committed funds, actual utilized expenditures, and review audit trails for documents submitted by your unit.</p>
           </div>
           <div class="header-actions">
             <!-- Fiscal Year Switcher -->
@@ -88,11 +88,11 @@
             <div class="stat-icon-wrapper green">
               <span class="material-symbols-outlined">trending_up</span>
             </div>
-            <span class="stat-badge badge-high">Disbursed</span>
+            <span class="stat-badge badge-high">Utilized</span>
           </div>
           <div class="stat-content">
             <h3 class="stat-value mono">₱{{ formatNum(actualCost) }}</h3>
-            <p class="stat-label">Actual Cost (Disbursed)</p>
+            <p class="stat-label">Actual Cost (Utilized)</p>
             <div class="stat-sub-info">
               <span>Verified AR Expenditures</span>
             </div>
@@ -143,7 +143,7 @@
           <div class="chart-card">
             <div class="chart-card-header">
               <h4 class="chart-card-title">Quarterly Expenditure Burn-Rate</h4>
-              <p class="text-[11px] text-slate-400 m-0">Actual Disbursed Cost (ARs) grouped by quarter</p>
+              <p class="text-[11px] text-slate-400 m-0">Actual Utilized Cost (ARs) grouped by quarter</p>
             </div>
             
             <div class="quarterly-bars-container">
@@ -176,11 +176,11 @@
                   </div>
                 </div>
                 <div class="class-progress-track">
-                  <div class="class-progress-disbursed" :style="{ width: c.disbursedPct + '%' }" :title="`Disbursed: ${c.disbursedPct.toFixed(1)}%`"></div>
+                  <div class="class-progress-disbursed" :style="{ width: c.disbursedPct + '%' }" :title="`Utilized: ${c.disbursedPct.toFixed(1)}%`"></div>
                   <div class="class-progress-committed" :style="{ width: c.committedPct + '%' }" :title="`Committed: ${c.committedPct.toFixed(1)}%`"></div>
                 </div>
                 <div class="class-stat-footer text-[11px] text-slate-400 flex justify-between">
-                  <span>{{ c.disbursedPct.toFixed(1) }}% Disbursed</span>
+                  <span>{{ c.disbursedPct.toFixed(1) }}% Utilized</span>
                   <span>{{ c.mandateCount }} Mandates</span>
                   <span class="text-purple-300 font-semibold">₱{{ formatCompactNum(c.remaining) }} Left</span>
                 </div>
@@ -348,7 +348,7 @@
                     </div>
 
                     <!-- Segmented Utilization Progress Bar -->
-                    <div class="segmented-progress-container mt-1.5" :title="`Disbursed: ₱${formatNum(row.actual_cost)} (${getSegmentPercentages(row).disbursed.toFixed(1)}%) | Committed: ₱${formatNum(row.pending_approved)} (${getSegmentPercentages(row).committed.toFixed(1)}%) | Remaining: ₱${formatNum(row.remaining)} (${getSegmentPercentages(row).remaining.toFixed(1)}%)`">
+                    <div class="segmented-progress-container mt-1.5" :title="`Utilized: ₱${formatNum(row.actual_cost)} (${getSegmentPercentages(row).disbursed.toFixed(1)}%) | Committed: ₱${formatNum(row.pending_approved)} (${getSegmentPercentages(row).committed.toFixed(1)}%) | Remaining: ₱${formatNum(row.remaining)} (${getSegmentPercentages(row).remaining.toFixed(1)}%)`">
                       <div class="segmented-bar">
                         <div 
                           v-if="getSegmentPercentages(row).disbursed > 0" 
@@ -374,7 +374,7 @@
                     </div>
                   </td>
 
-                  <!-- Actual Cost / Disbursed -->
+                  <!-- Actual Cost / Utilized -->
                   <td class="table-cell cell-actual-cost text-right">
                     <div class="cell-value mono font-semibold" :class="{ 'text-emerald-400': row.actual_cost > 0 }">
                       ₱{{ formatNum(row.actual_cost) }}
@@ -417,7 +417,7 @@
                           </span>
                           <span class="summary-sep">|</span>
                           <span class="summary-item">
-                            <span class="text-slate-400">Disbursed (AR):</span>
+                            <span class="text-slate-400">Utilized (AR):</span>
                             <span class="text-emerald-400 font-bold">₱{{ formatNum(row.actual_cost) }}</span>
                           </span>
                           <span class="summary-sep">|</span>
@@ -441,7 +441,7 @@
                             class="segment segment-disbursed" 
                             :style="{ width: getSegmentPercentages(row).disbursed + '%' }"
                           >
-                            <span v-if="getSegmentPercentages(row).disbursed >= 10" class="segment-label">{{ getSegmentPercentages(row).disbursed.toFixed(1) }}% Disbursed (₱{{ formatNum(row.actual_cost) }})</span>
+                            <span v-if="getSegmentPercentages(row).disbursed >= 10" class="segment-label">{{ getSegmentPercentages(row).disbursed.toFixed(1) }}% Utilized (₱{{ formatNum(row.actual_cost) }})</span>
                           </div>
                           <div 
                             v-if="getSegmentPercentages(row).committed > 0" 
@@ -515,15 +515,15 @@
                           </div>
                         </div>
 
-                        <!-- Panel 2: Disbursed Actual Accomplishment Reports -->
+                        <!-- Panel 2: Utilized Actual Accomplishment Reports -->
                         <div class="audit-panel ar-panel">
                           <div class="panel-header">
                             <div class="flex items-center gap-2">
                               <span class="material-symbols-outlined text-emerald-400 text-[18px]">verified</span>
-                              <h4 class="panel-title">Completed Accomplishment Reports (Disbursed Actuals)</h4>
+                              <h4 class="panel-title">Completed Accomplishment Reports (Utilized Actuals)</h4>
                             </div>
                             <span class="panel-badge-count green">
-                              {{ (row.completed_ars || []).length }} Disbursed
+                              {{ (row.completed_ars || []).length }} Utilized
                             </span>
                           </div>
 
@@ -908,7 +908,7 @@ const exportToExcel = () => {
   rows.push([
     'TOTAL GAD ALLOCATED BUDGET', '', '',
     'PROPOSED BUDGET (COMMITTED ADs)', '', '',
-    'ACTUAL DISBURSED COST (ARs)', '', '',
+    'ACTUAL UTILIZED COST (ARs)', '', '',
     'REMAINING AVAILABLE BALANCE', '', '', ''
   ]);
   rows.push([
@@ -920,7 +920,7 @@ const exportToExcel = () => {
   rows.push([
     `${filteredRows.value.length} Active Mandate(s)`, '', '',
     'Committed Proposals Pending Report', '', '',
-    'Verified Disbursed Expenditures', '', '',
+    'Verified Utilized Expenditures', '', '',
     `Overall Utilization Rate: ${overallUtilizationRate.value}%`, '', '', ''
   ]);
   rows.push(['', '', '', '', '', '', '', '', '', '', '', '', '']); // Row 8 spacer
@@ -936,7 +936,7 @@ const exportToExcel = () => {
     'Allocated Budget (PHP)',
     'Pending Approved ADs (PHP)',
     'Remaining Balance (PHP)',
-    'Actual Disbursed Cost (PHP)',
+    'Actual Utilized Cost (PHP)',
     'Utilization Rate',
     'Approved ADs Count',
     'Verified ARs Count'
@@ -1046,7 +1046,7 @@ const exportToExcel = () => {
     { wch: 22 }, // Allocated Budget
     { wch: 22 }, // Pending Approved ADs
     { wch: 22 }, // Remaining Balance
-    { wch: 22 }, // Actual Disbursed Cost
+    { wch: 22 }, // Actual Utilized Cost
     { wch: 16 }, // Utilization Rate
     { wch: 16 }, // Approved ADs Count
     { wch: 16 }  // Verified ARs Count

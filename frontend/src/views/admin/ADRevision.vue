@@ -1869,11 +1869,12 @@ const checkTransportationLimit = (vId) => {
     }
 
     const role = user.value?.role || 'admin';
+    const routePrefix = (role === 'admin') ? 'admin' : (role === 'gad_staff' ? 'staff' : 'college');
     Swal.fire({
       icon: 'warning',
       title: 'Limit Exceeded',
       html: `Overall Transportation budget cannot exceed the baseline limit of ₱${limit.toLocaleString('en-US')}.<br><br>
-             If you need to request an exemption, please <a href="/${role}/messages" style="color: #b979cc; text-decoration: underline; font-weight: bold;">message the GAD Director/Staff</a>.`,
+             If you need to request an exemption, please <a href="/${routePrefix}/messages" style="color: #b979cc; text-decoration: underline; font-weight: bold;">message the GAD Director/Staff</a>.`,
       confirmButtonColor: '#b979cc'
     });
   }

@@ -41,14 +41,13 @@ class UserManagementController extends ResourceController
             $counter++;
         }
 
-        $role = 'college'; 
+        $role = 'twg'; 
         switch ($data['user_role']) {
             case 'Director': $role = 'admin'; break;
-            case 'Staff': $role = 'gad_staff'; break;
-            case 'TWG':
-            case 'Non-TWG':
-            default:
-                $role = 'college'; break;
+            case 'Staff':    $role = 'gad_staff'; break;
+            case 'TWG':      $role = 'twg'; break;
+            case 'Non-TWG':  $role = 'non-twg'; break;
+            default:         $role = 'twg'; break;
         }
 
         $userData = [
@@ -102,14 +101,13 @@ class UserManagementController extends ResourceController
             }
         }
 
-        $role = 'college'; 
+        $role = 'twg'; 
         switch ($data['user_role']) {
             case 'Director': $role = 'admin'; break;
-            case 'Staff': $role = 'gad_staff'; break;
-            case 'TWG':
-            case 'Non-TWG':
-            default:
-                $role = 'college'; break;
+            case 'Staff':    $role = 'gad_staff'; break;
+            case 'TWG':      $role = 'twg'; break;
+            case 'Non-TWG':  $role = 'non-twg'; break;
+            default:         $role = 'twg'; break;
         }
 
         $updateData = [

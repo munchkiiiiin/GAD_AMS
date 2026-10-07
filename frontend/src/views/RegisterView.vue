@@ -34,7 +34,7 @@
             <div class="flex flex-col gap-2">
               <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400">Role <span class="text-red-400">*</span></label>
               <select v-model="form.user_role" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all">
-                <option value="Non-TWG" class="bg-[#1a1a2e] text-white">Non-TWG</option>
+                <option value="Non-TWG" class="bg-[#1a1a2e] text-white">Proponent</option>
                 <option value="TWG" class="bg-[#1a1a2e] text-white">TWG</option>
               </select>
             </div>

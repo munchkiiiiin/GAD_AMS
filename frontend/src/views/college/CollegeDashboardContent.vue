@@ -239,7 +239,7 @@ const displayName = computed(() => {
   if (user.value.full_name && user.value.full_name.trim() !== '') {
     return user.value.full_name;
   }
-  return user.value.role === 'twg' ? '(TWG)' : '(Non-TWG)';
+  return user.value.role === 'twg' ? '(TWG)' : '(Proponent)';
 });
 
 const calendarBaseDate = ref(new Date());

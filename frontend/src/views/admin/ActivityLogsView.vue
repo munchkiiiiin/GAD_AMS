@@ -42,7 +42,7 @@
               <option value="admin">Director / Admin</option>
               <option value="gad_staff">GAD Staff</option>
               <option value="twg">TWG</option>
-              <option value="non_twg">Non-TWG</option>
+              <option value="non_twg">Proponent</option>
             </select>
             
             <div class="relative flex-grow" v-if="roleFilter === 'twg' || roleFilter === 'non_twg'">
@@ -216,6 +216,7 @@ const formatRole = (role) => {
   if (role === 'admin') return 'Admin';
   if (role === 'director') return 'Director';
   if (role === 'gad_staff') return 'Staff';
+  if (role.toLowerCase() === 'non-twg' || role.toLowerCase() === 'non_twg') return 'Proponent';
   return role;
 };
 

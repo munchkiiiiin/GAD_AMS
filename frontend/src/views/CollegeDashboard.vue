@@ -13,7 +13,7 @@
       <DashboardSidebar
         :isOpen="isSidebarOpen"
         @close="isSidebarOpen = false"
-        roleLabel="TWG/Non-TWG"
+        roleLabel="TWG / Proponent"
         :menuItems="collegeMenu"
         :user="user"
         @logout="handleLogout"

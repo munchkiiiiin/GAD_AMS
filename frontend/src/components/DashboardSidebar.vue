@@ -27,7 +27,7 @@
       </div>
       <div class="flex flex-col overflow-hidden">
         <div class="text-sm font-bold text-white truncate leading-tight">{{ user.full_name || user.name || user.username || 'User Name' }}</div>
-        <div class="text-[10px] font-black tracking-widest text-[#c084fc] uppercase mt-1">{{ user.user_role || user.role || 'Role' }}</div>
+        <div class="text-[10px] font-black tracking-widest text-[#c084fc] uppercase mt-1">{{ displayRole }}</div>
       </div>
     </div>
 
@@ -115,11 +115,18 @@ const userInitial = computed(() => {
   return name.charAt(0).toUpperCase();
 });
 
+const displayRole = computed(() => {
+  const r = props.user?.user_role || props.user?.role || 'Role';
+  if (r.toLowerCase() === 'non-twg') return 'Proponent';
+  return r;
+});
+
 const avatarStyle = computed(() => {
   const role = (props.user?.user_role || props.user?.role || '').toLowerCase();
   if (role.includes('admin') || role.includes('director')) return 'bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-purple-500/20';
   if (role.includes('staff')) return 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/20';
-  if (role.includes('twg')) return 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-blue-500/20';
+  if (role === 'twg') return 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-blue-500/20';
+  if (role.includes('non-twg') || role.includes('proponent')) return 'bg-gradient-to-br from-purple-400 to-indigo-500 shadow-purple-500/20';
   return 'bg-gradient-to-br from-slate-400 to-slate-600 shadow-slate-500/20';
 });
 

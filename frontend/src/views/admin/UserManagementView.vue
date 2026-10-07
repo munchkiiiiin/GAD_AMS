@@ -74,7 +74,7 @@
                 <div class="icon-box bg-purple-500/20 text-purple-400 border border-purple-500/30">
                   <span class="material-symbols-outlined">person</span>
                 </div>
-                <h2 class="text-xl font-bold text-white">Non-TWG Users <span class="badge ml-2 bg-purple-500/20 text-purple-300 border border-purple-500/30">{{ nonTwgUsers.length }}</span></h2>
+                <h2 class="text-xl font-bold text-white">Proponents <span class="badge ml-2 bg-purple-500/20 text-purple-300 border border-purple-500/30">{{ nonTwgUsers.length }}</span></h2>
               </div>
               <div class="flex gap-3 flex-1 md:flex-none justify-end">
                 <div class="relative w-full md:w-64">
@@ -88,7 +88,7 @@
             </div>
           </div>
           <div class="card-body custom-scrollbar" style="display: flex; flex-direction: column; gap: 2rem;">
-            <div v-if="nonTwgUsers.length === 0" class="empty-state">No Non-TWG users found.</div>
+            <div v-if="nonTwgUsers.length === 0" class="empty-state">No Proponents found.</div>
             <template v-else>
               <!-- Users With Submissions Section -->
               <div class="sub-section">
@@ -236,7 +236,7 @@
             <div class="form-group">
               <label class="form-label">Role</label>
               <select v-model="form.user_role" required class="form-input">
-                <option value="Non-TWG">Non-TWG</option>
+                <option value="Non-TWG">Proponent</option>
                 <option value="TWG">TWG</option>
                 <option value="Staff">Staff</option>
                 <option value="Director">Director (Admin)</option>

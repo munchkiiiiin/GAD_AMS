@@ -67,7 +67,7 @@
                        <span class="conv-name" :class="{unread: conv.unread_count > 0 && activeTab !== 'trash'}">{{ conv.other_party }}</span>
                        <span class="conv-time">{{ conv.latest_time_short }}</span>
                     </div>
-                    <div class="conv-role">{{ conv.role }} &bull; {{ getOfficeName(conv.office_id) }}</div>
+                    <div class="conv-role">{{ formatRole(conv.role) }} &bull; {{ getOfficeName(conv.office_id) }}</div>
                     <div class="conv-preview" :class="{unread: conv.unread_count > 0 && activeTab !== 'trash'}">
                        <span v-if="conv.is_announcement" class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle; color: #facc15;">campaign</span>
                        {{ conv.preview }}
@@ -234,7 +234,7 @@
                     <button class="mobile-back-btn" @click="rightPaneMode = 'none'"><span class="material-symbols-outlined">arrow_back</span></button>
                     <div>
                         <h3>{{ activeConversation?.other_party }}</h3>
-                        <span class="chat-role">{{ activeConversation?.role }} &bull; {{ getOfficeName(activeConversation?.office_id) }}</span>
+                        <span class="chat-role">{{ formatRole(activeConversation?.role) }} &bull; {{ getOfficeName(activeConversation?.office_id) }}</span>
                     </div>
                  </div>
                  <div class="chat-header-actions">
@@ -348,6 +348,11 @@ const roles = [
   { value: 'Director', label: 'Director' },
   { value: 'Staff', label: 'Staff' }
 ];
+const formatRole = (role) => {
+  if (!role) return '';
+  if (role.toLowerCase() === 'non-twg') return 'Proponent';
+  return role;
+};
 const isTWG = ref(true);
 const hasAnnouncementFeature = ref(false);
 const viewAttachedDesign = (docId) => { if (!docId) return; router.push({ name: 'college-ad-view', params: { id: docId.replace('design_', '') } }); };
@@ -520,7 +525,7 @@ const processMessagesToConversations = (inbox, sent) => {
             displayParty = 'Broadcast Announcements';
         } else {
             // Role-based Announcements thread
-            const role = msg.role || 'System';
+            const role = (msg.role && msg.role.toLowerCase() === 'non-twg') ? 'Proponent' : (msg.role || 'System');
             displayParty = `${role} Announcements`;
         }
     }

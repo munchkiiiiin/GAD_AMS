@@ -157,7 +157,7 @@
               <div id="communications" class="manual-section">
                 <h2 class="section-title">8. Communications</h2>
                 <ul class="styled-list">
-                  <li><strong>Messages:</strong> To message director/twg/non-twg</li>
+                  <li><strong>Messages:</strong> To message director/twg/proponent</li>
                   <li><strong>Inquiries:</strong> To reply inquiries from outside users</li>
                   <li><strong>Publish IEC/News:</strong> Page to create post that will be published and seen at GAD corner at home page</li>
                 </ul>

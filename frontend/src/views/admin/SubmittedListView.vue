@@ -81,7 +81,7 @@
                     <th class="table-header-cell table-header-number">#</th>
                     <th class="table-header-cell">College / Office / Unit</th>
                     <th class="table-header-cell table-header-center">TWG</th>
-                    <th class="table-header-cell table-header-center">Non-TWG</th>
+                    <th class="table-header-cell table-header-center">Proponent</th>
                     <th class="table-header-cell table-header-center">Staff</th>
                     <th class="table-header-cell table-header-center">Activity Designs</th>
                     <th class="table-header-cell table-header-center">Accomplishment Reports</th>
@@ -232,7 +232,7 @@ const normalizeSubmissionUnits = (units) => {
 
 const metricsStats = ref([
   { label: 'Total TWGs', value: '0', icon: 'groups', iconColor: 'text-green-400', bgClass: 'bg-green-500/10' },
-  { label: 'Total Non-TWG', value: '0', icon: 'person_search', iconColor: 'text-amber-400', bgClass: 'bg-amber-500/10' },
+  { label: 'Total Proponents', value: '0', icon: 'person_search', iconColor: 'text-amber-400', bgClass: 'bg-amber-500/10' },
   { label: 'Total Act Designs', value: '0', icon: 'description', iconColor: 'text-purple-400', bgClass: 'bg-purple-500/10' },
   { label: 'Total Acc Reports', value: '0', icon: 'analytics', iconColor: 'text-blue-400', bgClass: 'bg-blue-500/10' }
 ]);

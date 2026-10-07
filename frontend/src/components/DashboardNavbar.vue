@@ -101,7 +101,7 @@
                   <div class="text-[13px] text-purple-200/60 truncate mb-2 mt-0.5">{{ user?.email || 'user@bsu.edu.ph' }}</div>
                   <div :class="['inline-flex items-center gap-1.5 border rounded-full px-3 py-1 w-fit shadow-sm', roleStyle.bgClass, roleStyle.borderClass]">
                     <span :class="['material-symbols-outlined text-[14px]', roleStyle.textClass]">{{ roleStyle.icon }}</span>
-                    <span class="text-[10px] font-black tracking-[0.05em] text-white uppercase leading-none mt-[1px]">{{ user?.user_role || user?.role || 'Role' }}</span>
+                    <span class="text-[10px] font-black tracking-[0.05em] text-white uppercase leading-none mt-[1px]">{{ displayRole }}</span>
                   </div>
                 </div>
               </div>
@@ -172,6 +172,12 @@ const userInitial = computed(() => {
   return name.charAt(0).toUpperCase();
 });
 
+const displayRole = computed(() => {
+  const r = props.user?.user_role || props.user?.role || 'Role';
+  if (r.toLowerCase() === 'non-twg') return 'Proponent';
+  return r;
+});
+
 const roleStyle = computed(() => {
   const role = (props.user?.user_role || props.user?.role || '').toLowerCase();
   
@@ -189,12 +195,19 @@ const roleStyle = computed(() => {
       textClass: 'text-emerald-300',
       icon: 'support_agent'
     };
-  } else if (role.includes('twg')) {
+  } else if (role === 'twg') {
     return {
       bgClass: 'bg-blue-900/80',
       borderClass: 'border-blue-500/50',
       textClass: 'text-blue-300',
       icon: 'school'
+    };
+  } else if (role.includes('non-twg') || role.includes('proponent')) {
+    return {
+      bgClass: 'bg-indigo-900/80',
+      borderClass: 'border-indigo-500/50',
+      textClass: 'text-indigo-300',
+      icon: 'person'
     };
   }
   
@@ -213,8 +226,10 @@ const avatarStyle = computed(() => {
     return 'bg-gradient-to-br from-[#d946ef] to-[#9333ea] shadow-purple-500/20';
   } else if (role.includes('staff')) {
     return 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/20';
-  } else if (role.includes('twg')) {
+  } else if (role === 'twg') {
     return 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-blue-500/20';
+  } else if (role.includes('non-twg') || role.includes('proponent')) {
+    return 'bg-gradient-to-br from-purple-400 to-indigo-500 shadow-purple-500/20';
   }
   
   return 'bg-gradient-to-br from-slate-400 to-slate-600 shadow-slate-500/20';

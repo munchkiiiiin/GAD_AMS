@@ -143,7 +143,7 @@
               <div id="communications" class="manual-section">
                 <h2 class="section-title">7. Communications</h2>
                 <ul class="styled-list">
-                  <li><strong>Messages:</strong> To message staff/twg/non-twg or to make an announcement</li>
+                  <li><strong>Messages:</strong> To message staff/twg/proponent or to make an announcement</li>
                   <li><strong>Inquiries:</strong> To reply inquiries from outside users</li>
                 </ul>
               </div>

@@ -95,12 +95,46 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="input-wrapper">
               <label class="input-label">Campus Location</label>
-              <input type="text" :value="user.location || 'La Trinidad Campus'" disabled class="custom-input !bg-white/5 opacity-70 cursor-not-allowed" />
+              <select 
+                v-model="designationForm.campus_location" 
+                @change="handleCampusChange" 
+                class="custom-input cursor-pointer"
+              >
+                <option value="La Trinidad Campus" class="bg-[#1a1a2e]">La Trinidad Campus</option>
+                <option value="Buguias Campus" class="bg-[#1a1a2e]">Buguias Campus</option>
+                <option value="Bokod Campus" class="bg-[#1a1a2e]">Bokod Campus</option>
+              </select>
             </div>
             <div class="input-wrapper">
               <label class="input-label">College / Office</label>
-              <input type="text" :value="user.office_name || 'No Office Assigned'" disabled class="custom-input !bg-white/5 opacity-70 cursor-not-allowed" />
+              <select 
+                v-model="designationForm.office_id" 
+                class="custom-input cursor-pointer"
+                required
+              >
+                <option value="" disabled class="bg-[#1a1a2e]">Select College / Office</option>
+                <option 
+                  v-for="unit in officesForSelectedCampus" 
+                  :key="unit.unit_id" 
+                  :value="unit.unit_id"
+                  class="bg-[#1a1a2e]"
+                >
+                  {{ unit.unit_name }}{{ unit.office_acronym ? ' (' + unit.office_acronym + ')' : '' }}
+                </option>
+                <option value="add_new" class="bg-[#1a1a2e] text-purple-300 font-bold">+ Not in the list? Add new office...</option>
+              </select>
             </div>
+          </div>
+
+          <div v-if="designationForm.office_id === 'add_new'" class="input-wrapper">
+            <label class="input-label text-purple-400">New College / Office Name</label>
+            <input 
+              type="text" 
+              v-model="designationForm.new_office_name" 
+              class="custom-input !border-purple-500/50" 
+              placeholder="Enter full new college or office name" 
+              required
+            />
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -292,14 +326,42 @@ const personalError = ref('');
 
 // Designation Form State
 const designationForm = ref({
+  campus_location: 'La Trinidad Campus',
+  office_id: '',
   department: '',
   position: '',
   student_id: '',
-  year_level: ''
+  year_level: '',
+  new_office_name: ''
 });
 const isSavingDesignation = ref(false);
 const designationSuccess = ref('');
 const designationError = ref('');
+
+// Offices & Campus Affiliation
+const officeUnits = ref([]);
+const fetchOffices = async () => {
+  try {
+    const res = await api.get('office_units');
+    officeUnits.value = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+  } catch (err) {
+    console.error("Fetch offices error:", err);
+  }
+};
+
+const officesForSelectedCampus = computed(() => {
+  if (!designationForm.value.campus_location) return officeUnits.value;
+  return officeUnits.value.filter(u => !u.location || u.location === designationForm.value.campus_location);
+});
+
+const handleCampusChange = () => {
+  const currentOfficeBelongs = officesForSelectedCampus.value.some(
+    u => String(u.unit_id) === String(designationForm.value.office_id)
+  );
+  if (!currentOfficeBelongs && officesForSelectedCampus.value.length > 0) {
+    designationForm.value.office_id = officesForSelectedCampus.value[0].unit_id;
+  }
+};
 
 // Avatar Upload
 const avatarPreview = ref('');
@@ -400,10 +462,13 @@ const fetchProfile = async () => {
       };
 
       designationForm.value = {
+        campus_location: u.location || 'La Trinidad Campus',
+        office_id: u.office_id || '',
         department: u.department || '',
         position: u.position || '',
         student_id: u.student_id || '',
-        year_level: u.year_level || ''
+        year_level: u.year_level || '',
+        new_office_name: ''
       };
 
       emailForm.value.email = u.email || '';
@@ -420,6 +485,7 @@ onMounted(async () => {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   user.value = storedUser;
   
+  await fetchOffices();
   await fetchProfile();
 
   if (isAdminOrStaff.value) {
@@ -467,9 +533,18 @@ const saveDesignation = async () => {
   designationError.value = '';
 
   try {
-    const res = await api.post('/users/profile/update', designationForm.value);
+    const payload = { ...designationForm.value };
+    if (payload.office_id === 'add_new') {
+      if (!payload.new_office_name || !payload.new_office_name.trim()) {
+        designationError.value = 'Please enter the new college or office name.';
+        isSavingDesignation.value = false;
+        return;
+      }
+    }
+    const res = await api.post('/users/profile/update', payload);
     if (res.data.success) {
-      designationSuccess.value = 'Designation details saved successfully.';
+      designationSuccess.value = 'Designation and office affiliation saved successfully.';
+      await fetchOffices();
       await fetchProfile();
     } else {
       designationError.value = res.data.message || 'Failed to save designation.';

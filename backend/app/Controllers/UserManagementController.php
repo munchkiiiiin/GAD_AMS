@@ -277,7 +277,15 @@ class UserManagementController extends ResourceController
         $userId = $this->request->getHeaderLine('X-User-Id');
         if (!$userId) return $this->failUnauthorized('Not logged in');
 
-        $data = $this->request->getJSON(true) ?: $this->request->getPost();
+        $data = null;
+        try {
+            $data = $this->request->getJSON(true);
+        } catch (\Throwable $e) {
+            $data = null;
+        }
+        if (!$data) {
+            $data = $this->request->getPost() ?: [];
+        }
         $userModel = new \App\Models\UserModel();
         $user = $userModel->find($userId);
         if (!$user) return $this->failNotFound('User not found');
@@ -304,49 +312,78 @@ class UserManagementController extends ResourceController
         }
 
         // 2. Handle Personal & Designation Information Update
-        if (isset($data['first_name']) || isset($data['last_name']) || isset($data['position']) || isset($data['department']) || isset($data['sex']) || isset($data['student_id']) || isset($data['year_level']) || isset($data['full_name'])) {
-            $firstName = trim($data['first_name'] ?? ($existingProfile['first_name'] ?? ''));
-            $middleName = trim($data['middle_name'] ?? ($existingProfile['middle_name'] ?? ''));
-            $lastName = trim($data['last_name'] ?? ($existingProfile['last_name'] ?? ''));
-
-            $fullName = trim($firstName . ' ' . $middleName . ' ' . $lastName);
-            if (empty($fullName) && !empty($data['full_name'])) {
-                $fullName = trim($data['full_name']);
-            }
-            $fullName = preg_replace('/\s+/', ' ', $fullName);
-
-            // Update user table
+        if (
+            isset($data['first_name']) || isset($data['last_name']) || 
+            isset($data['position']) || isset($data['department']) || 
+            isset($data['sex']) || isset($data['student_id']) || 
+            isset($data['year_level']) || isset($data['full_name']) || 
+            isset($data['office_id']) || !empty($data['new_office_name'])
+        ) {
             $userUpdate = [];
-            if (!empty($fullName)) {
-                $userUpdate['full_name'] = $fullName;
+
+            // Update user full_name if name fields were sent
+            if (isset($data['first_name']) || isset($data['last_name']) || isset($data['full_name'])) {
+                $firstName = trim($data['first_name'] ?? ($existingProfile['first_name'] ?? ''));
+                $middleName = trim($data['middle_name'] ?? ($existingProfile['middle_name'] ?? ''));
+                $lastName = trim($data['last_name'] ?? ($existingProfile['last_name'] ?? ''));
+
+                $fullName = trim($firstName . ' ' . $middleName . ' ' . $lastName);
+                if (empty($fullName) && !empty($data['full_name'])) {
+                    $fullName = trim($data['full_name']);
+                }
+                $fullName = preg_replace('/\s+/', ' ', $fullName);
+                if (!empty($fullName)) {
+                    $userUpdate['full_name'] = $fullName;
+                }
             }
-            if (isset($data['office_id']) && is_numeric($data['office_id'])) {
+
+            // Update user office / campus connection
+            if (!empty($data['new_office_name'])) {
+                $cleanOffice = trim($data['new_office_name']);
+                $cleanOffice = preg_replace('/\s+/', ' ', $cleanOffice);
+                $cleanOffice = ucwords(strtolower($cleanOffice));
+                $loc = !empty($data['campus_location']) ? trim($data['campus_location']) : 'La Trinidad Campus';
+                
+                $foundOffice = $db->table('office_units')->where('office_name', $cleanOffice)->get()->getRowArray();
+                if ($foundOffice) {
+                    $userUpdate['office_id'] = (int) $foundOffice['office_id'];
+                } else {
+                    $db->table('office_units')->insert([
+                        'office_name' => $cleanOffice,
+                        'location' => $loc,
+                        'office_acronym' => $data['office_acronym'] ?? null
+                    ]);
+                    $userUpdate['office_id'] = (int) $db->insertID();
+                }
+            } else if (isset($data['office_id']) && is_numeric($data['office_id'])) {
                 $userUpdate['office_id'] = (int) $data['office_id'];
             }
+
             if (!empty($userUpdate)) {
                 $userModel->update($userId, $userUpdate);
             }
 
             // Update or Insert user_profiles
-            $profileUpdate = [
-                'first_name' => $firstName,
-                'middle_name' => $middleName ?: null,
-                'last_name' => $lastName,
-                'sex' => $data['sex'] ?? ($existingProfile['sex'] ?? null),
-                'position' => $data['position'] ?? ($existingProfile['position'] ?? null),
-                'department' => $data['department'] ?? ($existingProfile['department'] ?? null),
-                'student_id' => $data['student_id'] ?? ($existingProfile['student_id'] ?? null),
-                'year_level' => $data['year_level'] ?? ($existingProfile['year_level'] ?? null),
-            ];
+            $profileUpdate = [];
+            if (isset($data['first_name'])) $profileUpdate['first_name'] = trim($data['first_name']);
+            if (isset($data['middle_name'])) $profileUpdate['middle_name'] = trim($data['middle_name']) ?: null;
+            if (isset($data['last_name'])) $profileUpdate['last_name'] = trim($data['last_name']);
+            if (isset($data['sex'])) $profileUpdate['sex'] = $data['sex'] ?: null;
+            if (isset($data['position'])) $profileUpdate['position'] = trim($data['position']) ?: null;
+            if (isset($data['department'])) $profileUpdate['department'] = trim($data['department']) ?: null;
+            if (isset($data['student_id'])) $profileUpdate['student_id'] = trim($data['student_id']) ?: null;
+            if (isset($data['year_level'])) $profileUpdate['year_level'] = $data['year_level'] ?: null;
 
-            if ($existingProfile) {
-                $profileModel->update($existingProfile['id'], $profileUpdate);
-            } else {
-                $profileUpdate['user_id'] = $userId;
-                $profileModel->insert($profileUpdate);
+            if (!empty($profileUpdate)) {
+                if ($existingProfile) {
+                    $profileModel->update($existingProfile['id'], $profileUpdate);
+                } else {
+                    $profileUpdate['user_id'] = $userId;
+                    $profileModel->insert($profileUpdate);
+                }
             }
 
-            \App\Models\ActivityLogModel::log($userId, 'Update Profile', 'updated profile information');
+            \App\Models\ActivityLogModel::log($userId, 'Update Profile', 'updated profile and designation details');
             return $this->respond(['success' => true, 'message' => 'Profile updated successfully']);
         }
 

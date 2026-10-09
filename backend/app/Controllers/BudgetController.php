@@ -193,8 +193,9 @@ class BudgetController extends Controller
             // Get approved activity designs for this mandate (GPB item)
             // Check both modern activity_design_mandates and direct gpb_id
             $designs = $db->table('activity_design ad')
-                ->select('ad.act_design_id, ad.user_id, ad.control_number, ad.activity_title, ad.proposed_budget, COALESCE(u.user_acronym, u.username, "") as college, COALESCE(ad.start_date, "") as created_at, ad.attachment')
+                ->select('ad.act_design_id, ad.user_id, ad.control_number, ad.activity_title, ad.proposed_budget, COALESCE(ou.office_acronym, ou.office_name, u.username, "") as college, COALESCE(ad.start_date, "") as created_at, ad.attachment')
                 ->join('users u', 'u.id = ad.user_id', 'left')
+                ->join('office_units ou', 'ou.office_id = u.office_id', 'left')
                 ->join('activity_design_mandates adm', 'adm.act_design_id = ad.act_design_id', 'left')
                 ->join('activity_design_issues adi', 'adi.act_design_id = ad.act_design_id', 'left')
                 ->groupStart()
@@ -221,8 +222,9 @@ class BudgetController extends Controller
             foreach ($designs as $design) {
                 // Check for a completed accomplishment report (active or archived)
                 $report = $db->table('accomplishment_report ar')
-                    ->select('ar.*, ar.user_id, COALESCE(u_ar.user_acronym, u_ar.username, "") as college, COALESCE(ar.start_date, "") as report_date')
+                    ->select('ar.*, ar.user_id, COALESCE(ou_ar.office_acronym, ou_ar.office_name, u_ar.username, "") as college, COALESCE(ar.start_date, "") as report_date')
                     ->join('users u_ar', 'u_ar.id = ar.user_id', 'left')
+                    ->join('office_units ou_ar', 'ou_ar.office_id = u_ar.office_id', 'left')
                     ->where('ar.control_number', $design['control_number'])
                     ->whereIn('ar.status', ['Completed', 'Verified', 'Approved'])
                     ->where('ar.deleted_at', null)

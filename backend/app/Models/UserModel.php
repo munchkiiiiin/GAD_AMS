@@ -12,20 +12,20 @@ class UserModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['username', 'email', 'password', 'reset_token', 'reset_token_expires_at', 'role', 'full_name', 'student_id', 'office_id', 'user_acronym', 'last_login', 'first_name', 'middle_name', 'last_name', 'profile_role'];
+    protected $allowedFields    = ['username', 'email', 'password', 'reset_token', 'reset_token_expires_at', 'role', 'full_name', 'student_id', 'office_id', 'last_login', 'first_name', 'middle_name', 'last_name', 'profile_role', 'year_level'];
 
     // Dates
     protected $useTimestamps = false;
 
     /**
-     * Find user by username or email
+     * Find user by username, email or student_id
      */
     public function findByIdentity(string $identity)
     {
         return $this->where('username', $identity)
                     ->orWhere('email', $identity)
-                    ->orWhere('user_acronym', $identity)
                     ->orWhere('student_id', $identity)
                     ->first();
     }
 }
+

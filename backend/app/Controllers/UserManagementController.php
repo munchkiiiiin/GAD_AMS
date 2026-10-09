@@ -194,17 +194,80 @@ class UserManagementController extends ResourceController
         $userId = $this->request->getHeaderLine('X-User-Id');
         if (!$userId) return $this->failUnauthorized('Not logged in');
 
-        $userModel = new \App\Models\UserModel();
-        $user = $userModel->find($userId);
+        $db = \Config\Database::connect();
+        $user = $db->table('users')
+            ->select('users.id, users.username, users.email, users.full_name, users.role, users.profile_role, users.office_id, office_units.office_name, office_units.location as campus_location, office_units.office_acronym')
+            ->join('office_units', 'office_units.office_id = users.office_id', 'left')
+            ->where('users.id', $userId)
+            ->get()
+            ->getRowArray();
+
         if (!$user) return $this->failNotFound('User not found');
+
+        $profile = $db->table('user_profiles')->where('user_id', $userId)->get()->getRowArray() ?: [];
 
         return $this->respond([
             'success' => true,
             'user' => [
                 'id' => $user['id'],
+                'username' => $user['username'],
                 'email' => $user['email'],
                 'full_name' => $user['full_name'],
-                'role' => $user['role']
+                'role' => $user['role'],
+                'user_role' => $user['profile_role'] ?? 'Non-TWG',
+                'office_id' => $user['office_id'],
+                'office_name' => $user['office_name'] ?? '',
+                'location' => $user['campus_location'] ?? 'La Trinidad Campus',
+                'office_acronym' => $user['office_acronym'] ?? '',
+                'first_name' => $profile['first_name'] ?? '',
+                'middle_name' => $profile['middle_name'] ?? '',
+                'last_name' => $profile['last_name'] ?? '',
+                'sex' => $profile['sex'] ?? '',
+                'profile_picture' => $profile['profile_picture'] ?? '',
+                'position' => $profile['position'] ?? '',
+                'department' => $profile['department'] ?? '',
+                'student_id' => $profile['student_id'] ?? '',
+                'year_level' => $profile['year_level'] ?? '',
+            ]
+        ]);
+    }
+
+    public function getUserProfile($id = null)
+    {
+        if (!$id) return $this->fail('User ID required');
+
+        $db = \Config\Database::connect();
+        $user = $db->table('users')
+            ->select('users.id, users.username, users.email, users.full_name, users.role, users.profile_role, users.office_id, office_units.office_name, office_units.location as campus_location, office_units.office_acronym')
+            ->join('office_units', 'office_units.office_id = users.office_id', 'left')
+            ->where('users.id', $id)
+            ->get()
+            ->getRowArray();
+
+        if (!$user) return $this->failNotFound('User not found');
+
+        $profile = $db->table('user_profiles')->where('user_id', $id)->get()->getRowArray() ?: [];
+
+        return $this->respond([
+            'success' => true,
+            'data' => [
+                'id' => $user['id'],
+                'full_name' => $user['full_name'],
+                'email' => $user['email'] ?? '',
+                'role' => $user['role'],
+                'user_role' => $user['profile_role'] ?? 'Non-TWG',
+                'office_name' => $user['office_name'] ?? 'N/A',
+                'location' => $user['campus_location'] ?? 'La Trinidad Campus',
+                'office_acronym' => $user['office_acronym'] ?? '',
+                'first_name' => $profile['first_name'] ?? '',
+                'middle_name' => $profile['middle_name'] ?? '',
+                'last_name' => $profile['last_name'] ?? '',
+                'sex' => $profile['sex'] ?? 'Not specified',
+                'profile_picture' => $profile['profile_picture'] ?? '',
+                'position' => $profile['position'] ?? ($user['role'] === 'non-twg' ? 'Proponent' : 'TWG Member'),
+                'department' => $profile['department'] ?? '',
+                'student_id' => $profile['student_id'] ?? '',
+                'year_level' => $profile['year_level'] ?? '',
             ]
         ]);
     }
@@ -219,6 +282,75 @@ class UserManagementController extends ResourceController
         $user = $userModel->find($userId);
         if (!$user) return $this->failNotFound('User not found');
 
+        $db = \Config\Database::connect();
+        $profileModel = new \App\Models\UserProfileModel();
+        $existingProfile = $profileModel->getProfileByUserId($userId);
+
+        // 1. Handle Avatar File Upload
+        $avatarFile = $this->request->getFile('profile_picture');
+        if ($avatarFile && $avatarFile->isValid() && !$avatarFile->hasMoved()) {
+            $newName = 'avatar_' . $userId . '_' . time() . '.' . $avatarFile->getExtension();
+            $avatarFile->move(FCPATH . 'uploads/avatars', $newName);
+            $avatarPath = 'uploads/avatars/' . $newName;
+
+            if ($existingProfile) {
+                $profileModel->update($existingProfile['id'], ['profile_picture' => $avatarPath]);
+            } else {
+                $profileModel->insert(['user_id' => $userId, 'profile_picture' => $avatarPath]);
+            }
+
+            \App\Models\ActivityLogModel::log($userId, 'Update Profile', 'uploaded a new profile picture');
+            return $this->respond(['success' => true, 'message' => 'Profile picture updated successfully', 'avatar_url' => $avatarPath]);
+        }
+
+        // 2. Handle Personal & Designation Information Update
+        if (isset($data['first_name']) || isset($data['last_name']) || isset($data['position']) || isset($data['department']) || isset($data['sex']) || isset($data['student_id']) || isset($data['year_level']) || isset($data['full_name'])) {
+            $firstName = trim($data['first_name'] ?? ($existingProfile['first_name'] ?? ''));
+            $middleName = trim($data['middle_name'] ?? ($existingProfile['middle_name'] ?? ''));
+            $lastName = trim($data['last_name'] ?? ($existingProfile['last_name'] ?? ''));
+
+            $fullName = trim($firstName . ' ' . $middleName . ' ' . $lastName);
+            if (empty($fullName) && !empty($data['full_name'])) {
+                $fullName = trim($data['full_name']);
+            }
+            $fullName = preg_replace('/\s+/', ' ', $fullName);
+
+            // Update user table
+            $userUpdate = [];
+            if (!empty($fullName)) {
+                $userUpdate['full_name'] = $fullName;
+            }
+            if (isset($data['office_id']) && is_numeric($data['office_id'])) {
+                $userUpdate['office_id'] = (int) $data['office_id'];
+            }
+            if (!empty($userUpdate)) {
+                $userModel->update($userId, $userUpdate);
+            }
+
+            // Update or Insert user_profiles
+            $profileUpdate = [
+                'first_name' => $firstName,
+                'middle_name' => $middleName ?: null,
+                'last_name' => $lastName,
+                'sex' => $data['sex'] ?? ($existingProfile['sex'] ?? null),
+                'position' => $data['position'] ?? ($existingProfile['position'] ?? null),
+                'department' => $data['department'] ?? ($existingProfile['department'] ?? null),
+                'student_id' => $data['student_id'] ?? ($existingProfile['student_id'] ?? null),
+                'year_level' => $data['year_level'] ?? ($existingProfile['year_level'] ?? null),
+            ];
+
+            if ($existingProfile) {
+                $profileModel->update($existingProfile['id'], $profileUpdate);
+            } else {
+                $profileUpdate['user_id'] = $userId;
+                $profileModel->insert($profileUpdate);
+            }
+
+            \App\Models\ActivityLogModel::log($userId, 'Update Profile', 'updated profile information');
+            return $this->respond(['success' => true, 'message' => 'Profile updated successfully']);
+        }
+
+        // 3. Handle Email Update
         if (isset($data['email'])) {
             $rules = ['email' => 'required|valid_email'];
             if (!$this->validateData($data, $rules)) {
@@ -232,16 +364,7 @@ class UserManagementController extends ResourceController
             return $this->respond(['success' => true, 'message' => 'Email updated successfully']);
         }
 
-        if (isset($data['full_name'])) {
-            $rules = ['full_name' => 'required|min_length[2]'];
-            if (!$this->validateData($data, $rules)) {
-                return $this->respond(['success' => false, 'message' => 'Invalid name format']);
-            }
-            $userModel->update($userId, ['full_name' => $data['full_name']]);
-            \App\Models\ActivityLogModel::log($userId, 'Update Profile', 'updated their display name');
-            return $this->respond(['success' => true, 'message' => 'Name updated successfully']);
-        }
-
+        // 4. Handle Password Update
         if (isset($data['current_password']) && isset($data['new_password'])) {
             if (!password_verify($data['current_password'], $user['password'])) {
                 return $this->respond(['success' => false, 'message' => 'Incorrect current password']);
@@ -257,3 +380,4 @@ class UserManagementController extends ResourceController
         return $this->respond(['success' => false, 'message' => 'No valid update data provided']);
     }
 }
+

@@ -58,6 +58,8 @@ $routes->group((ENVIRONMENT === 'production' ? '' : 'api'), function($routes) {
 
     $routes->options('users/profile', 'AuthController::handleOptions');
     $routes->get('users/profile', 'UserManagementController::getProfile');
+    $routes->options('users/profile/(:num)', 'AuthController::handleOptions');
+    $routes->get('users/profile/(:num)', 'UserManagementController::getUserProfile/$1');
     $routes->options('users/profile/update', 'AuthController::handleOptions');
     $routes->post('users/profile/update', 'UserManagementController::updateProfile');
 

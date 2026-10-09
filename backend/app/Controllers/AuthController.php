@@ -72,6 +72,11 @@ class AuthController extends ResourceController
             }
         }
 
+        // Fetch profile and office information
+        $db = \Config\Database::connect();
+        $profile = $db->table('user_profiles')->where('user_id', $user['id'])->get()->getRowArray() ?: [];
+        $office = $user['office_id'] ? $db->table('office_units')->where('office_id', $user['office_id'])->get()->getRowArray() : null;
+
         return $this->respond([
             'status' => 200,
             'message' => 'Login successful',
@@ -82,7 +87,19 @@ class AuthController extends ResourceController
                 'role' => $user['role'],
                 'user_role' => $userRole,
                 'full_name' => $user['full_name'],
-                'office_id' => $user['office_id']
+                'office_id' => $user['office_id'],
+                'office_name' => $office['office_name'] ?? '',
+                'location' => $office['location'] ?? 'La Trinidad Campus',
+                'office_acronym' => $office['office_acronym'] ?? '',
+                'first_name' => $profile['first_name'] ?? $user['first_name'] ?? '',
+                'middle_name' => $profile['middle_name'] ?? $user['middle_name'] ?? '',
+                'last_name' => $profile['last_name'] ?? $user['last_name'] ?? '',
+                'sex' => $profile['sex'] ?? '',
+                'profile_picture' => $profile['profile_picture'] ?? '',
+                'position' => $profile['position'] ?? '',
+                'department' => $profile['department'] ?? '',
+                'student_id' => $profile['student_id'] ?? $user['student_id'] ?? '',
+                'year_level' => $profile['year_level'] ?? $user['year_level'] ?? ''
             ]
         ]);
     }
@@ -160,6 +177,11 @@ class AuthController extends ResourceController
             $officeNameDisplay = $officeRow ? $officeRow['office_name'] : 'Unknown Office';
         }
 
+        $studentId = $data['university_id'] ?? $data['student_id'] ?? null;
+        $yearLevel = $data['year_level'] ?? null;
+        $departmentName = $data['department_name'] ?? null;
+        $position = $data['position'] ?? ($role === 'non-twg' ? 'Proponent' : 'TWG Member');
+
         $userData = [
             'username' => $username,
             'email' => $email,
@@ -170,12 +192,28 @@ class AuthController extends ResourceController
             'middle_name' => $data['middle_name'] ?? null,
             'last_name' => $data['last_name'] ?? '',
             'profile_role' => $data['user_role'] ?? 'Non-TWG',
-            'student_id' => $data['university_id'] ?? null,
+            'student_id' => $studentId,
+            'year_level' => $yearLevel,
             'office_id' => $officeId
         ];
 
         if ($userModel->insert($userData)) {
             $newUserId = $userModel->insertID();
+
+            // Create 1-to-1 Profile
+            $db->table('user_profiles')->insert([
+                'user_id' => $newUserId,
+                'first_name' => $data['first_name'] ?? '',
+                'middle_name' => $data['middle_name'] ?? null,
+                'last_name' => $data['last_name'] ?? '',
+                'sex' => $data['sex'] ?? null,
+                'position' => $position,
+                'department' => $departmentName,
+                'student_id' => $studentId,
+                'year_level' => $yearLevel,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
 
             $actionUserId = $this->request->getHeaderLine('X-User-Id') ?: $newUserId;
             \App\Models\ActivityLogModel::log($actionUserId, 'Register User', 'registered a new user: ' . $data['fullname']);
@@ -395,11 +433,13 @@ class AuthController extends ResourceController
     public function getOffices() {
         $db = \Config\Database::connect();
         // The frontend expects unit_id and unit_name, but our DB has office_id and office_name
-        $offices = $db->table('office_units')->get()->getResultArray();
+        $offices = $db->table('office_units')->orderBy('office_name', 'ASC')->get()->getResultArray();
         $mappedOffices = array_map(function($o) {
             return [
                 'unit_id' => $o['office_id'],
-                'unit_name' => $o['office_name']
+                'unit_name' => $o['office_name'],
+                'location' => $o['location'] ?? 'La Trinidad Campus',
+                'office_acronym' => $o['office_acronym'] ?? ''
             ];
         }, $offices);
         return $this->respond($mappedOffices);

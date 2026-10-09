@@ -11,7 +11,7 @@ class OfficeController extends ResourceController
     public function index()
     {
         $db = \Config\Database::connect();
-        $offices = $db->table('office_units')->orderBy('office_id', 'ASC')->get()->getResultArray();
+        $offices = $db->table('office_units')->orderBy('office_name', 'ASC')->get()->getResultArray();
         return $this->respond([
             'success' => true,
             'data' => $offices
@@ -31,12 +31,21 @@ class OfficeController extends ResourceController
         $cleanName = preg_replace('/\s+/', ' ', $cleanName);
         $cleanName = ucwords(strtolower($cleanName));
 
+        $location = !empty($data['location']) ? trim($data['location']) : 'La Trinidad Campus';
+        $officeAcronym = !empty($data['office_acronym']) ? trim($data['office_acronym']) : null;
+
         $existing = $db->table('office_units')->where('office_name', $cleanName)->get()->getRowArray();
         if ($existing) {
             return $this->failResourceExists('Office/Unit already exists.');
         }
 
-        $db->table('office_units')->insert(['office_name' => $cleanName]);
+        $insertData = [
+            'office_name' => $cleanName,
+            'location' => $location,
+            'office_acronym' => $officeAcronym
+        ];
+
+        $db->table('office_units')->insert($insertData);
         $id = $db->insertID();
 
         return $this->respondCreated([
@@ -44,7 +53,9 @@ class OfficeController extends ResourceController
             'message' => 'Office added successfully',
             'data' => [
                 'office_id' => $id,
-                'office_name' => $cleanName
+                'office_name' => $cleanName,
+                'location' => $location,
+                'office_acronym' => $officeAcronym
             ]
         ]);
     }
@@ -68,15 +79,20 @@ class OfficeController extends ResourceController
             return $this->failResourceExists('Another Office/Unit with this name already exists.');
         }
 
-        $db->table('office_units')->where('office_id', $id)->update(['office_name' => $cleanName]);
+        $updateData = ['office_name' => $cleanName];
+        if (isset($data['location'])) {
+            $updateData['location'] = trim($data['location']);
+        }
+        if (isset($data['office_acronym'])) {
+            $updateData['office_acronym'] = trim($data['office_acronym']);
+        }
+
+        $db->table('office_units')->where('office_id', $id)->update($updateData);
 
         return $this->respond([
             'success' => true,
             'message' => 'Office updated successfully',
-            'data' => [
-                'office_id' => $id,
-                'office_name' => $cleanName
-            ]
+            'data' => array_merge(['office_id' => $id], $updateData)
         ]);
     }
 

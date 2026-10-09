@@ -39,8 +39,19 @@
               </select>
             </div>
 
+            <!-- Campus Location -->
             <div class="flex flex-col gap-2">
-              <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400">Department / Office <span class="text-red-400">*</span></label>
+              <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400">Campus Location <span class="text-red-400">*</span></label>
+              <select v-model="form.campus_location" @change="handleCampusChange" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all">
+                <option value="La Trinidad Campus" class="bg-[#1a1a2e] text-white">La Trinidad Campus</option>
+                <option value="Buguias Campus" class="bg-[#1a1a2e] text-white">Buguias Campus</option>
+                <option value="Bokod Campus" class="bg-[#1a1a2e] text-white">Bokod Campus</option>
+              </select>
+            </div>
+
+            <!-- College / Office -->
+            <div class="flex flex-col gap-2 md:col-span-2">
+              <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400">College / Office <span class="text-red-400">*</span></label>
               
               <div class="space-y-2 relative" ref="dropdownRef">
                 <!-- Searchable Combobox -->
@@ -49,7 +60,7 @@
                     v-model="officeSearchQuery" 
                     @focus="isDropdownOpen = true"
                     @input="isDropdownOpen = true; handleSearchInput()"
-                    placeholder="Search or Select your unit"
+                    placeholder="Search or Select your college/office"
                     class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all placeholder:text-slate-600"
                     :required="!form.office_unit_id && !isAddingNew"
                   />
@@ -62,13 +73,14 @@
                     v-for="unit in filteredOffices" 
                     :key="unit.unit_id" 
                     @click="selectOffice(unit)"
-                    class="px-4 py-3 hover:bg-white/10 cursor-pointer text-white transition-colors"
+                    class="px-4 py-3 hover:bg-white/10 cursor-pointer text-white transition-colors flex items-center justify-between"
                   >
-                    {{ unit.unit_name }}
+                    <span>{{ unit.unit_name }}</span>
+                    <span v-if="unit.office_acronym" class="text-xs text-purple-400 font-mono bg-purple-500/10 px-2 py-0.5 rounded">{{ unit.office_acronym }}</span>
                   </div>
                   
                   <div v-if="filteredOffices.length === 0" class="px-4 py-3 text-slate-500 italic text-sm">
-                    No matching offices found.
+                    No matching colleges/offices in {{ form.campus_location }}.
                   </div>
 
                   <div 
@@ -76,7 +88,7 @@
                     class="px-4 py-3 font-bold text-purple-400 hover:bg-purple-500/20 cursor-pointer border-t border-white/10 transition-colors flex items-center gap-2"
                   >
                     <span class="material-symbols-outlined text-sm">add_circle</span>
-                    Not in the list? Add office
+                    Not in the list? Add new office
                   </div>
                 </div>
                 
@@ -87,6 +99,40 @@
                 </div>
               </div>
             </div>
+
+            <!-- Department (Optional) -->
+            <div class="flex flex-col gap-2 md:col-span-2">
+              <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400 flex items-center gap-2">
+                <span>Department</span>
+                <span class="text-slate-500 font-normal lowercase">(optional - for academic departments within colleges)</span>
+              </label>
+              <input v-model="form.department" placeholder="e.g. Department of Information Technology" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all placeholder:text-slate-600" />
+            </div>
+
+            <!-- Student ID & Year Level (For Proponents) -->
+            <template v-if="form.user_role === 'Non-TWG'">
+              <div class="flex flex-col gap-2">
+                <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400 flex items-center gap-2">
+                  <span>Student ID / ID Number</span>
+                  <span class="text-slate-500 font-normal lowercase">(optional)</span>
+                </label>
+                <input v-model="form.student_id" placeholder="e.g. 2022-12345" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all placeholder:text-slate-600" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400 flex items-center gap-2">
+                  <span>Year Level</span>
+                  <span class="text-slate-500 font-normal lowercase">(optional)</span>
+                </label>
+                <select v-model="form.year_level" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all">
+                  <option value="" class="bg-[#1a1a2e] text-white">None / Faculty / Staff</option>
+                  <option value="1st Year" class="bg-[#1a1a2e] text-white">1st Year</option>
+                  <option value="2nd Year" class="bg-[#1a1a2e] text-white">2nd Year</option>
+                  <option value="3rd Year" class="bg-[#1a1a2e] text-white">3rd Year</option>
+                  <option value="4th Year" class="bg-[#1a1a2e] text-white">4th Year</option>
+                  <option value="Graduate" class="bg-[#1a1a2e] text-white">Graduate Student</option>
+                </select>
+              </div>
+            </template>
 
             <div class="flex flex-col gap-2 md:col-span-2">
               <label class="text-xs uppercase tracking-widest font-label font-bold text-slate-400">
@@ -200,22 +246,37 @@ const dropdownRef = ref(null);
 const isDropdownOpen = ref(false);
 const officeSearchQuery = ref('');
 
+const officesByCampus = computed(() => {
+  if (!form.campus_location) return officeUnits.value;
+  return officeUnits.value.filter(u => !u.location || u.location === form.campus_location);
+});
+
 const filteredOffices = computed(() => {
-  if (!officeSearchQuery.value) return officeUnits.value;
+  const base = officesByCampus.value;
+  if (!officeSearchQuery.value) return base;
   
-  const selectedOffice = officeUnits.value.find(u => u.unit_id === form.office_unit_id);
+  const selectedOffice = base.find(u => u.unit_id === form.office_unit_id);
   if (selectedOffice && officeSearchQuery.value === selectedOffice.unit_name) {
-    return officeUnits.value;
+    return base;
   }
 
   const q = officeSearchQuery.value.toLowerCase();
-  return officeUnits.value.filter(u => u.unit_name.toLowerCase().includes(q));
+  return base.filter(u => 
+    u.unit_name.toLowerCase().includes(q) || 
+    (u.office_acronym && u.office_acronym.toLowerCase().includes(q))
+  );
 });
 
 const exactMatchExists = computed(() => {
   if (!officeSearchQuery.value) return false;
-  return officeUnits.value.some(u => u.unit_name.toLowerCase() === officeSearchQuery.value.trim().toLowerCase());
+  return officesByCampus.value.some(u => u.unit_name.toLowerCase() === officeSearchQuery.value.trim().toLowerCase());
 });
+
+const handleCampusChange = () => {
+  form.office_unit_id = '';
+  officeSearchQuery.value = '';
+  isAddingNew.value = false;
+};
 
 const handleSearchInput = () => {
   isAddingNew.value = false;
@@ -249,7 +310,12 @@ const handleClickOutside = (e) => {
 
 const form = reactive({
   first_name: '', middle_name: '', last_name: '',
-  user_role: 'Non-TWG', office_unit_id: '',
+  user_role: 'Non-TWG', 
+  campus_location: 'La Trinidad Campus',
+  office_unit_id: '',
+  department: '',
+  student_id: '',
+  year_level: '',
   email: '', password: '', confirm_password: '',
   privacyAccepted: false
 });
@@ -311,7 +377,8 @@ const handleRegister = async () => {
 
     if (isAddingNew.value && newOfficeName.value) {
       const res = await api.post('add_office', { 
-        unit_name: newOfficeName.value 
+        unit_name: newOfficeName.value,
+        location: form.campus_location
       });
       departmentId = res.data.new_id;
     }
@@ -322,6 +389,9 @@ const handleRegister = async () => {
       middle_name: form.middle_name,
       last_name: form.last_name,
       department: departmentId, 
+      department_name: form.department || null,
+      university_id: form.student_id || null,
+      year_level: form.year_level || null,
       email: form.email,
       password: form.password,
       confirm_password: form.confirm_password,

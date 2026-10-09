@@ -36,7 +36,15 @@
             <div class="info-grid">
               <div class="info-item">
                 <span class="info-label">Submitted By</span>
-                <span class="info-value-purple">{{ report.submitter_name || '' }}</span>
+                <button 
+                  type="button" 
+                  @click="openProponentModal(report.user_id)" 
+                  class="flex items-center gap-1.5 text-purple-300 hover:text-purple-200 hover:underline transition-colors cursor-pointer text-left font-semibold text-sm bg-transparent border-0 p-0"
+                  title="Click to view proponent profile"
+                >
+                  <span>{{ report.submitter_name || 'N/A' }}</span>
+                  <span class="material-symbols-outlined text-[15px] text-purple-400">account_circle</span>
+                </button>
               </div>
               <div class="info-item">
                 <span class="info-label">Office</span>
@@ -416,6 +424,13 @@
 
     <!-- PDF Preview Modal -->
     <PdfPreviewModal :isOpen="isPdfModalOpen" :fileUrl="pdfFileUrl" @close="closePdfModal" />
+
+    <!-- Proponent Profile Modal -->
+    <ProponentProfileModal 
+      :is-open="isProponentModalOpen" 
+      :user-id="selectedProponentId" 
+      @close="isProponentModalOpen = false" 
+    />
   </main>
     </div>
   </div>
@@ -425,29 +440,18 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../../api';
-
-const parseAttachments = (attachmentString) => {
-  if (!attachmentString) return [];
-  if (Array.isArray(attachmentString)) return attachmentString;
-  try {
-    let parsed = attachmentString;
-    if (typeof parsed === 'string') {
-      try { parsed = JSON.parse(parsed); } catch(e) {}
-    }
-    if (typeof parsed === 'string') {
-      try { parsed = JSON.parse(parsed); } catch(e) {}
-    }
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-    return [attachmentString];
-  } catch (e) {
-    return [attachmentString];
-  }
-};
-
 import Swal from 'sweetalert2';
 import PdfPreviewModal from '../../components/PdfPreviewModal.vue';
+import ProponentProfileModal from '../../components/ProponentProfileModal.vue';
+
+const isProponentModalOpen = ref(false);
+const selectedProponentId = ref(null);
+
+const openProponentModal = (userId) => {
+  if (!userId) return;
+  selectedProponentId.value = userId;
+  isProponentModalOpen.value = true;
+};
 import ActivityDesignBudget from '../../components/ActivityDesignBudget.vue';
 
 

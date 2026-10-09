@@ -94,3 +94,45 @@ button.dp--button.dp--overlay-action,
   position: absolute !important;
   z-index: -9999 !important;
 }
+
+/* Global Proponent Profile Button */
+.proponent-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  color: #b979cc !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  line-height: inherit !important;
+  transition: all 0.2s ease !important;
+}
+
+.proponent-btn span,
+.proponent-btn .proponent-name {
+  color: #b979cc !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  transition: color 0.2s ease !important;
+}
+
+.proponent-btn:hover,
+.proponent-btn:hover span,
+.proponent-btn:hover .proponent-name {
+  color: #e9d5ff !important;
+  text-decoration: underline !important;
+}
+
+.proponent-btn .material-symbols-outlined,
+.proponent-btn .proponent-icon {
+  font-size: 16px !important;
+  color: #c084fc !important;
+  text-decoration: none !important;
+  vertical-align: middle !important;
+}

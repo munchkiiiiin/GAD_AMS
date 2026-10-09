@@ -67,11 +67,11 @@
                 <button 
                   type="button" 
                   @click="openProponentModal(existingReport?.user_id)" 
-                  class="flex items-center gap-1.5 text-purple-300 hover:text-purple-200 hover:underline transition-colors cursor-pointer text-left font-semibold text-sm bg-transparent border-0 p-0"
+                  class="proponent-btn"
                   title="Click to view proponent profile"
                 >
-                  <span>{{ existingReport?.submitter_name || 'N/A' }}</span>
-                  <span class="material-symbols-outlined text-[15px] text-purple-400">account_circle</span>
+                  <span class="proponent-name">{{ existingReport?.submitter_name || 'N/A' }}</span>
+                  <span class="material-symbols-outlined proponent-icon">account_circle</span>
                 </button>
               </div>
               <div class="info-item">

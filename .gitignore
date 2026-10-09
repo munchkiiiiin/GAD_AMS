@@ -29,3 +29,7 @@ backend/writable/*
 
 # Production builds
 frontend/dist/
+
+# User uploaded avatars
+backend/public/uploads/avatars/*
+!backend/public/uploads/avatars/.gitkeep

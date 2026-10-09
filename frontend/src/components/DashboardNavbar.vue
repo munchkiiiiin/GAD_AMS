@@ -86,19 +86,31 @@
 
         <!-- User Profile Dropdown -->
         <div class="relative profile-wrapper" ref="profileDropdownRef">
-          <button class="profile-btn" @click="isProfileOpen = !isProfileOpen" :title="user?.name || 'User'">
-            <span class="user-initial">{{ userInitial }}</span>
+          <button class="profile-btn" @click="isProfileOpen = !isProfileOpen" :title="currentUser?.full_name || currentUser?.name || 'User'">
+            <img 
+              v-if="currentUser?.profile_picture" 
+              :src="getAvatarUrl(currentUser.profile_picture)" 
+              alt="Avatar" 
+              class="w-full h-full object-cover rounded-full" 
+            />
+            <span v-else class="user-initial">{{ userInitial }}</span>
           </button>
           
           <transition name="dropdown">
             <div v-if="isProfileOpen" class="dropdown-menu profile-menu !p-2 !bg-[#13101c] !border-[#2c2041] !rounded-2xl">
               <div class="bg-[#24133d] rounded-[14px] p-4 flex items-center gap-4 mb-2 shadow-inner border border-[#371f5c]">
-                <div :class="['w-[52px] h-[52px] rounded-full flex items-center justify-center flex-shrink-0 shadow-lg', avatarStyle]">
-                  <span class="text-xl font-bold text-white">{{ userInitial }}</span>
+                <div :class="['w-[52px] h-[52px] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden', avatarStyle]">
+                  <img 
+                    v-if="currentUser?.profile_picture" 
+                    :src="getAvatarUrl(currentUser.profile_picture)" 
+                    alt="Avatar" 
+                    class="w-full h-full object-cover" 
+                  />
+                  <span v-else class="text-xl font-bold text-white">{{ userInitial }}</span>
                 </div>
                 <div class="flex flex-col overflow-hidden">
-                  <div class="text-[15px] font-bold text-white truncate leading-tight">{{ user?.full_name || user?.name || user?.username || 'User Name' }}</div>
-                  <div class="text-[13px] text-purple-200/60 truncate mb-2 mt-0.5">{{ user?.email || 'user@bsu.edu.ph' }}</div>
+                  <div class="text-[15px] font-bold text-white truncate leading-tight">{{ currentUser?.full_name || currentUser?.name || currentUser?.username || 'User Name' }}</div>
+                  <div class="text-[13px] text-purple-200/60 truncate mb-2 mt-0.5">{{ currentUser?.email || 'user@bsu.edu.ph' }}</div>
                   <div :class="['inline-flex items-center gap-1.5 border rounded-full px-3 py-1 w-fit shadow-sm', roleStyle.bgClass, roleStyle.borderClass]">
                     <span :class="['material-symbols-outlined text-[14px]', roleStyle.textClass]">{{ roleStyle.icon }}</span>
                     <span class="text-[10px] font-black tracking-[0.05em] text-white uppercase leading-none mt-[1px]">{{ displayRole }}</span>
@@ -167,19 +179,55 @@ const settingsLink = computed(() => `${baseRoute.value}/settings`);
 const manualLink = computed(() => `${baseRoute.value}/user-manual`);
 const privacyLink = computed(() => `${baseRoute.value}/data-privacy-policy`);
 
+// Reactive local user synced with localStorage events
+const localUser = ref(JSON.parse(localStorage.getItem('user') || '{}'));
+
+const handleUserUpdated = () => {
+  try {
+    localUser.value = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch (e) {}
+};
+
+const currentUser = computed(() => {
+  const merged = { ...props.user, ...localUser.value };
+  merged.profile_picture = localUser.value?.profile_picture || props.user?.profile_picture || '';
+  return merged;
+});
+
+const getAvatarUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const rawBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/';
+  const baseUrl = rawBase.replace(/\/api\/?$/, '');
+  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+};
+
+const fetchProfileData = async () => {
+  try {
+    const res = await api.get('/users/profile');
+    if (res.data?.success && res.data?.user) {
+      const u = res.data.user;
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      const updated = { ...stored, ...u };
+      localStorage.setItem('user', JSON.stringify(updated));
+      localUser.value = updated;
+    }
+  } catch (e) {}
+};
+
 const userInitial = computed(() => {
-  const name = props.user?.full_name || props.user?.name || props.user?.username || 'U';
+  const name = currentUser.value?.full_name || currentUser.value?.name || currentUser.value?.username || 'U';
   return name.charAt(0).toUpperCase();
 });
 
 const displayRole = computed(() => {
-  const r = props.user?.user_role || props.user?.role || 'Role';
+  const r = currentUser.value?.user_role || currentUser.value?.role || 'Role';
   if (r.toLowerCase() === 'non-twg') return 'Proponent';
   return r;
 });
 
 const roleStyle = computed(() => {
-  const role = (props.user?.user_role || props.user?.role || '').toLowerCase();
+  const role = (currentUser.value?.user_role || currentUser.value?.role || '').toLowerCase();
   
   if (role.includes('admin') || role.includes('director')) {
     return {
@@ -220,7 +268,7 @@ const roleStyle = computed(() => {
 });
 
 const avatarStyle = computed(() => {
-  const role = (props.user?.user_role || props.user?.role || '').toLowerCase();
+  const role = (currentUser.value?.user_role || currentUser.value?.role || '').toLowerCase();
   
   if (role.includes('admin') || role.includes('director')) {
     return 'bg-gradient-to-br from-[#d946ef] to-[#9333ea] shadow-purple-500/20';
@@ -284,12 +332,17 @@ let msgInterval;
 
 onMounted(() => {
   document.addEventListener('click', closeProfileOnClickOutside);
+  window.addEventListener('user-updated', handleUserUpdated);
+  window.addEventListener('storage', handleUserUpdated);
+  fetchProfileData();
   fetchUnreadMessages();
   msgInterval = setInterval(fetchUnreadMessages, 10000);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', closeProfileOnClickOutside);
+  window.removeEventListener('user-updated', handleUserUpdated);
+  window.removeEventListener('storage', handleUserUpdated);
   if (msgInterval) clearInterval(msgInterval);
 });
 </script>
@@ -564,6 +617,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
   padding: 0;
+  overflow: hidden;
 }
 
 .profile-btn:hover {

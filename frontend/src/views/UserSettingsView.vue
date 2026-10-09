@@ -438,6 +438,7 @@ const handleAvatarSelected = async (e) => {
       const stored = JSON.parse(localStorage.getItem('user') || '{}');
       stored.profile_picture = res.data.avatar_url;
       localStorage.setItem('user', JSON.stringify(stored));
+      window.dispatchEvent(new CustomEvent('user-updated', { detail: stored }));
 
       Swal.fire({ icon: 'success', title: 'Updated', text: 'Profile picture updated successfully!' });
     }
@@ -474,7 +475,9 @@ const fetchProfile = async () => {
       emailForm.value.email = u.email || '';
 
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      localStorage.setItem('user', JSON.stringify({ ...storedUser, ...u }));
+      const updatedUser = { ...storedUser, ...u };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      window.dispatchEvent(new CustomEvent('user-updated', { detail: updatedUser }));
     }
   } catch (error) {
     console.error("Failed to fetch profile", error);

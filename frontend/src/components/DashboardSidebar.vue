@@ -21,12 +21,18 @@
     </div>
 
     <!-- User Profile Card (Mobile Only) -->
-    <div v-if="user && user.id" class="bg-[#24133d] rounded-2xl p-4 flex items-center gap-3 mb-2 border border-[#371f5c] flex-shrink-0">
-      <div :class="['w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg', avatarStyle]">
-        <span class="text-lg font-bold text-white">{{ userInitial }}</span>
+    <div v-if="currentUser && currentUser.id" class="bg-[#24133d] rounded-2xl p-4 flex items-center gap-3 mb-2 border border-[#371f5c] flex-shrink-0">
+      <div :class="['w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden', avatarStyle]">
+        <img 
+          v-if="currentUser?.profile_picture" 
+          :src="getAvatarUrl(currentUser.profile_picture)" 
+          alt="Avatar" 
+          class="w-full h-full object-cover rounded-full" 
+        />
+        <span v-else class="text-lg font-bold text-white">{{ userInitial }}</span>
       </div>
       <div class="flex flex-col overflow-hidden">
-        <div class="text-sm font-bold text-white truncate leading-tight">{{ user.full_name || user.name || user.username || 'User Name' }}</div>
+        <div class="text-sm font-bold text-white truncate leading-tight">{{ currentUser.full_name || currentUser.name || currentUser.username || 'User Name' }}</div>
         <div class="text-[10px] font-black tracking-widest text-[#c084fc] uppercase mt-1">{{ displayRole }}</div>
       </div>
     </div>
@@ -100,7 +106,7 @@
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 
 const props = defineProps({
@@ -110,19 +116,51 @@ const props = defineProps({
   user: { type: Object, default: () => ({}) }
 });
 
+const localUser = ref(JSON.parse(localStorage.getItem('user') || '{}'));
+
+const handleUserUpdated = () => {
+  try {
+    localUser.value = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch (e) {}
+};
+
+onMounted(() => {
+  window.addEventListener('user-updated', handleUserUpdated);
+  window.addEventListener('storage', handleUserUpdated);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('user-updated', handleUserUpdated);
+  window.removeEventListener('storage', handleUserUpdated);
+});
+
+const currentUser = computed(() => {
+  const merged = { ...props.user, ...localUser.value };
+  merged.profile_picture = localUser.value?.profile_picture || props.user?.profile_picture || '';
+  return merged;
+});
+
+const getAvatarUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const rawBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/';
+  const baseUrl = rawBase.replace(/\/api\/?$/, '');
+  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+};
+
 const userInitial = computed(() => {
-  const name = props.user?.full_name || props.user?.name || props.user?.username || 'U';
+  const name = currentUser.value?.full_name || currentUser.value?.name || currentUser.value?.username || 'U';
   return name.charAt(0).toUpperCase();
 });
 
 const displayRole = computed(() => {
-  const r = props.user?.user_role || props.user?.role || 'Role';
+  const r = currentUser.value?.user_role || currentUser.value?.role || 'Role';
   if (r.toLowerCase() === 'non-twg') return 'Proponent';
   return r;
 });
 
 const avatarStyle = computed(() => {
-  const role = (props.user?.user_role || props.user?.role || '').toLowerCase();
+  const role = (currentUser.value?.user_role || currentUser.value?.role || '').toLowerCase();
   if (role.includes('admin') || role.includes('director')) return 'bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-purple-500/20';
   if (role.includes('staff')) return 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/20';
   if (role === 'twg') return 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-blue-500/20';

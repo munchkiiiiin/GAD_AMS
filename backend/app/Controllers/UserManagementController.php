@@ -294,9 +294,49 @@ class UserManagementController extends ResourceController
         $profileModel = new \App\Models\UserProfileModel();
         $existingProfile = $profileModel->getProfileByUserId($userId);
 
-        // 1. Handle Avatar File Upload
+        // 1. Handle Avatar File Upload or Removal
+        if (isset($data['remove_avatar']) && $data['remove_avatar']) {
+            if ($existingProfile && !empty($existingProfile['profile_picture'])) {
+                $oldFile = FCPATH . ltrim($existingProfile['profile_picture'], '/\\');
+                if (is_file($oldFile)) {
+                    @unlink($oldFile);
+                }
+            }
+            $olderAvatars = glob(FCPATH . 'uploads/avatars/avatar_' . $userId . '_*');
+            if ($olderAvatars) {
+                foreach ($olderAvatars as $oldAvatar) {
+                    if (is_file($oldAvatar)) {
+                        @unlink($oldAvatar);
+                    }
+                }
+            }
+            if ($existingProfile) {
+                $profileModel->update($existingProfile['id'], ['profile_picture' => null]);
+            }
+            \App\Models\ActivityLogModel::log($userId, 'Update Profile', 'removed profile picture');
+            return $this->respond(['success' => true, 'message' => 'Profile picture removed successfully', 'avatar_url' => '']);
+        }
+
         $avatarFile = $this->request->getFile('profile_picture');
         if ($avatarFile && $avatarFile->isValid() && !$avatarFile->hasMoved()) {
+            // Delete previous avatar file(s) for this user to optimize storage
+            if ($existingProfile && !empty($existingProfile['profile_picture'])) {
+                $oldFile = FCPATH . ltrim($existingProfile['profile_picture'], '/\\');
+                if (is_file($oldFile)) {
+                    @unlink($oldFile);
+                }
+            }
+
+            // Also clean up any older/orphaned files for this user
+            $olderAvatars = glob(FCPATH . 'uploads/avatars/avatar_' . $userId . '_*');
+            if ($olderAvatars) {
+                foreach ($olderAvatars as $oldAvatar) {
+                    if (is_file($oldAvatar)) {
+                        @unlink($oldAvatar);
+                    }
+                }
+            }
+
             $newName = 'avatar_' . $userId . '_' . time() . '.' . $avatarFile->getExtension();
             $avatarFile->move(FCPATH . 'uploads/avatars', $newName);
             $avatarPath = 'uploads/avatars/' . $newName;

@@ -13,6 +13,15 @@
             <span class="material-symbols-outlined text-sm">photo_camera</span>
             <input type="file" accept="image/*" class="hidden" @change="handleAvatarSelected" />
           </label>
+          <button 
+            v-if="user.profile_picture" 
+            type="button" 
+            @click="handleRemoveAvatar" 
+            class="absolute -top-2 -right-2 bg-red-600/90 hover:bg-red-500 text-white w-6 h-6 rounded-full cursor-pointer shadow-lg transition-transform group-hover:scale-110 flex items-center justify-center border border-red-400/40" 
+            title="Remove profile picture"
+          >
+            <span class="material-symbols-outlined text-[13px]">close</span>
+          </button>
         </div>
 
         <div class="flex-1 text-center sm:text-left">
@@ -445,6 +454,37 @@ const handleAvatarSelected = async (e) => {
   } catch (err) {
     console.error('Avatar upload failed:', err);
     Swal.fire({ icon: 'error', title: 'Upload Failed', text: 'Failed to upload profile picture.' });
+  }
+};
+
+const handleRemoveAvatar = async () => {
+  const result = await Swal.fire({
+    title: 'Remove Profile Picture?',
+    text: 'Your current profile picture will be permanently deleted.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#4b5563',
+    confirmButtonText: 'Yes, remove it'
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const res = await api.post('/users/profile/update', { remove_avatar: true });
+    if (res.data.success) {
+      user.value.profile_picture = '';
+      avatarPreview.value = '';
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      stored.profile_picture = '';
+      localStorage.setItem('user', JSON.stringify(stored));
+      window.dispatchEvent(new CustomEvent('user-updated', { detail: stored }));
+
+      Swal.fire({ icon: 'success', title: 'Removed', text: 'Profile picture removed successfully!' });
+    }
+  } catch (err) {
+    console.error('Failed to remove avatar:', err);
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to remove profile picture.' });
   }
 };
 

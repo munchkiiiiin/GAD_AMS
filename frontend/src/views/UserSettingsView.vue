@@ -1,53 +1,165 @@
 <template>
   <div class="settings-container">
+    <!-- Header with Profile Overview -->
     <div class="settings-header">
-      <h1 class="text-3xl font-bold text-white">Account Settings</h1>
-      <p class="text-purple-200 mt-2">Manage your email address and update your password.</p>
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
+        <!-- Avatar Preview / Upload Trigger -->
+        <div class="relative group">
+          <div class="w-24 h-24 rounded-2xl overflow-hidden bg-purple-900/40 border-2 border-purple-400/40 shadow-xl flex items-center justify-center text-3xl font-extrabold text-white uppercase select-none">
+            <img v-if="avatarPreview || user.profile_picture" :src="avatarPreview || getAvatarUrl(user.profile_picture)" alt="Avatar" class="w-full h-full object-cover" />
+            <span v-else>{{ userInitials }}</span>
+          </div>
+          <label class="absolute -bottom-2 -right-2 bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-xl cursor-pointer shadow-lg transition-transform group-hover:scale-110 flex items-center justify-center border border-purple-400/30" title="Change profile picture">
+            <span class="material-symbols-outlined text-sm">photo_camera</span>
+            <input type="file" accept="image/*" class="hidden" @change="handleAvatarSelected" />
+          </label>
+        </div>
+
+        <div class="flex-1 text-center sm:text-left">
+          <div class="inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full border border-purple-500/30 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>{{ user.user_role || (user.role === 'non-twg' ? 'Proponent' : 'User') }}</span>
+            <span v-if="user.office_acronym" class="text-purple-200">({{ user.office_acronym }})</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white leading-tight">
+            {{ user.full_name || user.username || 'User Profile' }}
+          </h1>
+          <p class="text-purple-200/80 text-sm mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">business</span> {{ user.office_name || 'No Office Assigned' }}</span>
+            <span class="text-purple-400/60">•</span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">location_on</span> {{ user.location || 'La Trinidad Campus' }}</span>
+          </p>
+        </div>
+      </div>
     </div>
 
     <div class="settings-content mt-6">
-      <!-- Profile Information -->
+      
+      <!-- 1. PERSONAL INFORMATION -->
       <div class="settings-card">
         <div class="card-header">
           <span class="material-symbols-outlined text-purple-400">badge</span>
-          <h2 class="card-title">Profile Information</h2>
+          <h2 class="card-title">Personal Information</h2>
         </div>
         
-        <form @submit.prevent="updateName" class="form-group mb-8 pb-8 border-b border-slate-700/50">
-          <div class="input-wrapper mb-2">
-            <label class="input-label">Current Name</label>
-            <div class="text-white font-medium bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">{{ user.full_name || 'N/A' }}</div>
+        <form @submit.prevent="savePersonalInfo" class="form-group">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="input-wrapper">
+              <label class="input-label">First Name <span class="text-red-400">*</span></label>
+              <input type="text" v-model="personalForm.first_name" class="custom-input" required placeholder="First name" />
+            </div>
+            <div class="input-wrapper">
+              <label class="input-label">Middle Name</label>
+              <input type="text" v-model="personalForm.middle_name" class="custom-input" placeholder="Middle name (optional)" />
+            </div>
+            <div class="input-wrapper">
+              <label class="input-label">Last Name <span class="text-red-400">*</span></label>
+              <input type="text" v-model="personalForm.last_name" class="custom-input" required placeholder="Last name" />
+            </div>
           </div>
-          
-          <div class="input-wrapper">
-            <label class="input-label">Display Name</label>
-            <input 
-              type="text" 
-              v-model="nameForm.full_name" 
-              class="custom-input" 
-              required
-              placeholder="Enter your new name"
-            />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="input-wrapper">
+              <label class="input-label">Sex</label>
+              <select v-model="personalForm.sex" class="custom-input">
+                <option value="" class="bg-[#1a1a2e]">Select Sex</option>
+                <option value="Male" class="bg-[#1a1a2e]">Male</option>
+                <option value="Female" class="bg-[#1a1a2e]">Female</option>
+                <option value="Prefer not to say" class="bg-[#1a1a2e]">Prefer not to say</option>
+              </select>
+            </div>
+            <div class="input-wrapper">
+              <label class="input-label">Current Display Name</label>
+              <input type="text" :value="computedFullName" disabled class="custom-input !bg-white/5 opacity-70 cursor-not-allowed" />
+            </div>
           </div>
           
           <div class="form-actions">
-            <button type="submit" class="btn-primary" :disabled="isUpdatingName">
-              <span v-if="isUpdatingName" class="material-symbols-outlined animate-spin text-sm mr-2">refresh</span>
-              {{ isUpdatingName ? 'Updating...' : 'Update Name' }}
+            <button type="submit" class="btn-primary" :disabled="isSavingPersonal">
+              <span v-if="isSavingPersonal" class="material-symbols-outlined animate-spin text-sm mr-2">refresh</span>
+              {{ isSavingPersonal ? 'Saving...' : 'Save Personal Information' }}
             </button>
           </div>
-          <p v-if="nameSuccess" class="success-msg">{{ nameSuccess }}</p>
-          <p v-if="nameError" class="error-msg">{{ nameError }}</p>
+          <p v-if="personalSuccess" class="success-msg">{{ personalSuccess }}</p>
+          <p v-if="personalError" class="error-msg">{{ personalError }}</p>
         </form>
+      </div>
 
-        <form @submit.prevent="updateEmail" class="form-group">
+      <!-- 2. DESIGNATION & ACADEMIC DETAILS -->
+      <div class="settings-card">
+        <div class="card-header">
+          <span class="material-symbols-outlined text-blue-400">domain</span>
+          <h2 class="card-title">Designation & Affiliation</h2>
+        </div>
+        
+        <form @submit.prevent="saveDesignation" class="form-group">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="input-wrapper">
+              <label class="input-label">Campus Location</label>
+              <input type="text" :value="user.location || 'La Trinidad Campus'" disabled class="custom-input !bg-white/5 opacity-70 cursor-not-allowed" />
+            </div>
+            <div class="input-wrapper">
+              <label class="input-label">College / Office</label>
+              <input type="text" :value="user.office_name || 'No Office Assigned'" disabled class="custom-input !bg-white/5 opacity-70 cursor-not-allowed" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="input-wrapper">
+              <label class="input-label">Department</label>
+              <input type="text" v-model="designationForm.department" class="custom-input" placeholder="e.g. Department of Information Technology (optional)" />
+              <span class="text-[11px] text-slate-400">Academic unit or subdivision within your office/college</span>
+            </div>
+            <div class="input-wrapper">
+              <label class="input-label">Position / Title</label>
+              <input type="text" v-model="designationForm.position" class="custom-input" placeholder="e.g. Instructor, Student, GAD Coordinator" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="input-wrapper">
+              <label class="input-label">Student ID / Employee ID</label>
+              <input type="text" v-model="designationForm.student_id" class="custom-input" placeholder="e.g. 2022-12345 (optional)" />
+            </div>
+            <div class="input-wrapper">
+              <label class="input-label">Year Level (For Students)</label>
+              <select v-model="designationForm.year_level" class="custom-input">
+                <option value="" class="bg-[#1a1a2e]">None / Faculty / Staff</option>
+                <option value="1st Year" class="bg-[#1a1a2e]">1st Year</option>
+                <option value="2nd Year" class="bg-[#1a1a2e]">2nd Year</option>
+                <option value="3rd Year" class="bg-[#1a1a2e]">3rd Year</option>
+                <option value="4th Year" class="bg-[#1a1a2e]">4th Year</option>
+                <option value="Graduate" class="bg-[#1a1a2e]">Graduate Student</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" :disabled="isSavingDesignation">
+              <span v-if="isSavingDesignation" class="material-symbols-outlined animate-spin text-sm mr-2">refresh</span>
+              {{ isSavingDesignation ? 'Saving...' : 'Save Designation' }}
+            </button>
+          </div>
+          <p v-if="designationSuccess" class="success-msg">{{ designationSuccess }}</p>
+          <p v-if="designationError" class="error-msg">{{ designationError }}</p>
+        </form>
+      </div>
+
+      <!-- 3. SECURITY & ACCOUNT -->
+      <div class="settings-card">
+        <div class="card-header">
+          <span class="material-symbols-outlined text-pink-400">lock</span>
+          <h2 class="card-title">Security & Account</h2>
+        </div>
+        
+        <!-- Email Section -->
+        <form @submit.prevent="updateEmail" class="form-group mb-8 pb-8 border-b border-slate-700/50">
           <div class="input-wrapper mb-2">
             <label class="input-label">Current Email</label>
             <div class="text-white font-medium bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">{{ user.email || 'Loading...' }}</div>
           </div>
           
           <div class="input-wrapper">
-            <label class="input-label">Email Address</label>
+            <label class="input-label">New Email Address</label>
             <input 
               type="email" 
               v-model="emailForm.email" 
@@ -66,15 +178,8 @@
           <p v-if="emailSuccess" class="success-msg">{{ emailSuccess }}</p>
           <p v-if="emailError" class="error-msg">{{ emailError }}</p>
         </form>
-      </div>
 
-      <!-- Security -->
-      <div class="settings-card">
-        <div class="card-header">
-          <span class="material-symbols-outlined text-pink-400">lock</span>
-          <h2 class="card-title">Security</h2>
-        </div>
-        
+        <!-- Password Section -->
         <form @submit.prevent="updatePassword" class="form-group">
           <div class="input-wrapper">
             <label class="input-label">Current Password</label>
@@ -93,7 +198,7 @@
               v-model="passwordForm.newPassword" 
               class="custom-input" 
               required
-              placeholder="Enter new password"
+              placeholder="Enter new password (min. 6 characters)"
             />
           </div>
           <div class="input-wrapper">
@@ -117,89 +222,33 @@
           <p v-if="passwordError" class="error-msg">{{ passwordError }}</p>
         </form>
       </div>
-      <!-- Data Retention (Admin Only) -->
+
+      <!-- 4. DATA RETENTION POLICIES (Admin/Staff Only) -->
       <div v-if="isAdminOrStaff" class="settings-card">
         <div class="card-header">
-          <span class="material-symbols-outlined text-blue-400">auto_delete</span>
-          <h2 class="card-title">Data Retention Policies</h2>
+          <span class="material-symbols-outlined text-amber-400">schedule</span>
+          <h2 class="card-title">System Data Retention Policies</h2>
         </div>
         
-        <p class="text-slate-400 text-sm mb-4">
-          Configure how long deleted items and historical data are kept before being permanently purged. Set to 0 to disable automated deletion.
-        </p>
-        
         <form @submit.prevent="updateRetentionSettings" class="form-group">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <p class="text-sm text-slate-300 mb-2">Configure automated scheduled cleanup periods (in days) for temporary and archived records.</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="input-wrapper">
-              <label class="input-label">Trashbin TTL (Days)</label>
-              <input 
-                type="number" 
-                v-model.number="retentionForm.trash_ttl_days" 
-                class="custom-input" 
-                min="0"
-                required
-              />
-              <span class="text-xs text-slate-500">All data in trashbin</span>
+              <label class="input-label">Trash Bin (Days)</label>
+              <input type="number" min="1" max="365" v-model.number="retentionForm.trash_ttl_days" class="custom-input" required />
             </div>
-            
             <div class="input-wrapper">
-              <label class="input-label">Messages TTL (Days)</label>
-              <input 
-                type="number" 
-                v-model.number="retentionForm.messages_ttl_days" 
-                class="custom-input" 
-                min="0"
-                required
-              />
-              <span class="text-xs text-slate-500">Auto-move to trash</span>
+              <label class="input-label">Messages (Days)</label>
+              <input type="number" min="1" max="1825" v-model.number="retentionForm.messages_ttl_days" class="custom-input" required />
             </div>
-            
             <div class="input-wrapper">
-              <label class="input-label">Main Logs TTL (Days)</label>
-              <input 
-                type="number" 
-                v-model.number="retentionForm.activity_logs_ttl_days" 
-                class="custom-input" 
-                min="0"
-                required
-              />
-              <span class="text-xs text-slate-500">System activity logs</span>
+              <label class="input-label">Activity Logs (Days)</label>
+              <input type="number" min="1" max="1825" v-model.number="retentionForm.activity_logs_ttl_days" class="custom-input" required />
             </div>
-
             <div class="input-wrapper">
-              <label class="input-label">Operational Logs TTL (Days)</label>
-              <input 
-                type="number" 
-                v-model.number="retentionForm.operational_logs_ttl_days" 
-                class="custom-input" 
-                min="0"
-                required
-              />
-              <span class="text-xs text-slate-500">Logins, logouts, user management</span>
-            </div>
-
-            <div class="input-wrapper">
-              <label class="input-label">Archived Documents TTL (Days)</label>
-              <input 
-                type="number" 
-                v-model.number="retentionForm.archived_documents_ttl_days" 
-                class="custom-input" 
-                min="0"
-                required
-              />
-              <span class="text-xs text-slate-500">Applies to Activity Designs (Accomplishment reports are permanent)</span>
-            </div>
-
-            <div class="input-wrapper">
-              <label class="input-label">Drafts TTL (Days)</label>
-              <input 
-                type="number" 
-                v-model.number="retentionForm.drafts_ttl_days" 
-                class="custom-input" 
-                min="0"
-                required
-              />
-              <span class="text-xs text-slate-500">Pending, revision, disapproved documents</span>
+              <label class="input-label">Archived Documents (Days)</label>
+              <input type="number" min="30" max="3650" v-model.number="retentionForm.archived_documents_ttl_days" class="custom-input" required />
             </div>
           </div>
           
@@ -220,22 +269,42 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import api from '../api'; // Adjust path if necessary
+import api from '../api';
 import Swal from 'sweetalert2';
 
 const user = ref({});
 
-// Check if user is admin or staff to show system settings
 const isAdminOrStaff = computed(() => {
   const role = user.value.role ? user.value.role.toLowerCase() : '';
   return role === 'admin' || role === 'gad_staff' || role === 'superadmin' || role === 'director';
 });
 
-const nameForm = ref({ full_name: '' });
-const isUpdatingName = ref(false);
-const nameSuccess = ref('');
-const nameError = ref('');
+// Personal Form State
+const personalForm = ref({
+  first_name: '',
+  middle_name: '',
+  last_name: '',
+  sex: ''
+});
+const isSavingPersonal = ref(false);
+const personalSuccess = ref('');
+const personalError = ref('');
 
+// Designation Form State
+const designationForm = ref({
+  department: '',
+  position: '',
+  student_id: '',
+  year_level: ''
+});
+const isSavingDesignation = ref(false);
+const designationSuccess = ref('');
+const designationError = ref('');
+
+// Avatar Upload
+const avatarPreview = ref('');
+
+// Email & Password State
 const emailForm = ref({ email: '' });
 const isUpdatingEmail = ref(false);
 const emailSuccess = ref('');
@@ -250,6 +319,7 @@ const isUpdatingPassword = ref(false);
 const passwordSuccess = ref('');
 const passwordError = ref('');
 
+// Retention State
 const retentionForm = ref({
   trash_ttl_days: 30,
   messages_ttl_days: 365,
@@ -262,27 +332,96 @@ const isUpdatingRetention = ref(false);
 const retentionSuccess = ref('');
 const retentionError = ref('');
 
-onMounted(async () => {
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-  user.value = storedUser;
-  
+const computedFullName = computed(() => {
+  return [personalForm.value.first_name, personalForm.value.middle_name, personalForm.value.last_name]
+    .filter(Boolean)
+    .join(' ')
+    .trim() || user.value.full_name || 'N/A';
+});
+
+const userInitials = computed(() => {
+  const name = user.value.full_name || user.value.username || 'U';
+  return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+});
+
+const getAvatarUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/', '/') || 'http://localhost:8080/';
+  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+};
+
+const handleAvatarSelected = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Profile picture must be under 2MB.' });
+    return;
+  }
+
+  // Preview locally
+  avatarPreview.value = URL.createObjectURL(file);
+
+  const formData = new FormData();
+  formData.append('profile_picture', file);
+
+  try {
+    const res = await api.post('/users/profile/update', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    if (res.data.success) {
+      user.value.profile_picture = res.data.avatar_url;
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      stored.profile_picture = res.data.avatar_url;
+      localStorage.setItem('user', JSON.stringify(stored));
+
+      Swal.fire({ icon: 'success', title: 'Updated', text: 'Profile picture updated successfully!' });
+    }
+  } catch (err) {
+    console.error('Avatar upload failed:', err);
+    Swal.fire({ icon: 'error', title: 'Upload Failed', text: 'Failed to upload profile picture.' });
+  }
+};
+
+const fetchProfile = async () => {
   try {
     const res = await api.get('/users/profile');
     if (res.data.success) {
-      user.value.full_name = res.data.user.full_name;
-      nameForm.value.full_name = res.data.user.full_name;
-      user.value.email = res.data.user.email;
-      emailForm.value.email = res.data.user.email;
-      
-      // Update local storage to have the email cached
-      storedUser.email = res.data.user.email;
-      localStorage.setItem('user', JSON.stringify(storedUser));
+      const u = res.data.user;
+      user.value = { ...user.value, ...u };
+
+      personalForm.value = {
+        first_name: u.first_name || '',
+        middle_name: u.middle_name || '',
+        last_name: u.last_name || '',
+        sex: u.sex || ''
+      };
+
+      designationForm.value = {
+        department: u.department || '',
+        position: u.position || '',
+        student_id: u.student_id || '',
+        year_level: u.year_level || ''
+      };
+
+      emailForm.value.email = u.email || '';
+
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...storedUser, ...u }));
     }
   } catch (error) {
     console.error("Failed to fetch profile", error);
   }
+};
 
-  // Fetch system settings if admin
+onMounted(async () => {
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  user.value = storedUser;
+  
+  await fetchProfile();
+
   if (isAdminOrStaff.value) {
     try {
       const res = await api.get('/settings/system');
@@ -301,6 +440,46 @@ onMounted(async () => {
     }
   }
 });
+
+const savePersonalInfo = async () => {
+  isSavingPersonal.value = true;
+  personalSuccess.value = '';
+  personalError.value = '';
+
+  try {
+    const res = await api.post('/users/profile/update', personalForm.value);
+    if (res.data.success) {
+      personalSuccess.value = 'Personal information saved successfully.';
+      await fetchProfile();
+    } else {
+      personalError.value = res.data.message || 'Failed to save personal info.';
+    }
+  } catch (err) {
+    personalError.value = err.response?.data?.message || 'Error saving personal info.';
+  } finally {
+    isSavingPersonal.value = false;
+  }
+};
+
+const saveDesignation = async () => {
+  isSavingDesignation.value = true;
+  designationSuccess.value = '';
+  designationError.value = '';
+
+  try {
+    const res = await api.post('/users/profile/update', designationForm.value);
+    if (res.data.success) {
+      designationSuccess.value = 'Designation details saved successfully.';
+      await fetchProfile();
+    } else {
+      designationError.value = res.data.message || 'Failed to save designation.';
+    }
+  } catch (err) {
+    designationError.value = err.response?.data?.message || 'Error saving designation.';
+  } finally {
+    isSavingDesignation.value = false;
+  }
+};
 
 const updateEmail = async () => {
   if (emailForm.value.email === user.value.email) {
@@ -328,7 +507,6 @@ const updateEmail = async () => {
     const res = await api.post('/users/profile/update', { email: emailForm.value.email });
     if (res.data.success) {
       emailSuccess.value = 'Email updated successfully.';
-      // Update local storage and reactive state
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       storedUser.email = emailForm.value.email;
       localStorage.setItem('user', JSON.stringify(storedUser));
@@ -340,46 +518,6 @@ const updateEmail = async () => {
     emailError.value = err.response?.data?.message || 'An error occurred while updating email.';
   } finally {
     isUpdatingEmail.value = false;
-  }
-};
-
-const updateName = async () => {
-  if (nameForm.value.full_name === user.value.full_name) {
-    nameError.value = 'New name is the same as the current name.';
-    return;
-  }
-
-  const result = await Swal.fire({
-    title: 'Are you sure?',
-    text: "Do you want to update your display name?",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#9333ea',
-    cancelButtonColor: '#64748b',
-    confirmButtonText: 'Yes, update it!'
-  });
-
-  if (!result.isConfirmed) return;
-
-  isUpdatingName.value = true;
-  nameSuccess.value = '';
-  nameError.value = '';
-  
-  try {
-    const res = await api.post('/users/profile/update', { full_name: nameForm.value.full_name });
-    if (res.data.success) {
-      nameSuccess.value = 'Name updated successfully.';
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      storedUser.full_name = nameForm.value.full_name;
-      localStorage.setItem('user', JSON.stringify(storedUser));
-      user.value.full_name = nameForm.value.full_name;
-    } else {
-      nameError.value = res.data.message || 'Failed to update name.';
-    }
-  } catch (err) {
-    nameError.value = err.response?.data?.message || 'An error occurred while updating name.';
-  } finally {
-    isUpdatingName.value = false;
   }
 };
 
@@ -432,12 +570,9 @@ const updateRetentionSettings = async () => {
     const res = await api.post('/settings/system', retentionForm.value);
     if (res.status === 200 || res.status === 201 || (res.data && res.data.message)) {
       retentionSuccess.value = 'Data retention policies updated successfully.';
-      
-      // Also trigger a manual cleanup run since they just updated the settings
       try {
         api.post('/settings/trigger-cleanup').catch(e => console.log('Silent background cleanup error', e));
       } catch (e) {}
-      
     } else {
       retentionError.value = 'Failed to update retention policies.';
     }

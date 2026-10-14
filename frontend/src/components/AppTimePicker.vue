@@ -229,8 +229,13 @@ const emit = defineEmits(['update:modelValue', 'change']);
 const wrapperRef = ref(null);
 const isOpen = ref(false);
 const activeTab = ref('hour');
-const isDarkMode = ref(typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false);
-let observer = null;
+const isDarkMode = ref(false);
+
+const updateDarkMode = () => {
+  if (typeof document !== 'undefined') {
+    isDarkMode.value = document.documentElement.classList.contains('dark');
+  }
+};
 
 // Internal 12-hour values
 const selectedHour = ref(8);
@@ -295,28 +300,50 @@ const formattedDisplay = computed(() => {
   return `${padZero(hour12)}:${padZero(m)} ${period}`;
 });
 
-// Min / Max bound validation checks
+// Precompute min and max minutes for ultra-fast integer comparisons
+const minMinutes = computed(() => {
+  if (!props.min || !props.min.includes(':')) return null;
+  const [h, m] = props.min.split(':').map(Number);
+  return h * 60 + (m || 0);
+});
+
+const maxMinutes = computed(() => {
+  if (!props.max || !props.max.includes(':')) return null;
+  const [h, m] = props.max.split(':').map(Number);
+  return h * 60 + (m || 0);
+});
+
+// Fast integer Min / Max bound validation checks
 const isHourDisabled = (h) => {
-  if (!props.min && !props.max) return false;
-  // Check if any minute in this hour can satisfy bounds
-  const testValMin = to24HourString(h, 59, selectedPeriod.value);
-  const testValMax = to24HourString(h, 0, selectedPeriod.value);
-  if (props.min && testValMin < props.min) return true;
-  if (props.max && testValMax > props.max) return true;
+  if (minMinutes.value === null && maxMinutes.value === null) return false;
+  let h24 = h;
+  if (selectedPeriod.value === 'PM' && h24 < 12) h24 += 12;
+  else if (selectedPeriod.value === 'AM' && h24 === 12) h24 = 0;
+
+  const hourStartMins = h24 * 60;
+  const hourEndMins = h24 * 60 + 59;
+
+  if (minMinutes.value !== null && hourEndMins < minMinutes.value) return true;
+  if (maxMinutes.value !== null && hourStartMins > maxMinutes.value) return true;
   return false;
 };
 
 const isMinuteDisabled = (m) => {
-  if (!props.min && !props.max) return false;
-  const timeStr = to24HourString(selectedHour.value, m, selectedPeriod.value);
-  if (props.min && timeStr < props.min) return true;
-  if (props.max && timeStr > props.max) return true;
+  if (minMinutes.value === null && maxMinutes.value === null) return false;
+  let h24 = selectedHour.value;
+  if (selectedPeriod.value === 'PM' && h24 < 12) h24 += 12;
+  else if (selectedPeriod.value === 'AM' && h24 === 12) h24 = 0;
+
+  const currentMins = h24 * 60 + m;
+  if (minMinutes.value !== null && currentMins < minMinutes.value) return true;
+  if (maxMinutes.value !== null && currentMins > maxMinutes.value) return true;
   return false;
 };
 
 const togglePicker = () => {
   if (props.disabled) return;
   if (!isOpen.value) {
+    updateDarkMode();
     syncFromModel(props.modelValue);
     activeTab.value = 'hour';
     isOpen.value = true;
@@ -372,23 +399,10 @@ const handleKeyDown = (e) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
-  if (typeof document !== 'undefined') {
-    observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          isDarkMode.value = document.documentElement.classList.contains('dark');
-        }
-      });
-    });
-    observer.observe(document.documentElement, { attributes: true });
-  }
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
-  if (observer) {
-    observer.disconnect();
-  }
 });
 </script>
 
@@ -464,8 +478,7 @@ onUnmounted(() => {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;

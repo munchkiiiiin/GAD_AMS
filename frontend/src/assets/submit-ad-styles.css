@@ -16,19 +16,20 @@
 }
 
 .main-content-container {
-  max-width: 1280px;
+  width: 90%;
+  max-width: 1600px;
   margin-left: auto;
   margin-right: auto;
-  width: 100%;
+  padding-bottom: 110px;
 }
 
 .form-header {
-  text-align: center;
-  margin-bottom: 32px;
+  text-align: left;
+  margin-bottom: 28px;
 }
 
 .form-main-title {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.025em;
   color: #0f172a;
@@ -36,33 +37,132 @@
 }
 
 .form-description {
-  font-size: 14px;
+  font-size: 14.5px;
   color: #64748b;
   margin-top: 6px;
 }
 
 .form-grid-main {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 30px;
-}
-@media (min-width: 1024px) {
-  .form-grid-main {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.form-column-left, .form-column-right {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
+  width: 100%;
 }
 
-.form-column-left {
-  border-right: 1px solid #e2e8f0;
-  padding-right: 20px;
+.form-section-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  width: 100%;
 }
-  
+
+/* Minimalist design divider */
+.form-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #e2e8f0 8%, #e2e8f0 92%, transparent 100%);
+  margin: 32px 0;
+  width: 100%;
+}
+
+.form-section-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 13px;
+  font-family: 'IBM Plex Mono', monospace;
+  background: rgba(147, 51, 234, 0.1);
+  color: #7e22ce;
+  border: 1px solid rgba(147, 51, 234, 0.25);
+  flex-shrink: 0;
+}
+
+.form-section-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.form-section-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.form-section-subtitle {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Floating Sticky Action Dock */
+.form-sticky-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid #e2e8f0;
+  padding: 14px 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.form-sticky-dock-inner {
+  width: 90%;
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dock-summary-group {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.dock-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dock-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.dock-stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #7e22ce;
+  letter-spacing: -0.01em;
+}
+
+.dock-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .form-section-spacing {
   display: flex;
   flex-direction: column;
@@ -99,9 +199,8 @@
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 
-              0 0 25px rgba(126, 34, 206, 0.03);
+  padding: 36px 40px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
@@ -1766,3 +1865,335 @@ html.dark .bl-clear:hover, .dark .bl-clear:hover {
 html.dark .bl-link, .dark .bl-link {
   color: #b979cc;
 }
+
+/* One-Lane Container, Dividers & Floating Action Dock in Dark Mode */
+html.dark .form-container-box, .dark .form-container-box {
+  background: #182234;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+html.dark .form-section-card, .dark .form-section-card {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html.dark .form-divider, .dark .form-divider {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 8%, rgba(255, 255, 255, 0.08) 92%, transparent 100%);
+}
+
+html.dark .form-section-header, .dark .form-section-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .form-section-badge, .dark .form-section-badge {
+  background: rgba(185, 121, 204, 0.15);
+  color: #d8b4fe;
+  border-color: rgba(185, 121, 204, 0.35);
+}
+
+html.dark .form-section-title, .dark .form-section-title {
+  color: #f8fafc;
+}
+
+html.dark .form-section-subtitle, .dark .form-section-subtitle {
+  color: #94a3b8;
+}
+
+html.dark .form-sticky-dock, .dark .form-sticky-dock {
+  background: rgba(15, 23, 42, 0.92);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .dock-stat-label, .dark .dock-stat-label {
+  color: #94a3b8;
+}
+
+html.dark .dock-stat-value, .dark .dock-stat-value {
+  color: #c084fc;
+}
+
+/* Modern GAD Mandates & Gender Issues Multiselect Design */
+.gad-multiselect-container {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.gad-multiselect-container:focus-within {
+  border-color: #b979cc;
+  box-shadow: 0 0 0 2px rgba(185, 121, 204, 0.18);
+}
+
+.gad-search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.gad-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.gad-search-icon {
+  position: absolute;
+  left: 8px;
+  font-size: 16px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.gad-search-input {
+  width: 100%;
+  padding: 5px 8px 5px 28px;
+  font-size: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.gad-search-input:focus {
+  border-color: #b979cc;
+  background: #ffffff;
+}
+
+.gad-count-chip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(147, 51, 234, 0.08);
+  color: #7e22ce;
+  border: 1px solid rgba(147, 51, 234, 0.18);
+  white-space: nowrap;
+}
+
+.gad-count-chip.has-selection {
+  background: rgba(147, 51, 234, 0.15);
+  color: #6b21a8;
+  border-color: rgba(147, 51, 234, 0.35);
+}
+
+.gad-multiselect-list {
+  min-height: 140px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scroll-behavior: smooth;
+}
+
+.gad-multiselect-list::-webkit-scrollbar {
+  width: 6px;
+}
+.gad-multiselect-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gad-multiselect-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.gad-multiselect-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.gad-multiselect-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.gad-multiselect-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.gad-multiselect-item.is-selected {
+  background: rgba(185, 121, 204, 0.1);
+  border-color: rgba(185, 121, 204, 0.45);
+  box-shadow: 0 1px 3px rgba(185, 121, 204, 0.1);
+}
+
+.gad-custom-checkbox {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid #94a3b8;
+  background: #ffffff;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.18s ease;
+}
+
+.gad-multiselect-item:hover .gad-custom-checkbox {
+  border-color: #b979cc;
+}
+
+.gad-multiselect-item.is-selected .gad-custom-checkbox {
+  background: #b979cc;
+  border-color: #b979cc;
+  color: #ffffff;
+}
+
+.gad-check-icon {
+  font-size: 13px !important;
+  font-weight: 800;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.18s ease;
+}
+
+.gad-multiselect-item.is-selected .gad-check-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.gad-item-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.gad-mandate-code-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(126, 34, 206, 0.08);
+  color: #7e22ce;
+  border: 1px solid rgba(126, 34, 206, 0.18);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.gad-item-title {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #1e293b;
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+
+.gad-multiselect-item.is-selected .gad-item-title {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.gad-empty-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 14px;
+  color: #64748b;
+  font-size: 13px;
+  font-style: italic;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Dark Mode Overrides for GAD Multiselect */
+html.dark .gad-multiselect-container, .dark .gad-multiselect-container {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+html.dark .gad-multiselect-container:focus-within, .dark .gad-multiselect-container:focus-within {
+  border-color: rgba(185, 121, 204, 0.5);
+  box-shadow: 0 0 0 2px rgba(185, 121, 204, 0.2);
+}
+html.dark .gad-search-header, .dark .gad-search-header {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+html.dark .gad-search-input, .dark .gad-search-input {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+html.dark .gad-search-input:focus, .dark .gad-search-input:focus {
+  border-color: #b979cc;
+}
+html.dark .gad-count-chip, .dark .gad-count-chip {
+  background: rgba(185, 121, 204, 0.12);
+  color: #d8b4fe;
+  border-color: rgba(185, 121, 204, 0.25);
+}
+html.dark .gad-count-chip.has-selection, .dark .gad-count-chip.has-selection {
+  background: rgba(185, 121, 204, 0.22);
+  color: #f3e8ff;
+  border-color: rgba(185, 121, 204, 0.45);
+}
+html.dark .gad-multiselect-item, .dark .gad-multiselect-item {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+html.dark .gad-multiselect-item:hover, .dark .gad-multiselect-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+html.dark .gad-multiselect-item.is-selected, .dark .gad-multiselect-item.is-selected {
+  background: rgba(185, 121, 204, 0.15);
+  border-color: rgba(185, 121, 204, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+html.dark .gad-custom-checkbox, .dark .gad-custom-checkbox {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+html.dark .gad-multiselect-item.is-selected .gad-custom-checkbox, .dark .gad-multiselect-item.is-selected .gad-custom-checkbox {
+  background: #b979cc;
+  border-color: #b979cc;
+  color: #ffffff;
+}
+html.dark .gad-item-title, .dark .gad-item-title {
+  color: #cbd5e1;
+}
+html.dark .gad-multiselect-item.is-selected .gad-item-title, .dark .gad-multiselect-item.is-selected .gad-item-title {
+  color: #ffffff;
+}
+html.dark .gad-mandate-code-badge, .dark .gad-mandate-code-badge {
+  background: rgba(185, 121, 204, 0.16);
+  color: #d8b4fe;
+  border-color: rgba(185, 121, 204, 0.3);
+}
+html.dark .gad-multiselect-list::-webkit-scrollbar-thumb, .dark .gad-multiselect-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+html.dark .gad-multiselect-list::-webkit-scrollbar-thumb:hover, .dark .gad-multiselect-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(185, 121, 204, 0.4);
+}
+
+

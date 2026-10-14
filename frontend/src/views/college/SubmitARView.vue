@@ -11,7 +11,9 @@
           <div class="form-container-box">
             <form @submit.prevent="submitReport" class="form-main-layout-ar">
               <div class="form-grid-main-ar">
-                <div class="form-column-left-ar">
+                <!-- Section 01: Activity Reference & Classification -->
+                <section class="form-section-card">
+
                   <div class="input-group-ar">
                     <label class="form-label-ar">Activity Design Control Number *</label>
                     <select 
@@ -28,7 +30,7 @@
                     </select>
                   </div>
 
-                  <div class="input-group-ar">
+                  <div class="input-group-ar" style="margin-top: 16px;">
                     <label class="form-label-ar">Activity Title *</label>
                     <textarea 
                       v-model="form.activity_title" 
@@ -39,111 +41,173 @@
                     ></textarea>
                   </div>
 
-                  <div class="input-group-ar">
-                    <label class="form-label-ar">Form Type *</label>
-                    <select 
-                      v-model="form.form_type" 
-                      required 
-                      class="custom-input-field select-arrow-fix"
-                    >
-                      <option value="" disabled class="dark-option">Select form type...</option>
-                      <option 
-                        v-for="ft in formTypes" 
-                        :key="ft.id" 
-                        :value="ft.name" 
-                        class="dark-option"
-                      >
-                        {{ ft.name }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="input-group-ar">
-                    <label class="form-label-ar">Activity Classification *</label>
-                    <select
-                      v-model="form.activity_classification"
-                      @change="handleClassificationChange"
-                      required
-                      class="custom-input-field select-arrow-fix"
-                    >
-                      <option value="" disabled class="dark-option">Select Classification</option>
-                      <option
-                        v-for="classification in ActClassification"
-                        :key="classification.id"
-                        :value="classification.classification_name"
-                        class="dark-option"
-                      >
-                        {{ classification.classification_name }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="input-group-ar">
-                    <label class="form-label-ar">Gender Issue / GAD Mandate *</label>
-                    <div class="checkbox-group-container custom-input-field" style="min-height: 120px; max-height: 250px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-                      <label v-for="mandate in GADMandates" :key="mandate.id" class="checkbox-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" @change="handleMandateChange" v-model="form.gad_mandate_id" :value="mandate.id.toString()" style="margin-top: 2px; accent-color: #b979cc; transform: scale(1.1);" />
-                        <span style="font-size: 14px; line-height: 1.4;">{{ mandate.code }} - {{ mandate.title }}</span>
-                      </label>
-                      
-                    </div>
-                    
-                  </div>
-
-                  <div class="input-group-ar">
-                    <label class="form-label-ar">Cause of Gender Issue *</label>
-                    <div class="checkbox-group-container custom-input-field" style="min-height: 120px; max-height: 250px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-                      <label v-for="issue in genderIssues" :key="issue.id" class="checkbox-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" v-model="form.gender_issue_id" :value="issue.id.toString()" style="margin-top: 2px; accent-color: #b979cc; transform: scale(1.1);" />
-                        <span style="font-size: 14px; line-height: 1.4;">{{ issue.title }}</span>
-                      </label>
-                      
-                      <p v-if="!form.gad_mandate_id || form.gad_mandate_id.length === 0" style="color: #94a3b8; font-size: 13px; font-style: italic; margin: 0;">Select a mandate first to see gender issues.</p>
-                    </div>
-                    <input v-if="form.gender_issue_id && form.gender_issue_id === 'Other'" 
-                          v-model="customGenderIssue" 
-                          type="text" 
-                          placeholder="Enter new gender issue..." 
-                          class="custom-input-field" 
-                          style="margin-top: 10px;" />
-                  </div>
-
-
-
-                  
-                  
-                  <!-- Computed Global Dates -->
-                  <div class="form-sub-grid-ar mb-4 mt-4">
+                  <div class="form-sub-grid-ar" style="margin-top: 16px;">
                     <div class="input-group-ar">
-                      <div class="label-container">
-                        <label class="form-label-ar">Calculated Start Date</label>
-                        <div class="info-btn-wrapper">
-                          <button type="button" class="info-btn" @click.stop="toggleHelp('startDate')">
-                            i
-                          </button>
-                          <transition name="fade-pop">
-                            <div v-if="helpState.startDate" class="simple-popup">
-                              Ideal submission is 15 working days before this date. Strict minimum is 3 working days.
+                      <label class="form-label-ar">Form Type *</label>
+                      <select 
+                        v-model="form.form_type" 
+                        required 
+                        class="custom-input-field select-arrow-fix"
+                      >
+                        <option value="" disabled class="dark-option">Select form type...</option>
+                        <option 
+                          v-for="ft in formTypes" 
+                          :key="ft.id" 
+                          :value="ft.name" 
+                          class="dark-option"
+                        >
+                          {{ ft.name }}
+                        </option>
+                      </select>
+                    </div>
+
+                    <div class="input-group-ar">
+                      <label class="form-label-ar">Activity Classification *</label>
+                      <select
+                        v-model="form.activity_classification"
+                        @change="handleClassificationChange"
+                        required
+                        class="custom-input-field select-arrow-fix"
+                      >
+                        <option value="" disabled class="dark-option">Select Classification</option>
+                        <option
+                          v-for="classification in ActClassification"
+                          :key="classification.id"
+                          :value="classification.classification_name"
+                          class="dark-option"
+                        >
+                          {{ classification.classification_name }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="form-divider"></div>
+
+                <!-- Section 02: GAD Alignment & Gender Issues -->
+                <section class="form-section-card" id="section-gad-mandates-issues">
+                  <div class="form-sub-grid-ar">
+                    <!-- GAD Mandates Multiselect -->
+                    <div class="input-group-ar">
+                      <label class="form-label-ar">Gender Issue / GAD Mandate *</label>
+                      <div class="gad-multiselect-container">
+                        <div class="gad-search-header">
+                          <div class="gad-search-input-wrap">
+                            <span class="material-symbols-outlined gad-search-icon">search</span>
+                            <input 
+                              type="text" 
+                              v-model="mandateSearchQuery" 
+                              placeholder="Search mandates..." 
+                              class="gad-search-input" 
+                            />
+                          </div>
+                          <span class="gad-count-chip" :class="{ 'has-selection': selectedMandatesCount > 0 }">
+                            {{ selectedMandatesCount }} selected
+                          </span>
+                        </div>
+
+                        <div class="gad-multiselect-list" ref="mandatesListRef">
+                          <label 
+                            v-for="mandate in filteredMandatesList" 
+                            :key="mandate.id" 
+                            :id="'mandate-item-' + mandate.id"
+                            class="gad-multiselect-item"
+                            :class="{ 'is-selected': isMandateSelected(mandate.id) }"
+                          >
+                            <span class="gad-custom-checkbox">
+                              <input 
+                                type="checkbox" 
+                                @change="handleMandateChange" 
+                                v-model="form.gad_mandate_id" 
+                                :value="mandate.id.toString()" 
+                                style="position: absolute; opacity: 0; pointer-events: none;" 
+                              />
+                              <span class="material-symbols-outlined gad-check-icon">check</span>
+                            </span>
+                            <div class="gad-item-text-wrap">
+                              <span class="gad-mandate-code-badge">{{ mandate.code }}</span>
+                              <span class="gad-item-title">{{ mandate.title }}</span>
                             </div>
-                          </transition>
+                          </label>
+
+                          <div v-if="filteredMandatesList.length === 0" class="gad-empty-hint">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
+                            No mandates match your search.
+                          </div>
                         </div>
                       </div>
-                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.8; cursor: not-allowed;">
-                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">calendar_month</span>
-                        {{ computedStartDate || 'Awaiting schedule...' }}
-                      </div>
                     </div>
+
+                    <!-- Cause of Gender Issue Multiselect -->
                     <div class="input-group-ar">
-                      <label class="form-label-ar">Calculated End Date</label>
-                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.8; cursor: not-allowed;">
-                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">event</span>
-                        {{ computedEndDate || 'Awaiting schedule...' }}
+                      <label class="form-label-ar">Cause of Gender Issue *</label>
+                      <div class="gad-multiselect-container">
+                        <div class="gad-search-header">
+                          <div class="gad-search-input-wrap">
+                            <span class="material-symbols-outlined gad-search-icon">search</span>
+                            <input 
+                              type="text" 
+                              v-model="issueSearchQuery" 
+                              placeholder="Search causes..." 
+                              class="gad-search-input" 
+                              :disabled="!form.gad_mandate_id || form.gad_mandate_id.length === 0"
+                            />
+                          </div>
+                          <span class="gad-count-chip" :class="{ 'has-selection': selectedIssuesCount > 0 }">
+                            {{ selectedIssuesCount }} selected
+                          </span>
+                        </div>
+
+                        <div class="gad-multiselect-list" ref="issuesListRef">
+                          <label 
+                            v-for="issue in filteredGenderIssuesList" 
+                            :key="issue.id" 
+                            :id="'issue-item-' + issue.id"
+                            class="gad-multiselect-item"
+                            :class="{ 'is-selected': isIssueSelected(issue.id) }"
+                          >
+                            <span class="gad-custom-checkbox">
+                              <input 
+                                type="checkbox" 
+                                v-model="form.gender_issue_id" 
+                                :value="issue.id.toString()" 
+                                style="position: absolute; opacity: 0; pointer-events: none;" 
+                              />
+                              <span class="material-symbols-outlined gad-check-icon">check</span>
+                            </span>
+                            <div class="gad-item-text-wrap">
+                              <span class="gad-item-title">{{ issue.title }}</span>
+                            </div>
+                          </label>
+
+                          <div v-if="!form.gad_mandate_id || form.gad_mandate_id.length === 0" class="gad-empty-hint">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
+                            Select a mandate on the left first to see gender issues.
+                          </div>
+                          <div v-else-if="filteredGenderIssuesList.length === 0" class="gad-empty-hint">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
+                            No issues match your search.
+                          </div>
+                        </div>
                       </div>
+
+                      <input v-if="form.gender_issue_id && (Array.isArray(form.gender_issue_id) ? form.gender_issue_id.includes('Other') : form.gender_issue_id === 'Other')" 
+                            v-model="customGenderIssue" 
+                            type="text" 
+                            placeholder="Enter new gender issue..." 
+                            class="custom-input-field" 
+                            style="margin-top: 10px;" />
                     </div>
                   </div>
-                  
-                  <!-- Staggered Schedules Section -->
-                  <div class="schedules-container-ar">
+                </section>
+
+                <div class="form-divider"></div>
+
+                <!-- Section 03: Activity Schedules & Timeline -->
+                <section class="form-section-card">
+
+                  <div class="schedules-container-ar" style="margin-bottom: 20px;">
                     <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
                       <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                           <label class="form-label-ar !mb-0 flex items-center gap-2" style="white-space: nowrap;">
@@ -164,25 +228,24 @@
                       Please add at least one schedule.
                     </div>
                     
-                    
                     <!-- Continuous Config UI -->
                     <div v-if="scheduleType === 'continuous'" class="schedule-row mb-3 p-4 rounded-lg relative">
                       <div class="schedule-inputs-wrapper" style="margin-bottom: 16px;">
                         <div class="flex-1">
                           <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Start Date</label>
                           <VueDatePicker :dark="isDarkMode" v-model="continuousConfig.start_date" :min-date="minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
-<template #dp-input="{ value }">
-<input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
-</template>
-</VueDatePicker>
+                            <template #dp-input="{ value }">
+                              <input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
+                            </template>
+                          </VueDatePicker>
                         </div>
                         <div class="flex-1">
                           <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">End Date</label>
                           <VueDatePicker :dark="isDarkMode" v-model="continuousConfig.end_date" :min-date="continuousConfig.start_date || minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
-<template #dp-input="{ value }">
-<input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
-</template>
-</VueDatePicker>
+                            <template #dp-input="{ value }">
+                              <input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
+                            </template>
+                          </VueDatePicker>
                         </div>
                         <div class="flex-1">
                           <div class="label-container" style="margin-bottom: 4px;">
@@ -217,7 +280,6 @@
                           />
                         </div>
                       </div>
-
                     </div>
 
                     <!-- Expanded Schedules UI -->
@@ -229,10 +291,10 @@
                       <div style="flex: 1; min-width: 130px;">
                         <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Date</label>
                         <VueDatePicker :dark="isDarkMode" v-model="sch.date" @update:model-value="handleScheduleDateChange($event, index)" :disabled="scheduleType === 'continuous'" :min-date="minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
-<template #dp-input="{ value }">
-<input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
-</template>
-</VueDatePicker>
+                          <template #dp-input="{ value }">
+                            <input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
+                          </template>
+                        </VueDatePicker>
                       </div>
                       <div style="flex: 1; min-width: 130px;">
                         <div class="label-container" style="margin-bottom: 4px;">
@@ -269,13 +331,46 @@
                       <button type="button" v-if="scheduleType === 'staggered' && form.schedules.length > 1" @click.prevent="removeSchedule(index)" style="background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="Remove Schedule">
                         <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
                       </button>
-
                     </div>
-                    
-                    
                   </div>
 
-                  <div class="input-group-ar">
+                  <!-- Computed Global Dates Sub-Grid -->
+                  <div class="form-sub-grid-ar">
+                    <div class="input-group-ar">
+                      <div class="label-container">
+                        <label class="form-label-ar">Calculated Start Date</label>
+                        <div class="info-btn-wrapper">
+                          <button type="button" class="info-btn" @click.stop="toggleHelp('startDate')">
+                            i
+                          </button>
+                          <transition name="fade-pop">
+                            <div v-if="helpState.startDate" class="simple-popup">
+                              Ideal submission is 15 working days before this date. Strict minimum is 3 working days.
+                            </div>
+                          </transition>
+                        </div>
+                      </div>
+                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.85; cursor: not-allowed;">
+                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">calendar_month</span>
+                        {{ computedStartDate || 'Awaiting schedule...' }}
+                      </div>
+                    </div>
+                    <div class="input-group-ar">
+                      <label class="form-label-ar">Calculated End Date</label>
+                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.85; cursor: not-allowed;">
+                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">event</span>
+                        {{ computedEndDate || 'Awaiting schedule...' }}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="form-divider"></div>
+
+                <!-- Section 04: Venue Location & Setup (MOVED BELOW SCHEDULE!) -->
+                <section class="form-section-card">
+
+                  <div class="input-group-ar" style="margin-bottom: 20px;">
                     <label class="form-label-ar">Venue Location *</label>
                     <div class="toggle-container" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; min-height: 42px; height: auto; padding: 4px 0;">
                       <label class="location-radio-label" style="font-size: 14px; cursor: pointer; display: flex; align-items: center; white-space: nowrap;">
@@ -331,21 +426,12 @@
                       </div>
                     </div>
                   </div>
+                </section>
 
-                  <div class="input-group-ar">
-                    <div class="label-container">
-                      <label class="form-label-ar">Number of Attendees *</label>
-                    </div>
-                    <input 
-                      type="number" 
-                      v-model="form.attendees" 
-                      required 
-                      min="0"
-                      class="custom-input-field input-disabled-ar"
-                      placeholder="0"
-                      readonly
-                    >
-                  </div>
+                <div class="form-divider"></div>
+
+                <!-- Section 05: Attendance & Participant Demographics -->
+                <section class="form-section-card">
 
                   <div class="form-sub-grid-ar">
                     <div class="input-group-ar">
@@ -371,46 +457,66 @@
                       >
                     </div>
                   </div>
-                </div>
 
-                <div class="form-column-right-ar">
+                  <div class="input-group-ar" style="margin-top: 16px;">
+                    <label class="form-label-ar">Total Attendees (Auto-calculated) *</label>
+                    <input 
+                      type="number" 
+                      v-model="form.attendees" 
+                      required 
+                      min="0"
+                      class="custom-input-field input-disabled-ar"
+                      placeholder="0"
+                      readonly
+                    >
+                  </div>
+                </section>
+
+                <div class="form-divider"></div>
+
+                <!-- Section 06: Actual Budgetary Expenditures -->
+                <section class="form-section-card">
+
                   <div class="budget-section">
-                    <label class="form-label-ar">Actual Budgetary Expenditure *</label>
-                    <div class="budget-section">
-                      <BudgetBuilder 
-                        ref="budgetBuilder"
-                        :filteredVenues="venues"
-                        :customVenuesList="customVenuesList"
-                        v-model:venueBudgets="form.venue_budgets" 
-                        :venues="form.venues" 
-                        :baselineSettings="baselineSettings"
-                        :isOutsideBsu="isOutsideBsu"
-                        :computedDays="computedDays"
-                        :venueInsideMap="venueInsideMap"
-                        :label="''"
-                      />
-                    </div>
+                    <BudgetBuilder 
+                      ref="budgetBuilder"
+                      :filteredVenues="venues"
+                      :customVenuesList="customVenuesList"
+                      v-model:venueBudgets="form.venue_budgets" 
+                      :venues="form.venues" 
+                      :baselineSettings="baselineSettings"
+                      :isOutsideBsu="isOutsideBsu"
+                      :computedDays="computedDays"
+                      :venueInsideMap="venueInsideMap"
+                      :label="''"
+                    />
 
-
-                    <!-- Overall Target Participants Banner -->
-                    <div class="attendance-banner-card mb-3">
-                      <div class="attendance-banner-label">Overall Expected Attendance (Auto-calculated)</div>
-                      <div class="attendance-banner-value">
-                        {{ form.target_participants || 0 }} Pax
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <!-- Overall Target Participants Banner -->
+                      <div class="attendance-banner-card">
+                        <div class="attendance-banner-label">Overall Expected Attendance (Auto-calculated)</div>
+                        <div class="attendance-banner-value">
+                          {{ form.target_participants || 0 }} Pax
+                        </div>
                       </div>
-                    </div>
 
-                    <!-- Grand Total Banner Card -->
-                    <div class="grand-total-banner-card">
-                      <div class="grand-total-label-banner">Actual Total Expenditures</div>
-                      <div class="grand-total-value-banner">
-                        ₱{{ Number(form.proposed_budget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                      <!-- Grand Total Banner Card -->
+                      <div class="grand-total-banner-card">
+                        <div class="grand-total-label-banner">Actual Total Expenditures</div>
+                        <div class="grand-total-value-banner">
+                          ₱{{ Number(form.proposed_budget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                        </div>
                       </div>
                     </div>
                   </div>
+                </section>
+
+                <div class="form-divider"></div>
+
+                <!-- Section 07: Evaluation Results -->
+                <section class="form-section-card">
 
                   <div class="evaluation-section-ar">
-                    <label class="form-label-ar">Evaluation Results *</label>
                     <div class="evaluation-table-wrapper-ar">
                       <table class="evaluation-table-ar">
                         <thead class="evaluation-table-header-ar">
@@ -469,59 +575,65 @@
                       </table>
                     </div>
                   </div>
-                </div>
-              </div>
+                </section>
 
-              <div class="attachment-section-container-ar">
-                <label class="form-label-ar">Attachments (PDF) *</label>
-                <div class="attachment-display-grid-ar">
-                  <div class="attachment-upload-column-ar">
-                    <div class="upload-zone-ar" 
-                         @click="$refs.fileInput.click()"
-                         @dragover.prevent
-                         @dragenter.prevent
-                         @drop.prevent="handleDrop">
-                      <input 
-                        ref="fileInput" 
-                        type="file" 
-                        @change="handleFileUpload" 
-                        accept=".pdf" 
-                        class="file-input-hidden" 
-                        multiple 
-                      />
-                      <span class="upload-icon-ar">📤</span>
-                      <h4 class="upload-zone-title">Drag & drop your files here</h4>
-                      <p class="upload-zone-desc">or click to browse from your computer</p>
-                      <span class="upload-zone-badge">Max 10MB per file</span>
-                    </div>
-                  </div>
-                  <div class="attachment-preview-column-ar">
-                    <div v-if="uploadedFiles.length > 0" class="uploaded-files-container-ar">
-                      <div v-for="(file, index) in uploadedFiles" :key="index" class="uploaded-file-card">
-                        <div class="uploaded-file-tag">
-                          <span class="uploaded-file-name" style="word-break: break-all;">📄 {{ file.name }}</span>
-                          <div class="uploaded-file-actions-ar">
-                            <span class="uploaded-file-size-ar">({{ (file.size / 1024).toFixed(2) }} KB)</span>
-                            <button type="button" @click.stop="removeFile(index)" class="remove-file-btn">Remove</button>
+                <div class="form-divider"></div>
+
+                <!-- Section 08: Document Attachments -->
+                <section class="form-section-card">
+
+                  <div class="attachment-section-container-ar">
+                    <div class="attachment-display-grid-ar">
+                      <div class="attachment-upload-column-ar">
+                        <div class="upload-zone-ar" 
+                             @click="$refs.fileInput.click()"
+                             @dragover.prevent
+                             @dragenter.prevent
+                             @drop.prevent="handleDrop">
+                          <input 
+                            ref="fileInput" 
+                            type="file" 
+                            @change="handleFileUpload" 
+                            accept=".pdf" 
+                            class="file-input-hidden" 
+                            multiple 
+                          />
+                          <span class="upload-icon-ar">📤</span>
+                          <h4 class="upload-zone-title">Drag &amp; drop your files here</h4>
+                          <p class="upload-zone-desc">or click to browse from your computer</p>
+                          <span class="upload-zone-badge">Max 10MB per file</span>
+                        </div>
+                      </div>
+                      <div class="attachment-preview-column-ar">
+                        <div v-if="uploadedFiles.length > 0" class="uploaded-files-container-ar">
+                          <div v-for="(file, index) in uploadedFiles" :key="index" class="uploaded-file-card">
+                            <div class="uploaded-file-tag">
+                              <span class="uploaded-file-name" style="word-break: break-all;">📄 {{ file.name }}</span>
+                              <div class="uploaded-file-actions-ar">
+                                <span class="uploaded-file-size-ar">({{ (file.size / 1024).toFixed(2) }} KB)</span>
+                                <button type="button" @click.stop="removeFile(index)" class="remove-file-btn">Remove</button>
+                              </div>
+                            </div>
+                            
+                            <div v-if="file.previewUrl" class="document-previews" style="width: 100%;">
+                              <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                                <button @click.prevent="expandToNewTab(file.previewUrl)" class="btn-expand-preview">
+                                  <span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px;">open_in_new</span> Expand
+                                </button>
+                              </div>
+                              <iframe :src="getPdfViewerUrl(file.previewUrl)" width="100%" height="400px" style="border: 1px solid #b979cc; border-radius: 8px; background: white;"></iframe>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div v-if="file.previewUrl" class="document-previews" style="width: 100%;">
-                          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
-                            <button @click.prevent="expandToNewTab(file.previewUrl)" class="btn-expand-preview">
-                              <span class="material-symbols-outlined" style="font-size: 14px; margin-right: 4px;">open_in_new</span> Expand
-                            </button>
-                          </div>
-                          <iframe :src="getPdfViewerUrl(file.previewUrl)" width="100%" height="400px" style="border: 1px solid #b979cc; border-radius: 8px; background: white;"></iframe>
-                        </div>
+                        <p v-else style="color: #94a3b8; font-size: 14px; text-align: center; padding: 24px 0;">No files uploaded yet.</p>
                       </div>
                     </div>
                   </div>
-                </div>
+                </section>
               </div>
 
               <!-- Budget Exceeded Warning Card -->
-              <div v-if="isExceedingLimit" class="ar-limit-warning-card">
+              <div v-if="isExceedingLimit" class="ar-limit-warning-card" style="margin-top: 24px;">
                 <span class="warning-icon">⚠️</span>
                 <div class="warning-content">
                   <h4 class="warning-title">Budget Limit Exceeded</h4>
@@ -534,22 +646,38 @@
                 </div>
               </div>
 
-              <div class="form-actions-ar">
-                <button 
-                  type="button"
-                  @click="router.back()" 
-                  class="back-button"
-                >
-                  &#8592; Back
-                </button>
-                <button 
-                  type="submit" 
-                  class="submit-action-btn"
-                  
-                  
-                >
-                  Submit Report →
-                </button>
+              <!-- Floating Sticky Action Dock -->
+              <div class="form-sticky-dock">
+                <div class="form-sticky-dock-inner">
+                  <div class="dock-summary-group">
+                    <div class="dock-stat-item">
+                      <span class="dock-stat-label">Actual Pax</span>
+                      <span class="dock-stat-value">{{ form.attendees || form.target_participants || 0 }} Pax</span>
+                    </div>
+                    <div class="dock-stat-item">
+                      <span class="dock-stat-label">Actual Total Expenditures</span>
+                      <span class="dock-stat-value">₱{{ Number(form.proposed_budget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                    </div>
+                    <span v-if="isExceedingLimit" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                      ⚠️ Exceeds Approved Budget
+                    </span>
+                  </div>
+                  <div class="dock-actions-group">
+                    <button 
+                      type="button"
+                      @click="router.back()" 
+                      class="back-button"
+                    >
+                      &#8592; Back
+                    </button>
+                    <button 
+                      type="submit" 
+                      class="submit-action-btn"
+                    >
+                      Submit Report &#8594;
+                    </button>
+                  </div>
+                </div>
               </div>
             </form>
           </div>
@@ -883,6 +1011,86 @@ const fetchGADMandates = async () => {
   }
 };
 
+const mandatesListRef = ref(null);
+const issuesListRef = ref(null);
+const mandateSearchQuery = ref('');
+const issueSearchQuery = ref('');
+
+const filteredMandatesList = computed(() => {
+  if (!mandateSearchQuery.value) return GADMandates.value || [];
+  const q = mandateSearchQuery.value.toLowerCase().trim();
+  return (GADMandates.value || []).filter(m => 
+    (m.code && m.code.toLowerCase().includes(q)) || 
+    (m.title && m.title.toLowerCase().includes(q))
+  );
+});
+
+const filteredGenderIssuesList = computed(() => {
+  if (!issueSearchQuery.value) return genderIssues.value || [];
+  const q = issueSearchQuery.value.toLowerCase().trim();
+  return (genderIssues.value || []).filter(i => 
+    i.title && i.title.toLowerCase().includes(q)
+  );
+});
+
+const isMandateSelected = (id) => {
+  const list = form.value?.gad_mandate_id || form.gad_mandate_id;
+  if (!list || !Array.isArray(list)) return false;
+  return list.some(item => String(item) === String(id));
+};
+
+const isIssueSelected = (id) => {
+  const list = form.value?.gender_issue_id || form.gender_issue_id;
+  if (!list || !Array.isArray(list)) return false;
+  return list.some(item => String(item) === String(id));
+};
+
+const selectedMandatesCount = computed(() => {
+  const list = form.value?.gad_mandate_id || form.gad_mandate_id;
+  return Array.isArray(list) ? list.length : 0;
+});
+
+const selectedIssuesCount = computed(() => {
+  const list = form.value?.gender_issue_id || form.gender_issue_id;
+  return Array.isArray(list) ? list.length : 0;
+});
+
+const scrollToPreselectedMandateAndIssue = () => {
+  // Auto-scroll within Mandates list to the first preselected mandate
+  if (form.value.gad_mandate_id && form.value.gad_mandate_id.length > 0) {
+    const firstMandateId = form.value.gad_mandate_id[0];
+    const mandateEl = document.getElementById('mandate-item-' + firstMandateId);
+    if (mandateEl && mandatesListRef.value) {
+      mandatesListRef.value.scrollTo({
+        top: mandateEl.offsetTop - mandatesListRef.value.offsetTop - 8,
+        behavior: 'smooth'
+      });
+      mandateEl.classList.add('gad-item-highlight');
+      setTimeout(() => mandateEl.classList.remove('gad-item-highlight'), 1500);
+    }
+  }
+
+  // Auto-scroll within Issues list to the first preselected issue
+  if (form.value.gender_issue_id && form.value.gender_issue_id.length > 0) {
+    const firstIssueId = form.value.gender_issue_id[0];
+    const issueEl = document.getElementById('issue-item-' + firstIssueId);
+    if (issueEl && issuesListRef.value) {
+      issuesListRef.value.scrollTo({
+        top: issueEl.offsetTop - issuesListRef.value.offsetTop - 8,
+        behavior: 'smooth'
+      });
+      issueEl.classList.add('gad-item-highlight');
+      setTimeout(() => issueEl.classList.remove('gad-item-highlight'), 1500);
+    }
+  }
+
+  // Smoothly scroll the page to the GAD Mandates & Gender Issues section
+  const sectionEl = document.getElementById('section-gad-mandates-issues');
+  if (sectionEl) {
+    sectionEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+};
+
 const handleClassificationChange = async () => {
   form.value.gad_mandate_id = [];
   form.value.gender_issue_id = [];
@@ -1124,6 +1332,12 @@ watch(() => form.value.control_number, async (newVal) => {
         });
       }
     }
+
+    // Auto-scroll to the preselected GAD Mandate and Gender Issue
+    await nextTick();
+    setTimeout(() => {
+      scrollToPreselectedMandateAndIssue();
+    }, 150);
   } else {
     selectedProposedBudget.value = 0;
     form.value.form_type = '';

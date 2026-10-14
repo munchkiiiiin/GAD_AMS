@@ -11,7 +11,9 @@
           <div class="form-container-box">
             <form @submit.prevent="submitActivityDesign" class="form-main-layout">
               <div class="form-grid-main">
-                <div class="form-column-left">
+                <!-- Section 01: Classification & Activity Information -->
+                <section class="form-section-card">
+
                   <div class="form-sub-grid">
                     <div class="input-group">
                       <label class="form-label">Form Type *</label>
@@ -52,7 +54,7 @@
                     </div>
                   </div>
 
-                  <div class="input-group">
+                  <div class="input-group" style="margin-top: 20px;">
                     <label class="form-label">Activity Title *</label>
                     <textarea 
                       v-model="form.activity_title" 
@@ -62,38 +64,296 @@
                       placeholder="Enter the complete title of the activity"
                     ></textarea>
                   </div>
+                </section>
 
-                  <div class="input-group">
-                    <label class="form-label">Gender Issue / GAD Mandate *</label>
-                    <div class="checkbox-group-container custom-input-field" style="min-height: 120px; max-height: 250px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-                      <label v-for="mandate in GADMandates" :key="mandate.id" class="checkbox-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" v-model="form.gad_mandate_id" :value="mandate.id" style="margin-top: 2px; accent-color: #b979cc; transform: scale(1.1);" />
-                        <span style="font-size: 14px; line-height: 1.4;">{{ mandate.code }} - {{ mandate.title }}</span>
-                      </label>
-                      
+                <div class="form-divider"></div>
+
+                <!-- Section 02: GAD Alignment & Gender Issues -->
+                <section class="form-section-card" id="section-gad-mandates-issues">
+                  <div class="form-sub-grid">
+                    <!-- GAD Mandates Multiselect -->
+                    <div class="input-group">
+                      <label class="form-label">Gender Issue / GAD Mandate *</label>
+                      <div class="gad-multiselect-container">
+                        <div class="gad-search-header">
+                          <div class="gad-search-input-wrap">
+                            <span class="material-symbols-outlined gad-search-icon">search</span>
+                            <input 
+                              type="text" 
+                              v-model="mandateSearchQuery" 
+                              placeholder="Search mandates..." 
+                              class="gad-search-input" 
+                            />
+                          </div>
+                          <span class="gad-count-chip" :class="{ 'has-selection': selectedMandatesCount > 0 }">
+                            {{ selectedMandatesCount }} selected
+                          </span>
+                        </div>
+
+                        <div class="gad-multiselect-list" ref="mandatesListRef">
+                          <label 
+                            v-for="mandate in filteredMandatesList" 
+                            :key="mandate.id" 
+                            :id="'mandate-item-' + mandate.id"
+                            class="gad-multiselect-item"
+                            :class="{ 'is-selected': isMandateSelected(mandate.id) }"
+                          >
+                            <span class="gad-custom-checkbox">
+                              <input 
+                                type="checkbox" 
+                                v-model="form.gad_mandate_id" 
+                                :value="mandate.id" 
+                                style="position: absolute; opacity: 0; pointer-events: none;" 
+                              />
+                              <span class="material-symbols-outlined gad-check-icon">check</span>
+                            </span>
+                            <div class="gad-item-text-wrap">
+                              <span class="gad-mandate-code-badge">{{ mandate.code }}</span>
+                              <span class="gad-item-title">{{ mandate.title }}</span>
+                            </div>
+                          </label>
+
+                          <div v-if="filteredMandatesList.length === 0" class="gad-empty-hint">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
+                            No mandates match your search.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Cause of Gender Issue Multiselect -->
+                    <div class="input-group">
+                      <label class="form-label">Cause of Gender Issue *</label>
+                      <div class="gad-multiselect-container">
+                        <div class="gad-search-header">
+                          <div class="gad-search-input-wrap">
+                            <span class="material-symbols-outlined gad-search-icon">search</span>
+                            <input 
+                              type="text" 
+                              v-model="issueSearchQuery" 
+                              placeholder="Search causes..." 
+                              class="gad-search-input" 
+                              :disabled="!form.gad_mandate_id || form.gad_mandate_id.length === 0"
+                            />
+                          </div>
+                          <span class="gad-count-chip" :class="{ 'has-selection': selectedIssuesCount > 0 }">
+                            {{ selectedIssuesCount }} selected
+                          </span>
+                        </div>
+
+                        <div class="gad-multiselect-list" ref="issuesListRef">
+                          <label 
+                            v-for="issue in filteredGenderIssuesList" 
+                            :key="issue.id" 
+                            :id="'issue-item-' + issue.id"
+                            class="gad-multiselect-item"
+                            :class="{ 'is-selected': isIssueSelected(issue.id) }"
+                          >
+                            <span class="gad-custom-checkbox">
+                              <input 
+                                type="checkbox" 
+                                v-model="form.gender_issue_id" 
+                                :value="issue.id" 
+                                style="position: absolute; opacity: 0; pointer-events: none;" 
+                              />
+                              <span class="material-symbols-outlined gad-check-icon">check</span>
+                            </span>
+                            <div class="gad-item-text-wrap">
+                              <span class="gad-item-title">{{ issue.title }}</span>
+                            </div>
+                          </label>
+
+                          <div v-if="!form.gad_mandate_id || form.gad_mandate_id.length === 0" class="gad-empty-hint">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
+                            Select a mandate on the left first to see gender issues.
+                          </div>
+                          <div v-else-if="filteredGenderIssuesList.length === 0" class="gad-empty-hint">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
+                            No issues match your search.
+                          </div>
+                        </div>
+                      </div>
+
+                      <input v-if="form.gender_issue_id && (Array.isArray(form.gender_issue_id) ? form.gender_issue_id.includes('Other') : form.gender_issue_id === 'Other')" 
+                            v-model="customGenderIssue" 
+                            type="text" 
+                            placeholder="Enter new gender issue..." 
+                            class="custom-input-field" 
+                            style="margin-top: 10px;" />
+                    </div>
+                  </div>
+                </section>
+
+                <div class="form-divider"></div>
+
+                <!-- Section 03: Activity Schedules & Timeline -->
+                <section class="form-section-card">
+
+                  <div class="schedules-container" style="margin-bottom: 20px;">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                          <label class="form-label !mb-0 flex items-center gap-2" style="white-space: nowrap;">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">schedule</span>
+                            Activity Schedules *
+                          </label>
+                          <div class="schedule-type-toggle-container">
+                            <button type="button" @click.prevent="handleScheduleTypeChange('staggered')" class="schedule-type-toggle-btn" :style="{ background: scheduleType === 'staggered' ? 'rgba(185, 121, 204, 0.2)' : 'transparent', color: scheduleType === 'staggered' ? '#b979cc' : 'inherit' }">Non Consecutive</button>
+                            <button type="button" @click.prevent="handleScheduleTypeChange('continuous')" class="schedule-type-toggle-btn" :style="{ background: scheduleType === 'continuous' ? 'rgba(185, 121, 204, 0.2)' : 'transparent', color: scheduleType === 'continuous' ? '#b979cc' : 'inherit' }">Consecutive</button>
+                          </div>
+                      </div>
+                      <button type="button" v-if="scheduleType === 'staggered'" @click.prevent="addSchedule" class="btn-add-other">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Add Schedule
+                      </button>
                     </div>
                     
-                  </div>
-
-                  <div class="input-group">
-                    <label class="form-label">Cause of Gender Issue *</label>
-                    <div class="checkbox-group-container custom-input-field" style="min-height: 120px; max-height: 250px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-                      <label v-for="issue in genderIssues" :key="issue.id" class="checkbox-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" v-model="form.gender_issue_id" :value="issue.id" style="margin-top: 2px; accent-color: #b979cc; transform: scale(1.1);" />
-                        <span style="font-size: 14px; line-height: 1.4;">{{ issue.title }}</span>
-                      </label>
-                      
-                      <p v-if="!form.gad_mandate_id || form.gad_mandate_id.length === 0" style="color: #94a3b8; font-size: 13px; font-style: italic; margin: 0;">Select a mandate first to see gender issues.</p>
+                    <div v-if="schedules.length === 0" style="color: #94a3b8; font-size: 13px; font-style: italic; margin-bottom: 8px;">
+                      Please add at least one schedule.
                     </div>
-                    <input v-if="form.gender_issue_id && form.gender_issue_id === 'Other'" 
-                          v-model="customGenderIssue" 
-                          type="text" 
-                          placeholder="Enter new gender issue..." 
-                          class="custom-input-field" 
-                          style="margin-top: 10px;" />
+                    
+                    <!-- Continuous Config UI -->
+                    <div v-if="scheduleType === 'continuous'" class="schedule-row mb-3 p-4 rounded-lg relative">
+                      <div class="schedule-inputs-wrapper" style="margin-bottom: 16px;">
+                        <div class="flex-1">
+                          <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Start Date</label>
+                          <VueDatePicker :dark="isDarkMode" v-model="continuousConfig.start_date" :min-date="minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
+                            <template #dp-input="{ value }">
+                              <input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
+                            </template>
+                          </VueDatePicker>
+                        </div>
+                        <div class="flex-1">
+                          <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">End Date</label>
+                          <VueDatePicker :dark="isDarkMode" v-model="continuousConfig.end_date" :min-date="continuousConfig.start_date || minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
+                            <template #dp-input="{ value }">
+                              <input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
+                            </template>
+                          </VueDatePicker>
+                        </div>
+                        <div class="flex-1">
+                          <div class="label-container" style="margin-bottom: 4px;">
+                            <label class="text-[10px] uppercase font-bold text-slate-500 mb-0">Time From</label>
+                            <div class="info-btn-wrapper">
+                              <span class="material-symbols-outlined" @click.stop="toggleHelp('startTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
+                              <transition name="fade-pop"><div v-if="helpState.startTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
+                            </div>
+                          </div>
+                          <AppTimePicker 
+                            v-model="continuousConfig.start_time" 
+                            min="04:00" 
+                            max="20:00" 
+                            required 
+                            @change="handleTimeChange(continuousConfig)" 
+                          />
+                        </div>
+                        <div class="flex-1">
+                          <div class="label-container" style="margin-bottom: 4px;">
+                            <label class="text-[10px] uppercase font-bold text-slate-500 mb-0">Time To</label>
+                            <div class="info-btn-wrapper">
+                              <span class="material-symbols-outlined" @click.stop="toggleHelp('endTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
+                              <transition name="fade-pop"><div v-if="helpState.endTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
+                            </div>
+                          </div>
+                          <AppTimePicker 
+                            v-model="continuousConfig.end_time" 
+                            min="04:00" 
+                            max="20:00" 
+                            required 
+                            @change="handleTimeChange(continuousConfig)" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Expanded Schedules UI -->
+                    <div v-if="scheduleType === 'continuous' && schedules.length > 0" style="margin-top: 16px; margin-bottom: 8px; color: #b979cc; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px;">
+                      <span class="material-symbols-outlined" style="font-size: 14px;">info</span>
+                      You can customize the Time for specific days (e.g., half-day on the last day) below:
+                    </div>
+                    <div v-for="(sch, index) in schedules" :key="index" class="schedule-inputs-wrapper schedule-card-item" style="position: relative;">
+                      <div style="flex: 1; min-width: 130px;">
+                        <label style="color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: bold; margin-bottom: 6px; display: block;">Date</label>
+                        <VueDatePicker :dark="isDarkMode" v-model="sch.date" @update:model-value="handleScheduleDateChange($event, index)" :disabled="scheduleType === 'continuous'" :min-date="minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
+                          <template #dp-input="{ value }">
+                            <input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
+                          </template>
+                        </VueDatePicker>
+                      </div>
+                      <div style="flex: 1; min-width: 130px;">
+                        <div class="label-container" style="margin-bottom: 6px;">
+                          <label style="color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: bold; margin-bottom: 0;">Start Time</label>
+                          <div class="info-btn-wrapper">
+                            <span class="material-symbols-outlined" @click.stop="toggleHelp('startTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
+                            <transition name="fade-pop"><div v-if="helpState.startTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
+                          </div>
+                        </div>
+                        <AppTimePicker 
+                          v-model="sch.start_time" 
+                          min="04:00" 
+                          max="20:00" 
+                          required 
+                          @change="validateScheduleTime(index)" 
+                        />
+                      </div>
+                      <div style="flex: 1; min-width: 130px;">
+                        <div class="label-container" style="margin-bottom: 6px;">
+                          <label style="color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: bold; margin-bottom: 0;">End Time</label>
+                          <div class="info-btn-wrapper">
+                            <span class="material-symbols-outlined" @click.stop="toggleHelp('endTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
+                            <transition name="fade-pop"><div v-if="helpState.endTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
+                          </div>
+                        </div>
+                        <AppTimePicker 
+                          v-model="sch.end_time" 
+                          min="04:00" 
+                          max="20:00" 
+                          required 
+                          @change="validateScheduleTime(index)" 
+                        />
+                      </div>
+                      <button type="button" v-if="scheduleType === 'staggered' && schedules.length > 1" @click.prevent="removeSchedule(index)" style="background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="Remove Schedule">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div class="input-group">
+                  <!-- Computed Global Dates Sub-Grid -->
+                  <div class="form-sub-grid">
+                    <div class="input-group">
+                      <div class="label-container">
+                        <label class="form-label">Calculated Start Date</label>
+                        <div class="info-btn-wrapper">
+                          <button type="button" class="info-btn" @click.stop="toggleHelp('startDate')">
+                            i
+                          </button>
+                          <transition name="fade-pop">
+                            <div v-if="helpState.startDate" class="simple-popup">
+                              Ideal submission is 15 working days before this date. Strict minimum is 3 working days.
+                            </div>
+                          </transition>
+                        </div>
+                      </div>
+                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.85; cursor: not-allowed;">
+                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">calendar_month</span>
+                        {{ computedStartDate || 'Awaiting schedule...' }}
+                      </div>
+                    </div>
+
+                    <div class="input-group">
+                      <label class="form-label">Calculated End Date</label>
+                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.85; cursor: not-allowed;">
+                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">event</span>
+                        {{ computedEndDate || 'Awaiting schedule...' }}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="form-divider"></div>
+
+                <!-- Section 04: Venue Location & Setup (MOVED BELOW SCHEDULE!) -->
+                <section class="form-section-card">
+
+                  <div class="input-group" style="margin-bottom: 20px;">
                     <label class="form-label">Venue Location *</label>
                     <div class="toggle-container" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; min-height: 42px; height: auto; padding: 4px 0;">
                       <label class="location-radio-label" style="font-size: 14px; cursor: pointer; display: flex; align-items: center; white-space: nowrap;">
@@ -149,177 +409,51 @@
                       </div>
                     </div>
                   </div>
+                </section>
 
+                <div class="form-divider"></div>
 
+                <!-- Section 05: Itemized Budget Breakdown -->
+                <section class="form-section-card">
 
-                                                                        <!-- Computed Global Dates -->
-                  <div class="form-sub-grid mb-4 mt-4">
+                  <div class="budget-section">
+                    <BudgetBuilder 
+                      ref="budgetBuilder"
+                      v-model:venueBudgets="form.venue_budgets" 
+                      :venues="form.venues" 
+                      :baselineSettings="baselineSettings"
+                      :isOutsideBsu="isOutsideBsu" 
+                      :computedDays="computedDays"
+                      :filteredVenues="venues"
+                      :customVenuesList="customVenuesList"
+                      :venueInsideMap="venueInsideMap"
+                    />
 
-                    <div class="input-group">
-                      <div class="label-container">
-                        <label class="form-label">Calculated Start Date</label>
-                        <div class="info-btn-wrapper">
-                          <button type="button" class="info-btn" @click.stop="toggleHelp('startDate')">
-                            i
-                          </button>
-                          <transition name="fade-pop">
-                            <div v-if="helpState.startDate" class="simple-popup">
-                              Ideal submission is 15 working days before this date. Strict minimum is 3 working days.
-                            </div>
-                          </transition>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <!-- Overall Target Participants Banner -->
+                      <div class="attendance-banner-card">
+                        <div class="attendance-banner-label">Overall Expected Attendance (Auto-calculated)</div>
+                        <div class="attendance-banner-value">
+                          {{ form.target_participants || 0 }} Pax
                         </div>
                       </div>
-                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.8; cursor: not-allowed;">
-                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">calendar_month</span>
-                        {{ computedStartDate || 'Awaiting schedule...' }}
+
+                      <!-- Grand Total Banner Card -->
+                      <div class="grand-total-banner-card">
+                        <div class="grand-total-label-banner">Grand Total (PHP)</div>
+                        <div class="grand-total-value-banner">
+                          ₱{{ Number(form.proposed_budget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div class="form-sub-grid mb-4 mt-4">
-                    <div class="input-group">
-                      <label class="form-label">Calculated End Date</label>
-                      <div class="custom-input-field" style="display: flex; align-items: center; gap: 8px; opacity: 0.8; cursor: not-allowed;">
-                        <span class="material-symbols-outlined" style="font-size: 16px; color: #b979cc;">event</span>
-                        {{ computedEndDate || 'Awaiting schedule...' }}
-                      </div>
-                    </div>
-                  </div>
-                  
+                </section>
 
-                  <!-- Staggered Schedules Section -->
-                  <div class="schedules-container">
-                    <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
-                      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                          <label class="form-label !mb-0 flex items-center gap-2" style="white-space: nowrap;">
-                            <span class="material-symbols-outlined" style="font-size: 18px;">schedule</span>
-                            Activity Schedules *
-                          </label>
-                          <div class="schedule-type-toggle-container">
-                            <button type="button" @click.prevent="handleScheduleTypeChange('staggered')" class="schedule-type-toggle-btn" :style="{ background: scheduleType === 'staggered' ? 'rgba(185, 121, 204, 0.2)' : 'transparent', color: scheduleType === 'staggered' ? '#b979cc' : 'inherit' }">Non Consecutive</button>
-                            <button type="button" @click.prevent="handleScheduleTypeChange('continuous')" class="schedule-type-toggle-btn" :style="{ background: scheduleType === 'continuous' ? 'rgba(185, 121, 204, 0.2)' : 'transparent', color: scheduleType === 'continuous' ? '#b979cc' : 'inherit' }">Consecutive</button>
-                          </div>
-                      </div>
-                      <button type="button" v-if="scheduleType === 'staggered'" @click.prevent="addSchedule" class="btn-add-other">
-                        <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Add Schedule
-                      </button>
-                    </div>
-                    
-                    <div v-if="schedules.length === 0" style="color: #94a3b8; font-size: 13px; font-style: italic; margin-bottom: 8px;">
-                      Please add at least one schedule.
-                    </div>
-                    
-                    
-                    <!-- Continuous Config UI -->
-                    <div v-if="scheduleType === 'continuous'" class="schedule-row mb-3 p-4 rounded-lg relative">
-                      <div class="schedule-inputs-wrapper" style="margin-bottom: 16px;">
-                        <div class="flex-1">
-                          <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Start Date</label>
-                          <VueDatePicker :dark="isDarkMode" v-model="continuousConfig.start_date" :min-date="minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
-<template #dp-input="{ value }">
-<input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
-</template>
-</VueDatePicker>
-                        </div>
-                        <div class="flex-1">
-                          <label class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">End Date</label>
-                          <VueDatePicker :dark="isDarkMode" v-model="continuousConfig.end_date" :min-date="continuousConfig.start_date || minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
-<template #dp-input="{ value }">
-<input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
-</template>
-</VueDatePicker>
-                        </div>
-                        <div class="flex-1">
-                          <div class="label-container" style="margin-bottom: 4px;">
-                            <label class="text-[10px] uppercase font-bold text-slate-500 mb-0">Time From</label>
-                            <div class="info-btn-wrapper">
-                              <span class="material-symbols-outlined" @click.stop="toggleHelp('startTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
-                              <transition name="fade-pop"><div v-if="helpState.startTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
-                            </div>
-                          </div>
-                          <AppTimePicker 
-                            v-model="continuousConfig.start_time" 
-                            min="04:00" 
-                            max="20:00" 
-                            required 
-                            @change="handleTimeChange(continuousConfig)" 
-                          />
-                        </div>
-                        <div class="flex-1">
-                          <div class="label-container" style="margin-bottom: 4px;">
-                            <label class="text-[10px] uppercase font-bold text-slate-500 mb-0">Time To</label>
-                            <div class="info-btn-wrapper">
-                              <span class="material-symbols-outlined" @click.stop="toggleHelp('endTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
-                              <transition name="fade-pop"><div v-if="helpState.endTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
-                            </div>
-                          </div>
-                          <AppTimePicker 
-                            v-model="continuousConfig.end_time" 
-                            min="04:00" 
-                            max="20:00" 
-                            required 
-                            @change="handleTimeChange(continuousConfig)" 
-                          />
-                        </div>
-                      </div>
+                <div class="form-divider"></div>
 
-                    </div>
+                <!-- Section 06: Document Attachments -->
+                <section class="form-section-card">
 
-                    <!-- Expanded Schedules UI -->
-                    <div v-if="scheduleType === 'continuous' && schedules.length > 0" style="margin-top: 16px; margin-bottom: 8px; color: #b979cc; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-                      <span class="material-symbols-outlined" style="font-size: 14px;">info</span>
-                      You can customize the Time for specific days (e.g., half-day on the last day) below:
-                    </div>
-                    <div v-for="(sch, index) in schedules" :key="index" class="schedule-inputs-wrapper schedule-card-item" style="position: relative;">
-                      <div style="flex: 1; min-width: 130px;">
-                        <label style="color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: bold; margin-bottom: 6px; display: block;">Date</label>
-                        <VueDatePicker :dark="isDarkMode" v-model="sch.date" @update:model-value="handleScheduleDateChange($event, index)" :disabled="scheduleType === 'continuous'" :min-date="minStartDate" :disabled-dates="isDisabledDate" model-type="yyyy-MM-dd" :enable-time-picker="false" format="MM/dd/yyyy" auto-apply required input-class-name="custom-input-field dp-custom-transparent" :max-date="maxDateLimit" >
-<template #dp-input="{ value }">
-<input type="text" :value="value ? String(value).replace(',', '').trim().split(' ')[0] : ''" class="custom-input-field dp-custom-transparent !text-xs !p-2" readonly placeholder="Select Date" />
-</template>
-</VueDatePicker>
-                      </div>
-                      <div style="flex: 1; min-width: 130px;">
-                        <div class="label-container" style="margin-bottom: 6px;">
-                          <label style="color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: bold; margin-bottom: 0;">Start Time</label>
-                          <div class="info-btn-wrapper">
-                            <span class="material-symbols-outlined" @click.stop="toggleHelp('startTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
-                            <transition name="fade-pop"><div v-if="helpState.startTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
-                          </div>
-                        </div>
-                        <AppTimePicker 
-                          v-model="sch.start_time" 
-                          min="04:00" 
-                          max="20:00" 
-                          required 
-                          @change="validateScheduleTime(index)" 
-                        />
-                      </div>
-                      <div style="flex: 1; min-width: 130px;">
-                        <div class="label-container" style="margin-bottom: 6px;">
-                          <label style="color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: bold; margin-bottom: 0;">End Time</label>
-                          <div class="info-btn-wrapper">
-                            <span class="material-symbols-outlined" @click.stop="toggleHelp('endTime')" style="font-size: 14px; cursor: pointer; color: #94a3b8; transition: color 0.2s;" onmouseover="this.style.color='#b979cc'" onmouseout="this.style.color='#94a3b8'">info</span>
-                            <transition name="fade-pop"><div v-if="helpState.endTime" class="simple-popup" style="width:160px; font-size:10px; font-weight:normal;">Valid times: 04:00 AM - 08:00 PM</div></transition>
-                          </div>
-                        </div>
-                        <AppTimePicker 
-                          v-model="sch.end_time" 
-                          min="04:00" 
-                          max="20:00" 
-                          required 
-                          @change="validateScheduleTime(index)" 
-                        />
-                      </div>
-                      <button type="button" v-if="scheduleType === 'staggered' && schedules.length > 1" @click.prevent="removeSchedule(index)" style="background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="Remove Schedule">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                      </button>
-                      
-                    </div>
-                    
-                    
-                  </div>
-
-                  <!-- Upload Activity Design (Moved inside left column) -->
                   <div class="attachment-section-container">
                     <label class="form-label">Upload Activity Design (PDF) *</label>
                     <div class="attachment-display-grid">
@@ -352,55 +486,38 @@
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div class="form-column-right">
-                  <div class="budget-section">
-                    <BudgetBuilder 
-                      ref="budgetBuilder"
-                      v-model:venueBudgets="form.venue_budgets" 
-                      :venues="form.venues" 
-                      :baselineSettings="baselineSettings"
-                      :isOutsideBsu="isOutsideBsu" 
-                      :computedDays="computedDays"
-                      :filteredVenues="venues"
-                      :customVenuesList="customVenuesList"
-                      :venueInsideMap="venueInsideMap"
-                    />
-
-                    <!-- Overall Target Participants Banner -->
-                    <div class="attendance-banner-card">
-                      <div class="attendance-banner-label">Overall Expected Attendance (Auto-calculated)</div>
-                      <div class="attendance-banner-value">
-                        {{ form.target_participants || 0 }} Pax
-                      </div>
-                    </div>
-
-                    <!-- Grand Total Banner Card -->
-                    <div class="grand-total-banner-card">
-                      <div class="grand-total-label-banner">Grand Total (PHP)</div>
-                      <div class="grand-total-value-banner">
-                        ₱{{ Number(form.proposed_budget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                </section>
               </div>
 
-              <div class="form-actions">
-                <button 
-                  type="button"
-                  @click="goBack" 
-                  class="back-button"
-                >
-                  &#8592; Back
-                </button>
-                <button 
-                  type="submit" 
-                  class="submit-action-btn"
-                >
-                  Submit Design &#8594;
-                </button>
+              <!-- Floating Sticky Action Dock -->
+              <div class="form-sticky-dock">
+                <div class="form-sticky-dock-inner">
+                  <div class="dock-summary-group">
+                    <div class="dock-stat-item">
+                      <span class="dock-stat-label">Expected Pax</span>
+                      <span class="dock-stat-value">{{ form.target_participants || 0 }} Pax</span>
+                    </div>
+                    <div class="dock-stat-item">
+                      <span class="dock-stat-label">Proposed Grand Total</span>
+                      <span class="dock-stat-value">₱{{ Number(form.proposed_budget || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                    </div>
+                  </div>
+                  <div class="dock-actions-group">
+                    <button 
+                      type="button"
+                      @click="goBack" 
+                      class="back-button"
+                    >
+                      &#8592; Back
+                    </button>
+                    <button 
+                      type="submit" 
+                      class="submit-action-btn"
+                    >
+                      Submit Design &#8594;
+                    </button>
+                  </div>
+                </div>
               </div>
             </form>
           </div>
@@ -531,6 +648,50 @@ const genderIssues = ref([]);
 const ActClassification = ref([]); 
 const customMandate = ref('');
 const customGenderIssue = ref('');
+
+const mandatesListRef = ref(null);
+const issuesListRef = ref(null);
+const mandateSearchQuery = ref('');
+const issueSearchQuery = ref('');
+
+const filteredMandatesList = computed(() => {
+  if (!mandateSearchQuery.value) return GADMandates.value || [];
+  const q = mandateSearchQuery.value.toLowerCase().trim();
+  return (GADMandates.value || []).filter(m => 
+    (m.code && m.code.toLowerCase().includes(q)) || 
+    (m.title && m.title.toLowerCase().includes(q))
+  );
+});
+
+const filteredGenderIssuesList = computed(() => {
+  if (!issueSearchQuery.value) return genderIssues.value || [];
+  const q = issueSearchQuery.value.toLowerCase().trim();
+  return (genderIssues.value || []).filter(i => 
+    i.title && i.title.toLowerCase().includes(q)
+  );
+});
+
+const isMandateSelected = (id) => {
+  const list = form.value?.gad_mandate_id || form.gad_mandate_id;
+  if (!list || !Array.isArray(list)) return false;
+  return list.some(item => String(item) === String(id));
+};
+
+const isIssueSelected = (id) => {
+  const list = form.value?.gender_issue_id || form.gender_issue_id;
+  if (!list || !Array.isArray(list)) return false;
+  return list.some(item => String(item) === String(id));
+};
+
+const selectedMandatesCount = computed(() => {
+  const list = form.value?.gad_mandate_id || form.gad_mandate_id;
+  return Array.isArray(list) ? list.length : 0;
+});
+
+const selectedIssuesCount = computed(() => {
+  const list = form.value?.gender_issue_id || form.gender_issue_id;
+  return Array.isArray(list) ? list.length : 0;
+});
 
 const scheduleType = ref('staggered');
 const continuousConfig = ref({

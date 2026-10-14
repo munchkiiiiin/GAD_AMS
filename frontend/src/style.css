@@ -221,3 +221,262 @@ button.dp--button.dp--overlay-action,
 .light .stat-card {
   border-color: var(--color-outline-variant) !important;
 }
+
+/* ==========================================================================
+   UNIVERSAL DARK MODE TRANSLUCENT TINTED BADGES, PILLS, BUTTONS & TAGS
+   Eliminates opaque white backgrounds in dark mode across all pages
+   ========================================================================== */
+
+/* 1. Stat & KPI Badges (Committed, Utilized, Starting, Optimal, etc.) */
+html.dark .badge-warning,
+.dark .badge-warning {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+html.dark .badge-high,
+.dark .badge-high {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+html.dark .badge-med,
+.dark .badge-med {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
+}
+
+html.dark .badge-normal,
+.dark .badge-normal {
+  background: rgba(148, 163, 184, 0.15) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+}
+
+/* 2. Audit Trail Buttons & Counters */
+html.dark .btn-audit-toggle,
+.dark .btn-audit-toggle,
+html.dark .btn-audit-trail,
+.dark .btn-audit-trail {
+  background: rgba(168, 85, 247, 0.12) !important;
+  color: #d8b4fe !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+}
+
+html.dark .btn-audit-toggle:hover,
+html.dark .btn-audit-toggle.active,
+.dark .btn-audit-toggle:hover,
+.dark .btn-audit-toggle.active,
+html.dark .btn-audit-trail:hover,
+.dark .btn-audit-trail:hover {
+  background: rgba(168, 85, 247, 0.25) !important;
+  color: #ffffff !important;
+  border-color: #c084fc !important;
+}
+
+html.dark .audit-counter,
+.dark .audit-counter {
+  background: rgba(168, 85, 247, 0.25) !important;
+  color: #e9d5ff !important;
+}
+
+html.dark .btn-audit-toggle.active .audit-counter,
+.dark .btn-audit-toggle.active .audit-counter {
+  background: #0f172a !important;
+  color: #c084fc !important;
+}
+
+/* 3. Classification Pills (Client-Focused, Org-Focused, Attributed, General) */
+html.dark .pill-client,
+.dark .pill-client {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.35) !important;
+}
+
+html.dark .pill-org,
+.dark .pill-org {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #d8b4fe !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
+}
+
+html.dark .pill-attributed,
+.dark .pill-attributed {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fde68a !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+html.dark .pill-general,
+.dark .pill-general,
+html.dark .pill-default,
+.dark .pill-default {
+  background: rgba(148, 163, 184, 0.15) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+}
+
+/* 4. Mandate Code & Responsible Office Pills (OSS, OUR, UHS, etc.) */
+html.dark .unit-code,
+.dark .unit-code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark .office-pill,
+.dark .office-pill {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #6ee7b7 !important;
+}
+
+/* 5. Document List Status Badges Across All Pages */
+html.dark .status-badge-pending,
+.dark .status-badge-pending {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+html.dark .status-badge-approved,
+.dark .status-badge-approved,
+html.dark .status-badge.status-approved,
+.dark .status-badge.status-approved {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+html.dark .status-badge-verified,
+.dark .status-badge-verified,
+html.dark .status-badge.status-completed,
+.dark .status-badge.status-completed {
+  background: rgba(6, 182, 212, 0.15) !important;
+  color: #22d3ee !important;
+  border: 1px solid rgba(6, 182, 212, 0.35) !important;
+}
+
+html.dark .status-badge-revision,
+.dark .status-badge-revision,
+html.dark .status-badge-disapproved,
+.dark .status-badge-disapproved,
+html.dark .status-badge.status-cancelled,
+.dark .status-badge.status-cancelled {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+/* 6. Panel Counts & Preview Buttons */
+html.dark .panel-badge-count.amber,
+.dark .panel-badge-count.amber {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+html.dark .panel-badge-count.green,
+.dark .panel-badge-count.green {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+html.dark .btn-preview-doc,
+.dark .btn-preview-doc {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #d8b4fe !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+}
+
+html.dark .btn-preview-doc:hover,
+.dark .btn-preview-doc:hover {
+  background: #c084fc !important;
+  color: #0f172a !important;
+}
+
+/* 7. Universal Expand/Collapse All Buttons - Never Transparent */
+.btn-toggle-all {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+}
+
+html.dark .btn-toggle-all,
+.dark .btn-toggle-all {
+  background: #1e1b2e !important;
+  border: 1px solid rgba(192, 132, 252, 0.25) !important;
+  color: #ffffff !important;
+}
+
+html.dark .btn-toggle-all:hover,
+.dark .btn-toggle-all:hover {
+  background: #252038 !important;
+  border-color: #c084fc !important;
+  color: #e9d5ff !important;
+}
+
+/* 8. Progress Bars & Segmented Tracks - Translucent Purple in Dark Mode */
+html.dark .segmented-bar,
+.dark .segmented-bar,
+html.dark .drawer-bar,
+.dark .drawer-bar,
+html.dark .util-gauge-track,
+.dark .util-gauge-track,
+html.dark .class-progress-track,
+.dark .class-progress-track {
+  background: rgba(168, 85, 247, 0.12) !important;
+  border: 1px solid rgba(168, 85, 247, 0.25) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .segment-remaining,
+.dark .segment-remaining,
+html.dark .drawer-bar .segment-remaining,
+.dark .drawer-bar .segment-remaining {
+  background: rgba(168, 85, 247, 0.18) !important;
+  border-left: 1px solid rgba(168, 85, 247, 0.35) !important;
+}
+
+html.dark .drawer-bar .segment-remaining .segment-label,
+.dark .drawer-bar .segment-remaining .segment-label {
+  color: #e9d5ff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* 9. Table Footers & Total Summary Rows */
+html.dark .mandate-tfoot,
+.dark .mandate-tfoot,
+html.dark .mandate-tfoot tr,
+.dark .mandate-tfoot tr,
+html.dark .tfoot-cell,
+.dark .tfoot-cell {
+  background: #151226 !important;
+  border-top: 2px solid rgba(192, 132, 252, 0.3) !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .tfoot-cell.text-green,
+.dark .tfoot-cell.text-green {
+  color: #34d399 !important;
+}
+
+html.dark .tfoot-cell.text-yellow,
+.dark .tfoot-cell.text-yellow {
+  color: #fbbf24 !important;
+}
+
+html.dark .tfoot-cell.text-blue,
+.dark .tfoot-cell.text-blue {
+  color: #60a5fa !important;
+}
+
+html.dark .tfoot-cell.text-red,
+.dark .tfoot-cell.text-red {
+  color: #f87171 !important;
+}

@@ -59,7 +59,7 @@
       <div class="drop-panel" style="flex: 2; min-width: 300px;">
         <div class="ledger-inline">
           <div class="ledger-main">
-            <div class="ledger-total-label">Total GAD Budget</div>
+            <div class="ledger-total-label">Total GAD Budget with PS Attribution</div>
             <div class="ledger-big" id="ledgerTotal">{{ peso(ledger.total) }}</div>
             <div class="ledger-of">of <span class="mono" id="ledgerOrgTotal">{{ peso(state.org.totalOrgBudget) }}</span> total appropriation</div>
             <div class="ledger-pct mono" id="ledgerPct">{{ ledger.pct.toFixed(2) }}% of total budget</div>

@@ -124,6 +124,7 @@ class Filters extends BaseFilters
                 'api/register',
                 'api/forgot-password',
                 'api/reset-password',
+                'api/add_office',
             ]
         ],
 
@@ -178,7 +179,6 @@ class Filters extends BaseFilters
                 'api/venues*',
                 'api/contact-inquiries*',
                 'api/storage*',
-                'api/add_office',
             ]
         ],
 

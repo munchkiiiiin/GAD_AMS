@@ -1,13 +1,12 @@
 <template>
   <div class="app-time-picker-wrapper" ref="wrapperRef">
-    <!-- Trigger Field -->
+      <!-- Trigger Field -->
     <div 
       class="time-picker-trigger custom-input-field"
       :class="{ 'is-disabled': disabled, 'is-open': isOpen }"
       @click="togglePicker"
       tabindex="0"
-      @keydown.enter.prevent="togglePicker"
-      @keydown.space.prevent="togglePicker"
+      @keydown="handleTriggerKeyDown"
     >
       <span class="material-symbols-outlined trigger-icon">schedule</span>
       <span class="trigger-text" :class="{ 'placeholder-text': !formattedDisplay }">
@@ -40,26 +39,42 @@
                 </button>
               </div>
 
-              <!-- Big Digital Readout -->
+              <!-- Big Digital Readout (Typeable) -->
               <div class="digital-display-card">
                 <div class="digital-time-boxes">
-                  <button 
-                    type="button" 
-                    class="time-unit-box" 
+                  <input
+                    ref="hourInputRef"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    maxlength="2"
+                    class="time-unit-box time-unit-input"
                     :class="{ active: activeTab === 'hour' }"
-                    @click="activeTab = 'hour'"
-                  >
-                    {{ padZero(selectedHour) }}
-                  </button>
+                    :value="hourInputVal"
+                    @focus="handleHourFocus"
+                    @input="handleHourInput"
+                    @keydown="handleHourKeyDown"
+                    @blur="handleHourBlur"
+                    aria-label="Hour (1-12)"
+                    title="Type hour (1-12)"
+                  />
                   <span class="time-colon">:</span>
-                  <button 
-                    type="button" 
-                    class="time-unit-box" 
+                  <input
+                    ref="minuteInputRef"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    maxlength="2"
+                    class="time-unit-box time-unit-input"
                     :class="{ active: activeTab === 'minute' }"
-                    @click="activeTab = 'minute'"
-                  >
-                    {{ padZero(selectedMinute) }}
-                  </button>
+                    :value="minuteInputVal"
+                    @focus="handleMinuteFocus"
+                    @input="handleMinuteInput"
+                    @keydown="handleMinuteKeyDown"
+                    @blur="handleMinuteBlur"
+                    aria-label="Minute (0-59)"
+                    title="Type minute (0-59)"
+                  />
                 </div>
 
                 <!-- AM / PM Segmented Switch -->
@@ -69,6 +84,8 @@
                     class="ampm-btn" 
                     :class="{ active: selectedPeriod === 'AM' }"
                     @click="setPeriod('AM')"
+                    tabindex="0"
+                    @keydown.enter.prevent="setPeriod('AM')"
                   >
                     AM
                   </button>
@@ -77,6 +94,8 @@
                     class="ampm-btn" 
                     :class="{ active: selectedPeriod === 'PM' }"
                     @click="setPeriod('PM')"
+                    tabindex="0"
+                    @keydown.enter.prevent="setPeriod('PM')"
                   >
                     PM
                   </button>
@@ -91,7 +110,7 @@
                   type="button" 
                   class="tab-btn" 
                   :class="{ active: activeTab === 'hour' }"
-                  @click="activeTab = 'hour'"
+                  @click="switchTab('hour')"
                 >
                   Hour
                 </button>
@@ -99,7 +118,7 @@
                   type="button" 
                   class="tab-btn" 
                   :class="{ active: activeTab === 'minute' }"
-                  @click="activeTab = 'minute'"
+                  @click="switchTab('minute')"
                 >
                   Minute
                 </button>
@@ -227,6 +246,8 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'change']);
 
 const wrapperRef = ref(null);
+const hourInputRef = ref(null);
+const minuteInputRef = ref(null);
 const isOpen = ref(false);
 const activeTab = ref('hour');
 const isDarkMode = ref(false);
@@ -242,6 +263,10 @@ const selectedHour = ref(8);
 const selectedMinute = ref(0);
 const selectedPeriod = ref('AM');
 
+// Typeable string representations
+const hourInputVal = ref('08');
+const minuteInputVal = ref('00');
+
 const minutePresets = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
 const padZero = (n) => String(n).padStart(2, '0');
@@ -252,6 +277,8 @@ const syncFromModel = (val) => {
     selectedHour.value = 8;
     selectedMinute.value = 0;
     selectedPeriod.value = 'AM';
+    hourInputVal.value = '08';
+    minuteInputVal.value = '00';
     return;
   }
   const [hStr, mStr] = val.split(':');
@@ -268,6 +295,8 @@ const syncFromModel = (val) => {
     selectedHour.value = h === 0 ? 12 : h;
   }
   selectedMinute.value = m;
+  hourInputVal.value = padZero(selectedHour.value);
+  minuteInputVal.value = padZero(selectedMinute.value);
 };
 
 watch(() => props.modelValue, (newVal) => {
@@ -347,6 +376,12 @@ const togglePicker = () => {
     syncFromModel(props.modelValue);
     activeTab.value = 'hour';
     isOpen.value = true;
+    setTimeout(() => {
+      if (hourInputRef.value) {
+        hourInputRef.value.focus();
+        hourInputRef.value.select();
+      }
+    }, 60);
   } else {
     isOpen.value = false;
   }
@@ -356,14 +391,35 @@ const close = () => {
   isOpen.value = false;
 };
 
+const switchTab = (tab) => {
+  activeTab.value = tab;
+  setTimeout(() => {
+    if (tab === 'hour' && hourInputRef.value) {
+      hourInputRef.value.focus();
+      hourInputRef.value.select();
+    } else if (tab === 'minute' && minuteInputRef.value) {
+      minuteInputRef.value.focus();
+      minuteInputRef.value.select();
+    }
+  }, 20);
+};
+
 const selectHour = (h) => {
   selectedHour.value = h;
+  hourInputVal.value = padZero(h);
   // Automatically switch tab to minute for fast flow
   activeTab.value = 'minute';
+  setTimeout(() => {
+    if (minuteInputRef.value) {
+      minuteInputRef.value.focus();
+      minuteInputRef.value.select();
+    }
+  }, 30);
 };
 
 const selectMinute = (m) => {
   selectedMinute.value = m;
+  minuteInputVal.value = padZero(m);
 };
 
 const adjustMinute = (delta) => {
@@ -371,10 +427,262 @@ const adjustMinute = (delta) => {
   if (newM < 0) newM = 59;
   if (newM > 59) newM = 0;
   selectedMinute.value = newM;
+  minuteInputVal.value = padZero(newM);
 };
 
 const setPeriod = (period) => {
   selectedPeriod.value = period;
+};
+
+// Keyboard Typing: Hour Handlers
+const handleHourFocus = (e) => {
+  activeTab.value = 'hour';
+  e.target.select();
+};
+
+const handleHourInput = (e) => {
+  const raw = e.target.value.replace(/\D/g, '');
+  if (!raw) {
+    hourInputVal.value = '';
+    return;
+  }
+
+  if (raw.length === 1) {
+    const digit = parseInt(raw, 10);
+    hourInputVal.value = raw;
+    if (digit >= 3 && digit <= 9) {
+      // 3-9 cannot be the start of a 2-digit hour in 12h clock
+      selectedHour.value = digit;
+      hourInputVal.value = padZero(digit);
+      activeTab.value = 'minute';
+      setTimeout(() => {
+        if (minuteInputRef.value) {
+          minuteInputRef.value.focus();
+          minuteInputRef.value.select();
+        }
+      }, 30);
+    } else if (digit === 1 || digit === 2) {
+      selectedHour.value = digit;
+    }
+  } else {
+    // 2 digits entered (e.g. "08", "12", "14")
+    let num = parseInt(raw.slice(0, 2), 10);
+    if (num > 12 && num <= 23) {
+      // User typed 24h hour (e.g. 13 = 1 PM, 17 = 5 PM)
+      selectedPeriod.value = 'PM';
+      num = num - 12;
+    } else if (num === 0) {
+      num = 12;
+    } else if (num > 12) {
+      num = 12;
+    }
+    selectedHour.value = num;
+    hourInputVal.value = padZero(num);
+    activeTab.value = 'minute';
+    setTimeout(() => {
+      if (minuteInputRef.value) {
+        minuteInputRef.value.focus();
+        minuteInputRef.value.select();
+      }
+    }, 30);
+  }
+};
+
+const handleHourKeyDown = (e) => {
+  if (e.key === ':' || e.key === ';' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    activeTab.value = 'minute';
+    setTimeout(() => {
+      if (minuteInputRef.value) {
+        minuteInputRef.value.focus();
+        minuteInputRef.value.select();
+      }
+    }, 20);
+    return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    let next = selectedHour.value + 1;
+    if (next > 12) next = 1;
+    selectedHour.value = next;
+    hourInputVal.value = padZero(next);
+    setTimeout(() => hourInputRef.value?.select(), 10);
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    let prev = selectedHour.value - 1;
+    if (prev < 1) prev = 12;
+    selectedHour.value = prev;
+    hourInputVal.value = padZero(prev);
+    setTimeout(() => hourInputRef.value?.select(), 10);
+    return;
+  }
+  if (e.key === 'a' || e.key === 'A') {
+    e.preventDefault();
+    setPeriod('AM');
+    return;
+  }
+  if (e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    setPeriod('PM');
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleConfirm();
+    return;
+  }
+};
+
+const handleHourBlur = () => {
+  if (!hourInputVal.value) {
+    hourInputVal.value = padZero(selectedHour.value);
+  } else {
+    let h = parseInt(hourInputVal.value, 10);
+    if (isNaN(h) || h < 1) h = 12;
+    if (h > 12) h = 12;
+    selectedHour.value = h;
+    hourInputVal.value = padZero(h);
+  }
+};
+
+// Keyboard Typing: Minute Handlers
+const handleMinuteFocus = (e) => {
+  activeTab.value = 'minute';
+  e.target.select();
+};
+
+const handleMinuteInput = (e) => {
+  const raw = e.target.value.replace(/\D/g, '');
+  if (!raw) {
+    minuteInputVal.value = '';
+    return;
+  }
+
+  if (raw.length === 1) {
+    const digit = parseInt(raw, 10);
+    minuteInputVal.value = raw;
+    if (digit >= 6) {
+      // 6-9 cannot be first digit of minute (00-59)
+      selectedMinute.value = digit;
+      minuteInputVal.value = padZero(digit);
+      setTimeout(() => minuteInputRef.value?.select(), 10);
+    } else {
+      selectedMinute.value = digit;
+    }
+  } else {
+    let m = parseInt(raw.slice(0, 2), 10);
+    if (m > 59) m = 59;
+    selectedMinute.value = m;
+    minuteInputVal.value = padZero(m);
+    setTimeout(() => minuteInputRef.value?.select(), 10);
+  }
+};
+
+const handleMinuteKeyDown = (e) => {
+  if (e.key === 'Backspace') {
+    const input = minuteInputRef.value;
+    if (input && (minuteInputVal.value === '' || (input.selectionStart === 0 && input.selectionEnd === input.value.length))) {
+      if (minuteInputVal.value === '') {
+        e.preventDefault();
+        activeTab.value = 'hour';
+        setTimeout(() => {
+          if (hourInputRef.value) {
+            hourInputRef.value.focus();
+            hourInputRef.value.select();
+          }
+        }, 20);
+        return;
+      }
+    }
+  }
+  if (e.key === 'ArrowLeft') {
+    const input = minuteInputRef.value;
+    if (input && input.selectionStart === 0) {
+      e.preventDefault();
+      activeTab.value = 'hour';
+      setTimeout(() => {
+        if (hourInputRef.value) {
+          hourInputRef.value.focus();
+          hourInputRef.value.select();
+        }
+      }, 20);
+      return;
+    }
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    adjustMinute(1);
+    setTimeout(() => minuteInputRef.value?.select(), 10);
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    adjustMinute(-1);
+    setTimeout(() => minuteInputRef.value?.select(), 10);
+    return;
+  }
+  if (e.key === 'PageUp') {
+    e.preventDefault();
+    adjustMinute(5);
+    setTimeout(() => minuteInputRef.value?.select(), 10);
+    return;
+  }
+  if (e.key === 'PageDown') {
+    e.preventDefault();
+    adjustMinute(-5);
+    setTimeout(() => minuteInputRef.value?.select(), 10);
+    return;
+  }
+  if (e.key === 'a' || e.key === 'A') {
+    e.preventDefault();
+    setPeriod('AM');
+    return;
+  }
+  if (e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    setPeriod('PM');
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleConfirm();
+    return;
+  }
+};
+
+const handleMinuteBlur = () => {
+  if (!minuteInputVal.value) {
+    minuteInputVal.value = padZero(selectedMinute.value);
+  } else {
+    let m = parseInt(minuteInputVal.value, 10);
+    if (isNaN(m) || m < 0) m = 0;
+    if (m > 59) m = 59;
+    selectedMinute.value = m;
+    minuteInputVal.value = padZero(m);
+  }
+};
+
+// Keyboard Trigger Handler
+const handleTriggerKeyDown = (e) => {
+  if (props.disabled) return;
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    togglePicker();
+  } else if (/^[0-9]$/.test(e.key)) {
+    e.preventDefault();
+    if (!isOpen.value) {
+      togglePicker();
+      setTimeout(() => {
+        if (hourInputRef.value) {
+          hourInputRef.value.focus();
+          hourInputVal.value = e.key;
+          handleHourInput({ target: { value: e.key } });
+        }
+      }, 70);
+    }
+  }
 };
 
 const handleConfirm = () => {
@@ -595,16 +903,30 @@ onUnmounted(() => {
 }
 
 .time-unit-box {
+  width: 3.5rem;
+  height: 2.75rem;
   background: #f1f5f9;
   border: 2px solid transparent;
   border-radius: 0.625rem;
   font-size: 1.5rem;
   font-weight: 800;
-  padding: 0.25rem 0.6rem;
+  padding: 0.25rem 0.25rem;
   color: #334155;
-  cursor: pointer;
+  cursor: text;
+  text-align: center;
   transition: all 0.15s ease;
   font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: none;
+  caret-color: #b979cc;
+}
+
+.time-unit-box::-webkit-inner-spin-button,
+.time-unit-box::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .is-dark .time-unit-box {
@@ -612,14 +934,18 @@ onUnmounted(() => {
   color: #f8fafc;
 }
 
+.time-unit-box:focus,
 .time-unit-box.active {
   background: rgba(185, 121, 204, 0.2);
   border-color: #b979cc;
   color: #7e22ce;
+  box-shadow: 0 0 0 3px rgba(185, 121, 204, 0.25);
 }
 
+.is-dark .time-unit-box:focus,
 .is-dark .time-unit-box.active {
   color: #ffffff;
+  border-color: #b979cc;
 }
 
 .time-colon {

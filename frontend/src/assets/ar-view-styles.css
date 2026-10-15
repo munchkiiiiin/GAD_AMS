@@ -1933,3 +1933,48 @@ html.dark .btn-cancel-modal:hover,
 .font-bold {
   font-weight: 700;
 }
+
+/* Sticky Bottom Action Dock for AR View */
+.action-dock-card {
+  position: sticky;
+  bottom: 1.25rem;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(185, 121, 204, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+html.dark .action-dock-card,
+.dark .action-dock-card {
+  background: rgba(22, 33, 62, 0.95);
+  border-color: rgba(185, 121, 204, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.action-dock-card .btn-approve,
+.action-dock-card .btn-primary {
+  width: auto !important;
+  padding: 10px 20px !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-dock-card .btn-back,
+.action-dock-card .btn-trash {
+  width: auto !important;
+  padding: 10px 18px !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}

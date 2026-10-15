@@ -98,15 +98,12 @@
                             class="gad-multiselect-item"
                             :class="{ 'is-selected': isMandateSelected(mandate.id) }"
                           >
-                            <span class="gad-custom-checkbox">
-                              <input 
-                                type="checkbox" 
-                                v-model="form.gad_mandate_id" 
-                                :value="mandate.id" 
-                                style="position: absolute; opacity: 0; pointer-events: none;" 
-                              />
-                              <span class="material-symbols-outlined gad-check-icon">check</span>
-                            </span>
+                            <input 
+                              type="checkbox" 
+                              v-model="form.gad_mandate_id" 
+                              :value="mandate.id" 
+                              class="gad-real-checkbox"
+                            />
                             <div class="gad-item-text-wrap">
                               <span class="gad-mandate-code-badge">{{ mandate.code }}</span>
                               <span class="gad-item-title">{{ mandate.title }}</span>
@@ -149,15 +146,12 @@
                             class="gad-multiselect-item"
                             :class="{ 'is-selected': isIssueSelected(issue.id) }"
                           >
-                            <span class="gad-custom-checkbox">
-                              <input 
-                                type="checkbox" 
-                                v-model="form.gender_issue_id" 
-                                :value="issue.id" 
-                                style="position: absolute; opacity: 0; pointer-events: none;" 
-                              />
-                              <span class="material-symbols-outlined gad-check-icon">check</span>
-                            </span>
+                            <input 
+                              type="checkbox" 
+                              v-model="form.gender_issue_id" 
+                              :value="issue.id" 
+                              class="gad-real-checkbox"
+                            />
                             <div class="gad-item-text-wrap">
                               <span class="gad-item-title">{{ issue.title }}</span>
                             </div>
@@ -693,7 +687,7 @@ const selectedIssuesCount = computed(() => {
   return Array.isArray(list) ? list.length : 0;
 });
 
-const scheduleType = ref('staggered');
+const scheduleType = ref('continuous');
 const continuousConfig = ref({
   start_date: '',
   end_date: '',
@@ -1234,7 +1228,7 @@ watch(() => form.value.venue_budgets, (newBudgets) => {
       
       let venueMaxPax = 0;
       items.forEach(item => {
-        const paxMult = validBudgetMultipliers(item).find(m => /^(pax|person|persons|head|heads)$/i.test(String(m.u || '').trim()));
+        const paxMult = validBudgetMultipliers(item).find(m => /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(m.u || '').trim()));
         if (paxMult && Number(paxMult.q) > venueMaxPax) {
           venueMaxPax = Number(paxMult.q);
         }
@@ -1698,7 +1692,7 @@ const submitActivityDesign = async () => {
         if (item.custom && (!String(item.name).trim() || lineTotalAmount <= 0)) return;
         const isOther = item.custom && item.group === 'materials';
         
-        const paxOfItem = Number((multipliers.find(m => /^(pax|person|persons|head|heads)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
+        const paxOfItem = Number((multipliers.find(m => /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
         const lineFormulaStr = [('₱' + (Number(item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })), ...multipliers.map(m => `${Number(m.q) || 0} ${String(m.u || '').trim()}`.trim())].join(' × ');
         
         normalizedBudgetItems.push({

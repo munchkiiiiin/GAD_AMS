@@ -2206,3 +2206,77 @@ html.dark .grand-total-value-banner,
     flex: 1;
   }
 }
+
+/* Sticky Bottom Action Dock for AR Revision */
+.action-dock-card {
+  position: sticky;
+  bottom: 1.25rem;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(185, 121, 204, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+html.dark .action-dock-card,
+.dark .action-dock-card {
+  background: rgba(22, 33, 62, 0.95);
+  border-color: rgba(185, 121, 204, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.action-dock-card .submit-action-btn,
+.action-dock-card .btn-approve {
+  width: auto;
+  padding: 10px 24px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #7e22ce 0%, #9333ea 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-dock-card .submit-action-btn:hover:not(:disabled),
+.action-dock-card .btn-approve:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(126, 34, 206, 0.25);
+}
+
+.action-dock-card .btn-back {
+  width: auto;
+  padding: 10px 20px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+html.dark .action-dock-card .btn-back,
+.dark .action-dock-card .btn-back {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+}

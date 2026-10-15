@@ -9,12 +9,12 @@
     <div v-else class="page-container">
 
       <!-- Rejection/Revision Note Alert -->
-      <div v-if="(existingReport?.modification_remarks)" class="rejection-note-banner">
+      <div v-if="(existingReport?.modification_remarks || existingReport?.remarks)" class="rejection-note-banner">
         <div style="display: flex; align-items: flex-start; gap: 12px;">
           <span class="material-symbols-outlined" style="color: #ef4444; font-size: 24px; margin-top: 2px;">error</span>
           <div>
             <h4 class="rejection-note-title">Rejection / Revision Note</h4>
-            <p class="rejection-note-text">{{ existingReport?.modification_remarks }}</p>
+            <p class="rejection-note-text">{{ existingReport?.modification_remarks || existingReport?.remarks }}</p>
           </div>
         </div>
       </div>
@@ -31,15 +31,9 @@
             <div class="assessment-form">
               <div class="info-item">
                 <span class="info-label">Evaluator's Remarks / Comments</span>
-                <div class="read-only-remarks">
-                  {{ existingReport?.remarks || 'No remarks recorded for this accomplishment report.' }}
+                <div class="read-only-remarks" style="white-space: pre-wrap; font-size: 13px; line-height: 1.6;">
+                  {{ existingReport?.modification_remarks || existingReport?.remarks || 'No remarks recorded for this accomplishment report.' }}
                 </div>
-              </div>
-
-              <div class="action-buttons">
-                <button type="button" @click="router.back()" class="btn-back">
-                  ← Back
-                </button>
               </div>
             </div>
           </div>
@@ -682,15 +676,25 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- Submit -->
-                <div class="full-width-info mt-4">
-                  <button type="submit" class="submit-action-btn w-full" :disabled="isSubmitting">
-                    {{ isSubmitting ? 'Resubmitting...' : 'Resubmit Report' }}
-                  </button>
-                </div>
               </div>
 
+            </div>
+
+            <!-- Sticky Bottom Action Dock -->
+            <div class="action-dock-card">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; margin-right: auto;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: #b979cc;">info</span>
+                <span>Review all actual expenditures and attendance before resubmitting.</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button type="button" @click="router.back()" class="btn-back">
+                  Cancel Changes
+                </button>
+                <button type="submit" class="submit-action-btn" :disabled="isSubmitting">
+                  <span class="material-symbols-outlined">send</span>
+                  {{ isSubmitting ? 'Resubmitting...' : 'Resubmit Report' }}
+                </button>
+              </div>
             </div>
           </form>
         </section>
@@ -1103,17 +1107,40 @@ const formatBudgetName = (name) => {
   return name.replace(/(\(.*\))/g, '<span class="budget-item-subtext">$1</span>');
 };
 
+const loadingData = ref(false);
+
+// Multiplier and budget calculation helpers
+const validMultipliers = item => Array.isArray(item?.mult)
+  ? item.mult.filter(multiplier => multiplier && typeof multiplier === 'object')
+  : [];
+
+const lineTotal = item => {
+  const rate = Number(item?.rate) || 0;
+  const mults = validMultipliers(item);
+  if (!mults.length) return rate;
+  return rate * mults.reduce((total, multiplier) => total * (Number(multiplier.q) || 0), 1);
+};
+
+const paxOf = item => Number(
+  (validMultipliers(item).find(multiplier =>
+    /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(multiplier.u || '').trim())
+  ) || {}).q
+) || 0;
+
 watch(() => form.value.venue_budgets, (newBudgets) => {
+  if (loadingData.value) return;
   let total = 0;
+  let maxOverallPax = 0;
   if (newBudgets) {
     Object.values(newBudgets).forEach(items => {
-      total += items.reduce((sum, item) => {
-        const mults = item.mult ? item.mult.reduce((p, m) => p * (Number(m.q) || 0), 1) : 0;
-        return sum + ((Number(item.rate) || 0) * mults);
-      }, 0);
+      total += (items || []).reduce((sum, item) => sum + lineTotal(item), 0);
+      maxOverallPax += Math.max(0, ...(items || []).filter(i => i.group === 'catering').map(paxOf));
     });
   }
   form.value.proposed_budget = total;
+  if (maxOverallPax > 0) {
+    form.value.target_participants = maxOverallPax;
+  }
 }, { deep: true });
 
 const fetchVenues = async () => {
@@ -1144,8 +1171,6 @@ watch(() => form.value.is_inside_bsu, () => {
     }
   }
 });
-
-const loadingData = ref(false);
 
 // watcher removed in favor of @change
 
@@ -1774,12 +1799,13 @@ const submitReport = async () => {
       const venueBudget = form.value.venue_budgets[vId] || form.value.venue_budgets[venue];
       if (venueBudget) {
         venueBudget.forEach(item => {
-          const lineTotalAmount = (Number(item.rate) || 0) * (item.mult ? item.mult.reduce((p, m) => p * (Number(m.q) || 0), 1) : 1);
+          const lineTotalAmount = lineTotal(item);
           if (item.custom && (!String(item.name).trim() || lineTotalAmount <= 0)) return;
           const isOther = item.custom && item.group === 'materials';
           
-          const paxOfItem = Number(((item.mult || []).find(m => /^(pax|person|persons|head|heads)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
-          const lineFormulaStr = [('₱' + (Number(item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })), ...(item.mult ? item.mult.map(m => `${Number(m.q) || 0} ${String(m.u || '').trim()}`.trim()) : [])].join(' x ');
+          const paxOfItem = paxOf(item);
+          const mults = validMultipliers(item);
+          const lineFormulaStr = [('₱' + (Number(item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })), ...(mults.map(m => `${Number(m.q) || 0} ${String(m.u || '').trim()}`.trim()))].join(' × ');
           
           normalizedBudgetItems.push({
             venue_id: vId,
@@ -2175,7 +2201,10 @@ const fetchReportDetails = async () => {
             if (dbItem.multipliers) {
               const parsed = typeof dbItem.multipliers === 'string' ? JSON.parse(dbItem.multipliers) : dbItem.multipliers;
               if (Array.isArray(parsed)) {
-                parsedMult = parsed.map(m => ({ q: Number(m.value) || 0, u: String(m.label || '').trim() }));
+                parsedMult = parsed.map(m => ({
+                  q: Number(m.value !== undefined ? m.value : m.q) || 0,
+                  u: String(m.label !== undefined ? m.label : m.u || '').trim()
+                }));
               }
             }
           } catch(e) {}
@@ -2183,7 +2212,7 @@ const fetchReportDetails = async () => {
           const savedAmount = Number(dbItem.amount) || 0;
           let savedRate = Number(dbItem.unit_cost) || 0;
           if (!parsedMult.length && typeof dbItem.sub_item === 'string') {
-            const formulaParts = dbItem.sub_item.split(/\s+x\s+/i);
+            const formulaParts = dbItem.sub_item.split(/\s+[x×*]\s+/i);
             const formulaRate = formulaParts[0]?.replace(/[₱,\s]/g, '');
             if (formulaParts.length > 1 && Number(formulaRate) >= 0) {
               savedRate = Number(formulaRate);
@@ -2194,11 +2223,18 @@ const fetchReportDetails = async () => {
             }
           }
           if (!savedRate && savedAmount > 0) savedRate = savedAmount;
-          if (!parsedMult.length) parsedMult = [{ q: 1, u: 'item' }];
+          if (!parsedMult.length) parsedMult = [{ q: 1, u: 'lot' }];
           
           const isCatering = ['Breakfast', 'Lunch', 'Dinner', 'AM Snack', 'PM Snack'].includes(dbItem.item_name);
           const isLogistics = ['Function Room/Venue', 'Accommodation', 'Equipment Rental', 'Transportation'].includes(dbItem.item_name);
           const isProgram = ['Professional Fee/Honoraria', 'Token/s'].includes(dbItem.item_name);
+
+          if (isCatering) {
+            const hasPax = parsedMult.some(m => /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(m.u || '').trim()));
+            if (!hasPax && Number(dbItem.pax) > 0) {
+              parsedMult.unshift({ q: Number(dbItem.pax), u: 'pax' });
+            }
+          }
           
           let group = 'materials';
           if (isCatering) group = 'catering';
@@ -2227,6 +2263,25 @@ const fetchReportDetails = async () => {
             capKey: dbItem.item_name === 'Transportation' ? 'transportation_limit' : null
           });
         });
+
+        let initialBudget = 0;
+        let initialPax = 0;
+        Object.values(form.value.venue_budgets).forEach(items => {
+          initialBudget += (items || []).reduce((sum, item) => sum + lineTotal(item), 0);
+          initialPax += Math.max(0, ...(items || []).filter(i => i.group === 'catering').map(paxOf));
+        });
+        if (initialBudget > 0) {
+          form.value.proposed_budget = initialBudget;
+        } else if (r.actual_budget) {
+          form.value.proposed_budget = Number(r.actual_budget) || 0;
+        } else if (r.activity_design?.proposed_budget) {
+          form.value.proposed_budget = Number(r.activity_design.proposed_budget) || 0;
+        }
+        if (initialPax > 0) {
+          form.value.target_participants = initialPax;
+        } else if (r.attendees) {
+          form.value.target_participants = Number(r.attendees) || 0;
+        }
       }
 
       // Populate evaluation_items from nested array

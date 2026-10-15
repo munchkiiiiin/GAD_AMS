@@ -27,21 +27,41 @@
     </div>
 
     <div v-else class="page-container">
-      <!-- Rejection/Revision Note Alert -->
-      <div v-if="(design?.modification_remarks || existingReport?.modification_remarks)" class="mb-6 p-5 rounded-xl revision-note-alert" style="width: 100%; max-width: 80rem; margin: 0 auto 20px auto; box-sizing: border-box;">
-        <div style="display: flex; align-items: flex-start; gap: 16px;">
-          <span class="material-symbols-outlined revision-note-icon" style="font-size: 28px; margin-top: 2px;">error</span>
-          <div style="flex: 1;">
-            <h4 class="revision-note-title" style="font-size: 15px; font-weight: 700; margin: 0 0 6px 0; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; text-transform: uppercase;">Rejection / Revision Note</h4>
-            <p class="revision-note-body" style="font-size: 14px; margin: 0; font-family: 'Inter', sans-serif; line-height: 1.6; white-space: pre-wrap;">{{ design?.modification_remarks || existingReport?.modification_remarks }}</p>
+      <div class="layout-vertical-ad">
+        <!-- Reviewer Feedback & Remarks (Top Banner) -->
+        <div v-if="design.status !== 'Approved' || (design?.modification_remarks || design?.remarks)" class="assessment-card-custom">
+          <div class="assessment-header">
+            <div class="assessment-icon">📋</div>
+            <div>
+              <div class="assessment-title">{{ design.status === 'Approved' ? 'Modification Notes' : 'Reviewer Feedback & Remarks' }}</div>
+              <p style="font-size: 12px; color: #94a3b8; margin: 2px 0 0 0;">Please review the evaluator feedback below before making changes.</p>
+            </div>
+          </div>
+
+          <div class="assessment-form">
+            <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px;">
+              <div v-if="design.accomplishment_deadline" class="info-item assessment-date-display" style="flex: 1; min-width: 200px;">
+                <span class="info-label">Accomplishment Deadline</span>
+                <span class="info-value-white">{{ formatDate(design.accomplishment_deadline) }}</span>
+              </div>
+
+              <div v-if="design.assessment_date" class="info-item assessment-date-display" style="flex: 1; min-width: 200px;">
+                <span class="info-label">Date of Assessment</span>
+                <span class="info-value-white">{{ formatDate(design.assessment_date) }}</span>
+              </div>
+            </div>
+
+            <div class="info-item feedback-remarks">
+              <span class="info-label">Previous Remarks / Revision Notes</span>
+              <div class="read-only-remarks" style="white-space: pre-wrap; font-size: 13px; line-height: 1.6;">
+                {{ design?.modification_remarks || design?.remarks || 'No remarks provided.' }}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="layout-grid">
-
-        <!-- LEFT SECTION - Edit Form -->
-        <section :class="design.status === 'Approved' ? 'flex-100' : 'flex-06'" class="glass-card">
+        <!-- Main Edit Form Card -->
+        <section class="glass-card">
           <div class="report-header">
             <div class="meta-header">
               <div class="status-badge-revision" :style="design.status === 'Approved' ? 'background: rgba(168,85,247,0.2); border-color: rgba(168,85,247,0.3);' : ''">
@@ -419,63 +439,25 @@
               </div>
             </div>
             
-            <div v-if="design.status === 'Approved'" class="assessment-card-custom" style="margin-top: 24px;">
-              <div class="assessment-header">
-                <div class="assessment-icon">📋</div>
-                <div class="assessment-title">Modification Actions</div>
-              </div>
-              <div class="assessment-form">
-                <div class="action-buttons" style="margin-top: 0; padding-top: 0; border-top: none;">
-                  <button @click="handleUpdate" class="btn-approve" :disabled="submitting">
-                    <span class="material-symbols-outlined">send</span> 
-                    {{ submitting ? 'Updating...' : 'Save and Update Document' }}
-                  </button>
-                  <button @click="router.back()" class="btn-back">
-                    Cancel Changes
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
-        <section v-if="design.status !== 'Approved'" class="flex-04-sidebar">
-          <div class="assessment-card-custom">
-            <div class="assessment-header">
-              <div class="assessment-icon">📋</div>
-              <div class="assessment-title">Reviewer Feedback</div>
-            </div>
-
-            <div class="assessment-form">
-              <div v-if="design.accomplishment_deadline" class="info-item assessment-date-display">
-                <span class="info-label">Accomplishment Deadline</span>
-                <span class="info-value-white">{{ formatDate(design.accomplishment_deadline) }}</span>
-              </div>
-
-              <div class="info-item assessment-date-display">
-                <span class="info-label">Date of Assessment</span>
-                <span class="info-value-white">{{ formatDate(design.assessment_date) }}</span>
-              </div>
-
-              <div class="info-item feedback-remarks">
-                <span class="info-label">Previous Remarks</span>
-                <div class="read-only-remarks">
-                  {{ design.remarks || 'No remarks provided.' }}
-                </div>
-              </div>
-
-              <div class="action-buttons">
-                <button @click="handleUpdate" class="btn-approve" :disabled="submitting">
-                  <span class="material-symbols-outlined">send</span> 
-                  {{ submitting ? 'Updating...' : 'Resubmit for Review' }}
-                </button>
-                <button @click="router.back()" class="btn-back">
-                  Cancel Changes
-                </button>
-              </div>
-            </div>
+        <!-- Sticky Bottom Action Dock -->
+        <div class="action-dock-card">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; margin-right: auto;">
+            <span class="material-symbols-outlined" style="font-size: 18px; color: #b979cc;">info</span>
+            <span>Review all schedule and budget entries before resubmitting.</span>
           </div>
-        </section>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button type="button" @click="router.back()" class="btn-back">
+              Cancel Changes
+            </button>
+            <button type="button" @click="handleUpdate" class="btn-approve" :disabled="submitting">
+              <span class="material-symbols-outlined">send</span> 
+              {{ submitting ? 'Updating...' : (design.status === 'Approved' ? 'Save and Update Document' : 'Resubmit for Review') }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -524,7 +506,7 @@ const tokensPax = ref('');
 const othersList = ref([]);
 
 
-const scheduleType = ref('staggered');
+const scheduleType = ref('continuous');
 const continuousConfig = ref({
   start_date: '',
   end_date: '',
@@ -818,33 +800,35 @@ const formData = ref({
 
 
 
+// Multiplier and budget calculation helpers
+const validMultipliers = item => Array.isArray(item?.mult)
+  ? item.mult.filter(multiplier => multiplier && typeof multiplier === 'object')
+  : [];
+
+const lineTotal = item => {
+  const rate = Number(item?.rate) || 0;
+  const mults = validMultipliers(item);
+  if (!mults.length) return rate;
+  return rate * mults.reduce((total, multiplier) => total * (Number(multiplier.q) || 0), 1);
+};
+
+const paxOf = item => Number(
+  (validMultipliers(item).find(multiplier =>
+    /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(multiplier.u || '').trim())
+  ) || {}).q
+) || 0;
+
 // Watch venue_budgets for grand total + auto-calculated participants
 watch(() => formData.value.venue_budgets, (newBudgets) => {
   if (loadingData.value) return;
   let grandTotal = 0;
   let maxOverallPax = 0;
-  Object.values(newBudgets).forEach(budgetItems => {
-    grandTotal += budgetItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
-    const mealsItem = budgetItems.find(i => i.name === 'Meals');
-    const snacksItem = budgetItems.find(i => i.name === 'Snacks');
-    let maxMeals = 0;
-    if (mealsItem && mealsItem.meals_needed) {
-      maxMeals = Math.max(
-        Number(mealsItem.meals_needed.breakfast) || 0,
-        Number(mealsItem.meals_needed.lunch) || 0,
-        Number(mealsItem.meals_needed.dinner) || 0
-      );
-    }
-    let maxSnacks = 0;
-    if (snacksItem && snacksItem.meals_needed) {
-      maxSnacks = Math.max(
-        Number(snacksItem.meals_needed.am_snack) || 0,
-        Number(snacksItem.meals_needed.pm_snack) || 0
-      );
-    }
-    const venueMaxPax = Math.max(maxMeals, maxSnacks);
-    maxOverallPax += venueMaxPax;
-  });
+  if (newBudgets) {
+    Object.values(newBudgets).forEach(budgetItems => {
+      grandTotal += (budgetItems || []).reduce((sum, item) => sum + lineTotal(item), 0);
+      maxOverallPax += Math.max(0, ...(budgetItems || []).filter(i => i.group === 'catering').map(paxOf));
+    });
+  }
   formData.value.proposed_budget = grandTotal;
   if (maxOverallPax > 0) {
     formData.value.target_participants = maxOverallPax;
@@ -1310,10 +1294,28 @@ const fetchDesignDetails = async () => {
               if (dbItem.multipliers) {
                 const parsed = typeof dbItem.multipliers === 'string' ? JSON.parse(dbItem.multipliers) : dbItem.multipliers;
                 if (Array.isArray(parsed)) {
-                  mult = parsed.map(m => ({ q: Number(m.value) || 0, u: String(m.label || '').trim() }));
+                  mult = parsed.map(m => ({
+                    q: Number(m.value !== undefined ? m.value : m.q) || 0,
+                    u: String(m.label !== undefined ? m.label : m.u || '').trim()
+                  }));
                 }
               }
             } catch(e) {}
+
+            const savedAmount = Number(dbItem.amount) || 0;
+            let savedRate = Number(dbItem.unit_cost) || 0;
+            if (!mult.length && typeof dbItem.sub_item === 'string') {
+              const formulaParts = dbItem.sub_item.split(/\s+[x×*]\s+/i);
+              const formulaRate = formulaParts[0]?.replace(/[₱,\s]/g, '');
+              if (formulaParts.length > 1 && Number(formulaRate) >= 0) {
+                savedRate = Number(formulaRate);
+                mult = formulaParts.slice(1).map(part => {
+                  const match = part.trim().match(/^(-?\d+(?:\.\d+)?)\s*(.*)$/);
+                  return match ? { q: Number(match[1]) || 0, u: match[2].trim() } : null;
+                }).filter(Boolean);
+              }
+            }
+            if (!savedRate && savedAmount > 0) savedRate = savedAmount;
             
             let baseKey = null;
             if (isCatering) baseKey = dbItem.item_name.includes('Snack') ? 'snacks' : 'meals';
@@ -1329,7 +1331,7 @@ const fetchDesignDetails = async () => {
               id: lineSeq++,
               group,
               name: dbItem.item_name === 'Others' ? dbItem.sub_item : dbItem.item_name,
-              rate: Number(dbItem.unit_cost) || 0,
+              rate: savedRate,
               mult,
               custom: dbItem.item_name === 'Others' || isCatering,
               baseKey,
@@ -1885,7 +1887,13 @@ const handleUpdate = async () => {
     submitData.append('end_date', formData.value.end_date);
     submitData.append('start_time', formData.value.start_time);
     submitData.append('end_time', formData.value.end_time);
-    submitData.append('proposed_budget', formData.value.proposed_budget);
+    let computedGrandTotal = 0;
+    for (const venueId of formData.value.venues || []) {
+      const items = formData.value.venue_budgets?.[venueId] || [];
+      computedGrandTotal += items.reduce((sum, item) => sum + lineTotal(item), 0);
+    }
+    const finalProposedBudget = computedGrandTotal > 0 ? computedGrandTotal : (Number(formData.value.proposed_budget) || 0);
+    submitData.append('proposed_budget', finalProposedBudget);
     submitData.append('target_participants', formData.value.target_participants);
     submitData.append('schedule_type', scheduleType.value);
     submitData.append('schedules', JSON.stringify(schedules.value));
@@ -1922,7 +1930,7 @@ const handleUpdate = async () => {
         if (item.custom && (!String(item.name).trim() || lineTotal <= 0)) return;
         const isOther = item.custom && item.group === 'materials';
         
-        const paxOf = Number((item.mult.find(m => /^(pax|person|persons|head|heads)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
+        const paxOf = Number((item.mult.find(m => /^(pax|person|persons|head|heads|people|participant|participants|attendee|attendees)$/i.test(String(m.u || '').trim())) || {}).q) || 0;
         const lineFormula = [('₱' + (Number(item.rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })), ...item.mult.map(m => `${Number(m.q) || 0} ${String(m.u || '').trim()}`.trim())].join(' × ');
         
         normalizedBudgetItems.push({

@@ -16,7 +16,27 @@
 
     <div v-else class="page-container">
       <div class="layout-vertical">
-        <!-- LEFT SECTION -->
+        <!-- TOP: Assessment Record / Evaluator Remarks Banner -->
+        <div v-if="report.remarks || report.status === 'Returned' || report.status === 'Rejected'" class="assessment-card-custom mb-6">
+          <div class="assessment-header">
+            <div class="assessment-icon">📋</div>
+            <div>
+              <div class="assessment-title">Assessment &amp; Review Remarks</div>
+              <p style="font-size: 12px; color: #94a3b8; margin: 2px 0 0 0;">Official evaluator feedback for this accomplishment report.</p>
+            </div>
+          </div>
+
+          <div class="assessment-form">
+            <div class="info-item mb-0">
+              <span class="info-label">Assessor Remarks</span>
+              <div class="read-only-remarks" style="white-space: pre-wrap; font-size: 13px; line-height: 1.6;">
+                {{ report.remarks || 'No remarks recorded for this accomplishment report.' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN SECTION - Accomplishment Report Details -->
         <section class="flex-full glass-card">
           <div class="report-header">
             <div class="meta-header">
@@ -392,35 +412,23 @@
           </div>
 
                     </div>
-  </section>
-
-        <!-- RIGHT SECTION - Assessment Sidebar -->
-        <section class="flex-full">
-          <div class="assessment-card-custom">
-            <div class="assessment-header">
-              <div class="assessment-icon">📋</div>
-              <div class="assessment-title">Assessment Record</div>
-            </div>
-
-            <div class="assessment-form">
-              <div class="info-item">
-                <span class="info-label">Assessor Remarks</span>
-                <div class="read-only-remarks">
-                  {{ report.remarks || 'No remarks recorded for this accomplishment report.' }}
-                </div>
-              </div>
-
-              <div class="action-buttons">
-                <button @click="handleTrash" class="btn-trash">
-                  <span class="material-symbols-outlined">delete</span> MOVE TO TRASH
-                </button>
-                <button @click="router.back()" class="btn-back">
-                  ← Back
-                </button>
-              </div>
-            </div>
-          </div>
         </section>
+
+        <!-- Sticky Bottom Action Dock -->
+        <div class="action-dock-card">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; margin-right: auto;">
+            <span class="material-symbols-outlined" style="font-size: 18px; color: #b979cc;">info</span>
+            <span>Accomplishment Report View &bull; Control: {{ report.control || 'NO CONTROL NUMBER' }}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button @click="handleTrash" class="btn-trash" style="padding: 8px 14px;">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 4px;">delete</span> Move to Trash
+            </button>
+            <button @click="router.back()" class="btn-back" style="padding: 8px 16px;">
+              &larr; Back
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

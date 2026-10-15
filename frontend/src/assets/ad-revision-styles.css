@@ -1707,3 +1707,65 @@ html.dark .dp-custom-transparent,
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
 }
+
+/* Modern Vertical Layout for AD Revision */
+.layout-vertical-ad {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto 3rem auto;
+  box-sizing: border-box;
+}
+
+.reviewer-feedback-card {
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+html.dark .reviewer-feedback-card,
+.dark .reviewer-feedback-card {
+  background: rgba(22, 33, 62, 0.7);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.action-dock-card {
+  position: sticky;
+  bottom: 1.25rem;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(185, 121, 204, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+html.dark .action-dock-card,
+.dark .action-dock-card {
+  background: rgba(22, 33, 62, 0.95);
+  border-color: rgba(185, 121, 204, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.action-dock-card .btn-approve {
+  width: auto;
+  padding: 10px 24px;
+  margin: 0;
+  display: inline-flex;
+}
+
+.action-dock-card .btn-back {
+  width: auto;
+  padding: 10px 20px;
+  margin: 0;
+  display: inline-flex;
+}

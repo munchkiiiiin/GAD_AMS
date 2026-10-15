@@ -27,9 +27,48 @@
     </div>
 
     <div v-else class="page-container">
-      <div class="layout-grid">
-        <!-- LEFT SECTION - Design Preview -->
-        <section class="flex-06 glass-card">
+      <div class="layout-vertical-ad">
+        <!-- TOP: Assessment & Review Record Banner -->
+        <div v-if="design.assessment_date || design.accomplishment_deadline || design.remarks || design.modification_request_status" class="assessment-card-custom">
+          <div class="assessment-header">
+            <div class="assessment-icon">📋</div>
+            <div>
+              <div class="assessment-title">Assessment &amp; Review Record</div>
+              <p style="font-size: 12px; color: #94a3b8; margin: 2px 0 0 0;">Official evaluation timeline and reviewer notes.</p>
+            </div>
+          </div>
+
+          <div class="assessment-form">
+            <div v-if="design.status === 'Approved' && design.modification_request_status === 'rejected'" class="mod-rejected-notice mb-4">
+              <div class="mod-rejected-title"><span class="material-symbols-outlined">cancel</span> Modification Request Rejected</div>
+              <div class="mod-rejected-body">
+                <strong>Reviewer's Note:</strong> {{ design.modification_remarks || 'No reason provided.' }}
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px;">
+              <div class="info-item mb-0" style="flex: 1; min-width: 200px;">
+                <span class="info-label">Assessment Date</span>
+                <span class="info-value-white">{{ formatDate(design.assessment_date) || '---' }}</span>
+              </div>
+
+              <div class="info-item mb-0" style="flex: 1; min-width: 200px;">
+                <span class="info-label">Accomplishment Deadline</span>
+                <span class="info-value-white">{{ formatDate(design.accomplishment_deadline) || '---' }}</span>
+              </div>
+            </div>
+
+            <div v-if="design.remarks" class="info-item">
+              <span class="info-label">Reviewer Remarks</span>
+              <div class="read-only-remarks" style="white-space: pre-wrap; font-size: 13px; line-height: 1.6;">
+                {{ design.remarks }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN SECTION - Design Preview -->
+        <section class="glass-card">
           <div class="report-header">
             <div class="meta-header">
               <div style="display: flex; gap: 8px; align-items: center;">
@@ -311,61 +350,32 @@
           </div>
         </section>
 
-        <!-- RIGHT SECTION - Assessment Sidebar -->
-        <section class="flex-04-sidebar">
-          <div class="assessment-card-custom">
-            <div class="assessment-header">
-              <div class="assessment-icon">📋</div>
-              <div class="assessment-title">Assessment Record</div>
-            </div>
-
-            <div class="assessment-form">
-              <div class="info-item mb-4">
-                <span class="info-label">Assessment Date</span>
-                <span class="info-value-white">{{ formatDate(design.assessment_date) || '---' }}</span>
-              </div>
-
-              <div class="info-item mb-4">
-                <span class="info-label">Accomplishment Deadline</span>
-                <span class="info-value-white">{{ formatDate(design.accomplishment_deadline) || '---' }}</span>
-              </div>
-
-                      <div class="info-item">
-                <span class="info-label">Reviewer Remarks</span>
-                <div class="read-only-remarks">
-                  {{ design.remarks || 'No remarks provided for this design.' }}
-                </div>
-              </div>
-
-              <div class="action-buttons">
-                <!-- Add Modification Request logic here -->
-                <div v-if="design.status === 'Approved' && design.modification_request_status === 'rejected'" class="mod-rejected-notice">
-                    <div class="mod-rejected-title"><span class="material-symbols-outlined">cancel</span> Modification Request Rejected</div>
-                    <div class="mod-rejected-body">
-                      <strong>Reviewer's Note:</strong> {{ design.modification_remarks || 'No reason provided.' }}
-                    </div>
-                </div>
-                <!-- Add Modification Request logic here -->
-                <button v-if="design.status === 'Approved' && (!design.modification_request_status || design.modification_request_status === 'none' || design.modification_request_status === 'rejected')" @click="openModModal" class="btn-approve" style="margin-bottom: 10px; width: 100%;">
-                  <span class="material-symbols-outlined" style="font-size: 1.2rem; margin-right: 4px;">edit_note</span> Request Modification
-                </button>
-                <div v-else-if="design.status === 'Approved' && design.modification_request_status === 'pending'" class="mod-pending-badge">
-                  Modification Requested
-                </div>
-                <button v-else-if="design.status === 'Approved' && design.modification_request_status === 'approved'" @click="router.push(`/college/ad-revision/${design.act_design_id}`)" class="btn-approve" style="margin-bottom: 10px; width: 100%;">
-                  <span class="material-symbols-outlined" style="font-size: 1.2rem; margin-right: 4px;">edit</span> Modify Design
-                </button>
-
-                <button @click="handleTrash" class="btn-trash">
-                  <span class="material-symbols-outlined">delete</span> MOVE TO TRASH
-                </button>
-                <button @click="router.back()" class="btn-back">
-                  ← Back
-                </button>
-              </div>
-            </div>
+        <!-- Sticky Bottom Action Dock -->
+        <div class="action-dock-card">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; margin-right: auto;">
+            <span class="material-symbols-outlined" style="font-size: 18px; color: #b979cc;">info</span>
+            <span>Activity Design View &bull; Control: {{ design.control || 'PENDING' }}</span>
           </div>
-        </section>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <!-- Modification Request buttons -->
+            <button v-if="design.status === 'Approved' && (!design.modification_request_status || design.modification_request_status === 'none' || design.modification_request_status === 'rejected')" @click="openModModal" class="btn-approve" style="padding: 8px 16px;">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 4px;">edit_note</span> Request Modification
+            </button>
+            <div v-else-if="design.status === 'Approved' && design.modification_request_status === 'pending'" class="mod-pending-badge" style="padding: 8px 14px; font-size: 12px;">
+              Modification Requested
+            </div>
+            <button v-else-if="design.status === 'Approved' && design.modification_request_status === 'approved'" @click="router.push(`/college/ad-revision/${design.act_design_id}`)" class="btn-approve" style="padding: 8px 16px;">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 4px;">edit</span> Modify Design
+            </button>
+
+            <button @click="handleTrash" class="btn-trash" style="padding: 8px 14px;">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 4px;">delete</span> Move to Trash
+            </button>
+            <button @click="router.back()" class="btn-back" style="padding: 8px 16px;">
+              &larr; Back
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

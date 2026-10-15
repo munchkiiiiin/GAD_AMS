@@ -27,9 +27,51 @@
     </div>
 
     <div v-else class="page-container">
-      <div class="layout-grid">
-        <!-- LEFT SECTION - Design Preview -->
-        <section class="flex-06 glass-card">
+      <div class="layout-vertical-ad">
+        <!-- TOP: Assessment & Review Record Banner -->
+        <div v-if="design.assessment_date || design.accomplishment_deadline || design.remarks || design.modification_request_status === 'pending'" class="assessment-card-custom">
+          <div class="assessment-header">
+            <div class="assessment-icon">📋</div>
+            <div>
+              <div class="assessment-title">Assessment &amp; Review Record</div>
+              <p style="font-size: 12px; color: #94a3b8; margin: 2px 0 0 0;">Official evaluation timeline and reviewer notes.</p>
+            </div>
+          </div>
+
+          <div class="assessment-form">
+            <div v-if="design.modification_request_status === 'pending'" class="staff-mod-box mb-4">
+              <div class="staff-mod-title"><span class="material-symbols-outlined">warning</span> Modification Requested</div>
+              <div class="staff-mod-body">{{ design.modification_remarks || 'No reason provided.' }}</div>
+            </div>
+
+            <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px;">
+              <div class="info-item mb-0" style="flex: 1; min-width: 200px;">
+                <span class="info-label">Assessment Date</span>
+                <span class="info-value-white">{{ formatDate(design.assessment_date) || '---' }}</span>
+              </div>
+
+              <div class="info-item mb-0" style="flex: 1; min-width: 200px;">
+                <span class="info-label" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  Accomplishment Deadline
+                  <button v-if="!(design.is_archived == 1 && design.accomplishment_report_count > 0)" @click="editDeadline" class="edit-btn" title="Edit Deadline" style="background: none; border: none; cursor: pointer; color: #b979cc; padding: 0;">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">edit</span>
+                  </button>
+                </span>
+                <span class="info-value-white">{{ formatDate(design.accomplishment_deadline) || '---' }}</span>
+              </div>
+            </div>
+
+            <div v-if="design.remarks" class="info-item">
+              <span class="info-label">Reviewer Remarks</span>
+              <div class="read-only-remarks" style="white-space: pre-wrap; font-size: 13px; line-height: 1.6;">
+                {{ design.remarks }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN SECTION - Design Preview -->
+        <section class="glass-card">
           <div class="report-header">
             <div class="meta-header">
               <div style="display: flex; gap: 8px; align-items: center;">
@@ -311,58 +353,32 @@
           </div>
         </section>
 
-        <!-- RIGHT SECTION - Assessment Sidebar -->
-        <section class="flex-04-sidebar">
-          <div class="assessment-card-custom">
-            <div class="assessment-header">
-              <div class="assessment-icon">📋</div>
-              <div class="assessment-title">Assessment Record</div>
-            </div>
-
-            <div class="assessment-form">
-              <div class="info-item mb-4">
-                <span class="info-label">Assessment Date</span>
-                <span class="info-value-white">{{ formatDate(design.assessment_date) || '---' }}</span>
-              </div>
-
-              <div class="info-item mb-4">
-                <span class="info-label" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                  Accomplishment Deadline
-                  <button v-if="!(design.is_archived == 1 && design.accomplishment_report_count > 0)" @click="editDeadline" class="edit-btn" title="Edit Deadline" style="background: none; border: none; cursor: pointer; color: #b979cc; padding: 0;">
-                    <span class="material-symbols-outlined" style="font-size: 14px;">edit</span>
-                  </button>
-                </span>
-                <span class="info-value-white">{{ formatDate(design.accomplishment_deadline) || '---' }}</span>
-              </div>
-
-              <div class="info-item">
-                <span class="info-label">Reviewer Remarks</span>
-                <div class="read-only-remarks">
-                  {{ design.remarks || 'No remarks provided for this design.' }}
-                </div>
-              </div>
-
-              <div class="action-buttons">
-                <div v-if="design.modification_request_status === 'pending'" class="staff-mod-box">
-                  <div class="staff-mod-title"><span class="material-symbols-outlined">warning</span> Modification Requested</div>
-                  <div class="staff-mod-body">{{ design.modification_remarks || 'No reason provided.' }}</div>
-                  <button @click="approveModRequest" class="btn-primary" style="background: #4ade80; color: #064e3b; border: none; width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;">Approve Request</button>
-                  <button @click="openRejectModModal" class="btn-primary" style="background: #f87171; color: #450a0a; border: none; width: 100%; padding: 0.5rem;">Reject Request</button>
-                </div>
-                <button v-if="design.status === 'Approved'" @click="router.push(`/staff/ad-revision/${design.act_design_id}`)" class="btn-primary" style="margin-bottom: 10px; width: 100%;">
-                  <span class="material-symbols-outlined" style="font-size: 1.2rem; margin-right: 4px;">edit</span> Modify Design
-                </button>
-
-                <button @click="handleTrash" class="btn-trash">
-                  <span class="material-symbols-outlined">delete</span> MOVE TO TRASH
-                </button>
-                <button @click="router.back()" class="btn-back">
-                  ← Back
-                </button>
-              </div>
-            </div>
+        <!-- Sticky Bottom Action Dock -->
+        <div class="action-dock-card">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; margin-right: auto;">
+            <span class="material-symbols-outlined" style="font-size: 18px; color: #b979cc;">info</span>
+            <span>Activity Design View &bull; Control: {{ design.control || 'PENDING' }}</span>
           </div>
-        </section>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <template v-if="design.modification_request_status === 'pending'">
+              <button @click="approveModRequest" class="btn-primary" style="background: #4ade80; color: #064e3b; border: none; padding: 8px 16px;">
+                Approve Request
+              </button>
+              <button @click="openRejectModModal" class="btn-primary" style="background: #f87171; color: #450a0a; border: none; padding: 8px 16px;">
+                Reject Request
+              </button>
+            </template>
+            <button v-if="design.status === 'Approved'" @click="router.push(`/staff/ad-revision/${design.act_design_id}`)" class="btn-primary" style="padding: 8px 16px;">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 4px;">edit</span> Modify Design
+            </button>
+            <button @click="handleTrash" class="btn-trash" style="padding: 8px 14px;">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 4px;">delete</span> Move to Trash
+            </button>
+            <button @click="router.back()" class="btn-back" style="padding: 8px 16px;">
+              &larr; Back
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
